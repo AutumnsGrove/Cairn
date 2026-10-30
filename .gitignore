@@ -1,0 +1,35 @@
+# Runtime state (on the potato, in the install folder)
+/data/
+/update-signal/
+/.env
+/.update-watcher.lock
+
+# My reviews, covers, exports and database snapshots. Never commit these.
+*.db
+*.db-wal
+*.db-shm
+/exports/
+/local-data/
+
+# Go
+/bin/
+*.test
+*.out
+
+# Web (SvelteKit + pnpm)
+node_modules/
+/web/build/
+/web/.svelte-kit/
+/web/.vite/
+!/web/build/.gitkeep
+
+# Python (spike scripts only)
+__pycache__/
+.venv/
+*.pyc
+
+# OS and editors
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
