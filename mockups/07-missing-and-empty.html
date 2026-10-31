@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cairn: when something is missing</title>
+<link rel="stylesheet" href="cairn.css">
+</head>
+<body>
+<main class="board">
+  <h1>When something is missing</h1>
+  <p class="lede">A helper is down, a title cannot be found, a screenshot is being read, a library has nothing in it yet. Each one says what happened in plain words and offers the next step, so a gap never becomes a dead end.</p>
+
+  <div class="row">
+
+    <!-- 1: pre-read unavailable -->
+    <div class="step">
+      <h2>1. The pre-read is down</h2>
+      <p>Quick reading is optional. Without it everything still works, and you may just get a few extra questions.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Piranesi</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="you"><div class="who">You</div><p>just finished piranesi, honestly one of the best things i have read, 4.75</p></div>
+          <p class="notice"><svg><use href="#i-info"/></svg><span>The quick pre-read was not available for this message, so it went straight to the agent. You may see a few more questions than usual.</span></p>
+          <div class="act"><svg><use href="#i-check"/></svg><span>Matched Piranesi (2020)</span></div>
+          <p class="agent">Here are the questions. Skip any you like.</p>
+          <div class="ix">
+            <div class="qf">
+              <div>
+                <p class="lab">How was the pacing?</p>
+                <div class="pills" data-pills>
+                  <button class="pill" aria-pressed="false">It dragged</button>
+                  <button class="pill" aria-pressed="false">Uneven</button>
+                  <button class="pill" aria-pressed="false">Steady</button>
+                  <button class="pill" aria-pressed="false">It flew by</button>
+                </div>
+              </div>
+              <div>
+                <p class="lab">How was the world or setting?</p>
+                <div class="pills" data-pills>
+                  <button class="pill" aria-pressed="false">Forgettable</button>
+                  <button class="pill" aria-pressed="false">Solid</button>
+                  <button class="pill" aria-pressed="false">Vivid</button>
+                  <button class="pill" aria-pressed="false">I lived in it</button>
+                </div>
+              </div>
+            </div>
+            <div class="formfoot"><button class="btn ghost">Skip the rest</button><button class="btn primary grow">Done</button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2: nothing found -->
+    <div class="step">
+      <h2>2. Nothing found</h2>
+      <p>No API and no web result. The review can still be logged as you wrote it, and matched up later.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">New entry</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="you"><div class="who">You</div><p>saw the salt road at the marlowe last night, 4.25, tiny cast and it still filled the room</p></div>
+          <div class="act"><svg><use href="#i-read"/></svg><span>Read as theatre</span><button class="why">why</button></div>
+          <div class="act"><svg><use href="#i-search"/></svg><span>Searched the web, no match</span></div>
+          <div class="ix">
+            <p class="q">I could not find The Salt Road.</p>
+            <p class="hintline">What would you like to do?</p>
+            <div class="opts">
+              <button class="opt sel"><span style="flex:1"><span class="l" style="display:block">Log it as you wrote it</span><span class="s" style="display:block;margin-top:.15rem">Marked as not matched. You can fill in details later.</span></span></button>
+              <button class="opt"><span class="l">Try a different title</span></button>
+              <button class="opt"><span class="l">Keep it as a draft for now</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="composer">
+          <div class="box">
+            <button class="attach" aria-label="Attach a screenshot"><svg><use href="#i-clip"/></svg></button>
+            <textarea rows="1" placeholder="Or type the right title"></textarea>
+            <button class="send" disabled aria-label="Send"><svg><use href="#i-send"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3: attaching screenshots -->
+    <div class="step">
+      <h2>3. Attaching screenshots</h2>
+      <p>Tap the paperclip, pick the screenshots, and say what they are. One title per session, any number of images.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">New entry</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="zero">
+            <h2>Bringing in an old review?</h2>
+            <p>Attach screenshots of one title and say where they are from. Cairn reads them and asks only what it cannot see.</p>
+          </div>
+        </div>
+        <p class="hintbelow">2 of 6 images. All of one title.</p>
+        <div class="composer" style="padding-top:.25rem">
+          <div class="box" style="flex-wrap:wrap;padding-top:.6rem">
+            <div class="tray" style="width:100%">
+              <span class="thumb"><i class="t"></i><i class="s"></i><i></i><i></i><button aria-label="Remove"><svg><use href="#i-x"/></svg></button></span>
+              <span class="thumb"><i class="t"></i><i></i><i></i><i></i><button aria-label="Remove"><svg><use href="#i-x"/></svg></button></span>
+            </div>
+            <div style="display:flex;align-items:flex-end;gap:.5rem;width:100%">
+              <button class="attach" aria-label="Attach more"><svg><use href="#i-clip"/></svg></button>
+              <textarea rows="2" style="flex:1;border:0;background:none;outline:none;resize:none;min-height:44px;padding:.65rem 0;font:inherit;line-height:1.4">from fable, import these please</textarea>
+              <button class="send" aria-label="Send"><svg><use href="#i-send"/></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4: reading screenshots -->
+    <div class="step">
+      <h2>4. Reading them</h2>
+      <p>Each image is read in turn. What was found is shown plainly, with a marker, before any questions.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Import</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="you">
+            <div class="who">You</div>
+            <p>from fable, import these please</p>
+            <div class="thumbs">
+              <span class="thumb"><i class="t"></i><i class="s"></i><i></i><i></i></span>
+              <span class="thumb"><i class="t"></i><i></i><i></i><i></i></span>
+            </div>
+          </div>
+          <div class="act"><svg><use href="#i-check"/></svg><span>Read screenshot 1 of 2</span></div>
+          <div class="act live"><span class="dot"></span><span>Reading screenshot 2 of 2</span></div>
+          <div class="ix">
+            <p class="q" style="margin-bottom:.6rem">So far</p>
+            <dl class="kv" style="grid-template-columns:5.5rem 1fr">
+              <dt>Title</dt><dd>The Night Circus</dd>
+              <dt>Author</dt><dd>Erin Morgenstern</dd>
+              <dt>Rating</dt><dd>4 <span class="tag i" style="margin-left:.4rem"><svg class="mk"><use href="#i-img"/></svg><span>from the image</span></span></dd>
+              <dt>Date</dt><dd>12 Mar 2024 <span class="tag i" style="margin-left:.4rem"><svg class="mk"><use href="#i-img"/></svg><span>from the image</span></span></dd>
+            </dl>
+          </div>
+        </div>
+        <div class="composer">
+          <div class="box">
+            <button class="attach" aria-label="Attach a screenshot"><svg><use href="#i-clip"/></svg></button>
+            <textarea rows="1" placeholder="You can keep typing"></textarea>
+            <button class="send stop" aria-label="Stop"><svg><use href="#i-stop"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5: empty library -->
+    <div class="step">
+      <h2>5. An empty library</h2>
+      <p>No sad illustration. It says what the library is for and points back at the composer.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Library</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="zero">
+            <h2>Nothing here yet.</h2>
+            <p>Everything you finish and write about lands here, across films, books, games, albums and more.</p>
+            <button class="btn primary">Log something</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6: no search results -->
+    <div class="step">
+      <h2>6. No results</h2>
+      <p>It says what was searched, and offers a way out. Search covers titles and your own words.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Library</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <label class="search"><svg><use href="#i-search"/></svg><input value="xyzzy" aria-label="Search"><button class="iconbtn" style="width:36px;height:36px;margin-right:-.5rem" aria-label="Clear"><svg><use href="#i-x"/></svg></button></label>
+          <div class="zero" style="padding-top:2rem">
+            <h2 style="font-size:1.375rem">No entries mention &ldquo;xyzzy&rdquo;.</h2>
+            <p>Search looks at titles and at what you wrote. Try fewer words, or check the spelling.</p>
+            <button class="btn">Clear search</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+<script src="icons.js"></script>
+<script src="cairn.js"></script>
+</body>
+</html>

@@ -115,3 +115,13 @@ only in the `backend:` block of the decisions config, so another model can repla
 - Whether the Jev tags that matter for a review (format, themes) are reliably separable at all; the
   Phase 0 spike records real odds on sample messages before any threshold is set.
 - Nova is leaning embedded, but that is still to be shown by the spike rather than decided.
+
+## 2026-10-31 (later) — Fable's descriptors, testing standard
+
+- **Fable's "describe this book" step** (screenshots from Autumn): category tabs (Characters, Plot, Setting,
+  Writing Style, Content Warnings), each with a star rating and about 20 multi-select chips mixing praise and
+  criticism. Cairn adopts the tabs and chips (a closed vocabulary, shown dashed as hints, never pre-selected)
+  but **not** the per-category stars: one overall quarter-star rating only. Vocabularies are written fresh,
+  not copied (`docs/question-banks/`).
+- **Testing and CI standard** adapted from Ivy: `docs/TESTING.md` and `docs/CI.md`. The repo is public, so the
+  public-repo security rules apply, and tests use synthetic reviews only.

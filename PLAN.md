@@ -97,7 +97,7 @@ That entry is then browsable, searchable and filterable across media in plain vi
 | Web lookups | Through the colocated **Polaris**, which already wraps SearXNG with a Brave fallback. Two tools: `lookup_web` (structured args: title, medium, creator, field wanted — the default) and `ask_polaris_freeform` (a free prompt, the escape hatch; logged only, no confirm tap). Calls carry `source: cairn` and live as normal Polaris threads, which its sidebar never shows. The thread id and citations are stored with the snapshot |
 | Web trust | Web-derived fields are **proposed, never canonical**: shown on the card as unverified with their source URL, accepted with one tap |
 | Transport | **WebSocket both ways, one socket per open session**; the library, drafts count and search are plain REST that refresh on focus. A small Cairn event vocabulary (nova's events stay server-side). The server keeps a per-session event log with sequence numbers: a client that reconnects (a sleeping phone, a killed PWA) says the last number it saw and gets everything after it replayed. The draft card syncs as a **full snapshot with a version number**; an edit made against a stale version is rejected. Every question the service asks is one `interaction_request`. The same session may be open on two devices; the first confirm wins. Spec: [`docs/PROTOCOL.md`](docs/PROTOCOL.md) |
-| Question sets | **Per-medium YAML templates**: a curated bank of questions per medium, each with a type. The model picks 3 to 6 that the message hasn't already answered and phrases them; it does not invent the questions. Answers stay comparable across entries. The questions appear **as one short form** (all 3 to 6 at once, skippable as a whole), and a suggested answer is a **tappable hint, never pre-selected**. First drafts for [books](docs/question-banks/books.yaml) and [films and TV](docs/question-banks/film-tv.yaml) |
+| Question sets | **Per-medium YAML banks** with two parts, both skippable and neither pre-selected. **Describe it**: tabs of multi-select chips (for books Characters, Plot, Setting and world, Writing style, Feel, Content warnings; for film and TV Story, Performances, Visuals, Sound and music, Pacing, Feel, Content warnings), about 150 chips each, a closed vocabulary that mixes praise and criticism. Then **at most three single questions** picked by weight (ending, length, recommend, and so on). The model may point at a chip it thinks I meant, shown dashed and never selected, but it cannot invent a descriptor. Chips are stored as stable keys, so they can be filtered later. One overall rating only; categories have no stars of their own. Drafts: [books](docs/question-banks/books.yaml), [films and TV](docs/question-banks/film-tv.yaml), [shared vocabularies](docs/question-banks/shared.yaml) |
 | Pre-read checks (v1) | `intent` (chitchat, log_review, import_review, find_entries, edit_entry, answer_pending), `medium`, `format`, `revisit`, `extract_fidelity` (faithful, drops_opinion, adds_content; runs on the body extract), and nine `mentions_*` yes/no flags (sound, visuals, acting, story, pacing, ending, characters, world, writing). Defined in a **hot-reloaded YAML registry**, baked into the image and bind-mounted over top as Polaris does for `prompts.yaml`. Thresholds are set from real odds in Phase 0 |
 | Revisits | Logging something already in the library asks: **new entry on the same work, or edit the old one**, showing the previous entry and rating. Several entries per work form a timeline |
 | Edits and history | Editing a saved entry is a draft revision with a confirm tap. Every confirmed edit stores the previous version in an **append-only revisions table, kept forever** |
@@ -105,11 +105,11 @@ That entry is then browsable, searchable and filterable across media in plain vi
 | Drafts | Kept until saved or discarded; they never expire. A Drafts list, with a count on the home screen |
 | Covers | Downloaded once, stored under `data/covers/`, mirrored to R2. No hot-linked third-party images. TMDB's image terms get checked in Phase 0 before this is final |
 | Degraded mode | If a metadata service is down, the review can still be logged as a **manual, unverified work** and enriched later with a "fill in details" action. A review is never blocked by someone else's outage |
-| Tags | Suggested from the `mentions_*` flags and the provider's genres, shown on the card for me to accept or edit. Free-text tags allowed. Nothing is applied without being shown |
+| Tags | Genres from the provider plus my own free-text tags, shown on the card to accept or edit. Nothing is applied without being shown. The descriptor chips from Describe it are separate: they are answers, stored by category, and are the structured way to filter ("everything I called morally grey") |
 | Entry card | One component for the draft and the saved entry. Rating is dragged across the stars and snaps to quarters, with +/- buttons and the number always visible. Unverified fields carry a dashed marker (tap for the source) and one Accept all button. A collapsed "why" sheet shows the decision odds, the tools that ran and their sources. After confirm the session closes and the card becomes the saved entry with an Edit button. Spec: [`docs/ENTRY_CARD.md`](docs/ENTRY_CARD.md) |
 | Visual design | **Dark only**, no light theme (the scene is an evening in a dim room). Warm-tinted neutrals with one **lichen** green accent (Restrained strategy, accent kept to a small share of any screen), so covers carry the colour. **Lexend** for the interface and the review text, **Fraunces** for work titles and screen headings, both self-hosted (OFL) with licences kept beside them. **Lucide** (ISC) for every icon, via `@lucide/svelte` in the app so only the icons used are bundled, never loaded from a CDN. Responsive motion, feedback and state change only, 150 to 250 ms eased out. No chat bubbles: the transcript is plain blocks and the agent speaks in cards. Context in [`PRODUCT.md`](PRODUCT.md) and a seed [`DESIGN.md`](DESIGN.md); live mockups in [`mockups/`](mockups/) |
 | Home | The chat input at the bottom, with recent entries and the drafts count above it. Library, search and the general chat are one tap away |
-| Testing | A **fixture corpus** of sample messages with the expected parse, expected decision outcome and expected tool sequence (the Oracle model: hand-written prompts with expected winners), run against **fake TMDB, Open Library, Jev and Polaris servers**. A separate live eval runs on demand |
+| Testing | **Test first, always.** TDD with integration-weighted tests against "the world" (in-process fakes of TMDB, Open Library, the chat and decisions models, Polaris and R2, all with fault injection). **Every boundary is tested on three routes: happy, bad (invalid, hostile or huge input) and sad (the world misbehaves, with sticky outages).** Go native fuzzing on everything that parses untrusted input, property tests for the invariants, a **fixture corpus** of sample messages with the expected parse, decision outcome and tool sequence, and a Playwright state and screenshot baseline for every mockup frame. **Extensive CI from the first commit**: race detector, `staticcheck`, `golangci-lint`, `govulncheck`, CodeQL, gitleaks, dependency review, image scan, nightly fuzzing. Specs: [`docs/TESTING.md`](docs/TESTING.md) and [`docs/CI.md`](docs/CI.md) |
 | Photos | My own photos on a review (a ticket, a shelf) are deferred to Phase 5. The `media` table is used earlier, by screenshot import in Phase 3 |
 | Fable import | **Fable has no export.** The migration is a first-class image import in Phase 3: I attach screenshots in the chat and the agent transcribes them into drafts, asking only about gaps. **One session per title**, with any number of images for it. Originals are kept as the entry's source and mirrored to R2. The pinned model reads the images (its listing shows image input), tested on real screenshots in Phase 0, with its own role so another model can replace it |
 | First media | **Books (Open Library) and films and TV (TMDB) together** in Phase 1, so the merge and disambiguation logic is proven against two real sources |
@@ -227,7 +227,7 @@ strongly at embedding. Phase 0 confirms it with a spike, not an opinion.
 | 5 | agent | `media_lookup` — search the right library by title (+ creator/year if I gave them) → 3–5 candidates with tiny payloads. `lookup_web` is used when the APIs return nothing |
 | 6 | me | Taps the right one, or "none of these" |
 | 7 | agent | `merge_candidates` — fetches full metadata for the chosen work, stores a per-source snapshot, returns the merged canonical draft with web-sourced fields marked unverified |
-| 8 | agent | `ask_reviewer` — 3–6 medium-appropriate questions, each with a type (`stars`, `choice`, `scale`, `short_text`, `skip`) and a suggested answer it thinks I implied |
+| 8 | agent | `ask_reviewer` — the **Describe it** step (category tabs of chips, hints dashed) plus up to 3 single questions, each with a type (`tags`, `choice`, `short_text`, `skip`) |
 | 9 | me | Answers, skips some, edits |
 | 10 | agent | Builds the draft entry: body and verdict as verbatim spans of my messages (code-verified, then decision-checked), answers as their own fields, canonical metadata attached |
 | 11 | me | Reviews the entry card: tap-to-edit any field, or type a correction in the chat; one confirm tap |
@@ -241,8 +241,10 @@ Branches off the main flow:
 - **Revisit.** If the work is already in the library (the `revisit` decision, backed by an exact match
   on the chosen work), the card shows the previous entry and rating and asks: new entry, or edit the
   old one.
-- **Outage.** If a metadata service is down or finds nothing, the review is logged against a manual,
-  unverified work, and a "fill in details" action retries the lookup later.
+- **Outage.** If a metadata service is down, times out or finds nothing, the agent says so and offers three
+  ways on: **Try again**, **Ask Polaris** (the web lookup; hidden or disabled with a reason if Polaris is
+  itself unreachable), or **Log it without details**, which logs against a manual, unverified work that a
+  "fill in details" action can retry later.
 - **Edit.** Saying "change my Dune rating" in the general chat opens a draft revision of that entry with
   the same card and confirm tap. The previous version goes into the revisions table.
 
@@ -254,7 +256,7 @@ Branches off the main flow:
 | `lookup_web` | `title`, `medium`, optional `creator`, `field` | labelled fields each with a source URL, plus the Polaris thread id and citations. Calls Polaris with `source: cairn` |
 | `ask_polaris_freeform` | `prompt` | Polaris's answer and citations. The escape hatch; logged only, no confirm tap |
 | `merge_candidates` | `provider`, `provider_id` | merged canonical draft + `sources[]` snapshots; flags conflicting fields and any web-derived (unverified) ones |
-| `ask_reviewer` | `medium`, `questions[]` (each with `id`, `prompt`, `type`, `options?`, `skipped_ok`) | `answers[]` — typed values, plus what was skipped |
+| `ask_reviewer` | `medium`, `categories[]` (tabs of chips), `questions[]` (each with `id`, `prompt`, `type`, `options?`, `skipped_ok`) | `answers[]` — chip selections per category and typed values, plus what was skipped |
 | `save_entry` | the full draft | committed entry id |
 | `read_source_image` | `media_id` | a transcription: `title`, `creator`, `rating_shown`, `date_shown`, `text`. Stored as the media row's `transcript_json`; used as the "original" for span extraction. Phase 3 |
 | `search_library` | text, filters | my own past entries (so "have I reviewed this already?" and "what did I watch in March?" are answerable). Reads only; edits happen through a draft revision and the confirm card |
@@ -320,7 +322,7 @@ entries (                    -- my review of a work; one work can have several o
   created_at, updated_at
 )
 
-answers (                    -- the blanks the agent asked me to fill
+answers (                    -- the blanks the agent asked me to fill; descriptor chips are answer_type `tags` (answer_json a list of stable values)
   id, entry_id, question_id, prompt, answer_type, answer_json, skipped INTEGER
 )
 
@@ -566,6 +568,7 @@ not a cheaper model.
 - Small readable functions, a functional core (merge, extract, compose) with thin imperative edges;
   pure merge logic is tested hard because it is the part that can silently corrupt history.
 - No telemetry, no third-party scripts, fonts or icons loaded from outside.
+- **Test first, all three routes, fuzz the parsers, and keep CI strict from the first commit** (see [`docs/TESTING.md`](docs/TESTING.md), [`docs/CI.md`](docs/CI.md)). We are still planning: the build plan itself is held until every design question is settled, and nothing is built yet.
 - Write for a reader new to the technical vocabulary; explain terms in plain language.
 - Every new pre-read check and every guardrail lands with fixture-corpus cases.
 - Findings and uncertainties go in `NOTES.md` as they are learned.

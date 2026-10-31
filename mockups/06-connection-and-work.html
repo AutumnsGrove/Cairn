@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cairn: connection and work in flight</title>
+<link rel="stylesheet" href="cairn.css">
+</head>
+<body>
+<main class="board">
+  <h1>Connection and work in flight</h1>
+  <p class="lede">A phone sleeps, a signal drops, a lookup times out. None of these should feel like a failure. Messages are kept, the server carries on, and the page catches up when it can.</p>
+
+  <div class="row">
+
+    <!-- 1: offline -->
+    <div class="step">
+      <h2>1. Offline</h2>
+      <p>One quiet strip, no alarm. The message you just typed is kept and sent when the connection returns.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">New entry</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="statusbar"><svg><use href="#i-wifioff"/></svg>Offline. Reconnecting.</div>
+        <div class="scroll">
+          <div class="you pending">
+            <div class="who">You</div>
+            <p>just finished piranesi, honestly one of the best things i have read, 4.75</p>
+            <span class="pend"><svg><use href="#i-clock"/></svg>Will send when you are back online</span>
+          </div>
+        </div>
+        <div class="composer">
+          <div class="box">
+            <button class="attach" aria-label="Attach a screenshot"><svg><use href="#i-clip"/></svg></button>
+            <textarea rows="1" placeholder="Say what you thought"></textarea>
+            <button class="send" disabled aria-label="Send"><svg><use href="#i-send"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2: reconnected -->
+    <div class="step">
+      <h2>2. Back, and caught up</h2>
+      <p>The phone slept mid-reply. On reconnect the page asks for what it missed, and nothing is lost or doubled.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">New entry</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="statusbar ok"><svg><use href="#i-check"/></svg>Back online. You did not miss anything.</div>
+        <div class="scroll">
+          <div class="you"><div class="who">You</div><p>just finished piranesi, honestly one of the best things i have read, 4.75</p></div>
+          <div class="act"><svg><use href="#i-read"/></svg><span>Read as a book</span><button class="why">why</button></div>
+          <div class="act"><svg><use href="#i-search"/></svg><span>Looked up Open Library</span></div>
+          <div class="ix">
+            <p class="q">Which one?</p>
+            <p class="hintline">Tap the one you finished.</p>
+            <div class="opts" data-choice>
+              <button class="opt" aria-checked="false"><span class="cand"><span class="cover teal">PIRANESI</span><span><p class="tt">Piranesi</p><p class="mm">Susanna Clarke · 2020</p></span></span></button>
+              <button class="opt" aria-checked="false"><span class="l">None of these</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="composer">
+          <div class="box">
+            <button class="attach" aria-label="Attach a screenshot"><svg><use href="#i-clip"/></svg></button>
+            <textarea rows="1" placeholder="Say what you thought"></textarea>
+            <button class="send" disabled aria-label="Send"><svg><use href="#i-send"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3: working -->
+    <div class="step">
+      <h2>3. Working</h2>
+      <p>Each step is a quiet line, and the one in progress pulses gently. The send button becomes Stop.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">New entry</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="you"><div class="who">You</div><p>watched blade runner 2049 at the cinema, 5/5, the sound design carried it</p></div>
+          <div class="act"><svg><use href="#i-check"/></svg><span>Read as a film</span><button class="why">why</button></div>
+          <div class="act"><svg><use href="#i-check"/></svg><span>Matched Blade Runner 2049 (2017)</span></div>
+          <div class="act live"><span class="dot"></span><span>Pulling details from TMDB</span></div>
+        </div>
+        <div class="composer">
+          <div class="box">
+            <button class="attach" aria-label="Attach a screenshot"><svg><use href="#i-clip"/></svg></button>
+            <textarea rows="1" placeholder="You can keep typing"></textarea>
+            <button class="send stop" aria-label="Stop"><svg><use href="#i-stop"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4: queued -->
+    <div class="step">
+      <h2>4. One message waiting</h2>
+      <p>You can send one more while it works. It queues, and a second is held back until the first is taken.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">New entry</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="you"><div class="who">You</div><p>watched blade runner 2049 at the cinema, 5/5, the sound design carried it</p></div>
+          <div class="act"><svg><use href="#i-check"/></svg><span>Matched Blade Runner 2049 (2017)</span></div>
+          <div class="act live"><span class="dot"></span><span>Pulling details from TMDB</span></div>
+          <div class="you pending" style="margin-top:1.4rem">
+            <div class="who">You</div>
+            <p>oh and it was the imax screening</p>
+            <span class="pend"><svg><use href="#i-clock"/></svg>Queued, sends when this finishes<button class="linkbtn">Cancel</button></span>
+          </div>
+        </div>
+        <p class="hintbelow">One message is already waiting.</p>
+        <div class="composer" style="padding-top:.25rem">
+          <div class="box">
+            <button class="attach" aria-label="Attach a screenshot"><svg><use href="#i-clip"/></svg></button>
+            <textarea rows="1" placeholder="Wait for the next reply" disabled></textarea>
+            <button class="send stop" aria-label="Stop"><svg><use href="#i-stop"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5: error with retry -->
+    <div class="step">
+      <h2>5. Something went wrong</h2>
+      <p>Plain words about what happened. Your message is kept, and there are three ways on: try again, ask Polaris to find it on the web, or log it without details.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">New entry</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="you"><div class="who">You</div><p>watched blade runner 2049 at the cinema, 5/5, the sound design carried it</p></div>
+          <div class="act"><svg><use href="#i-check"/></svg><span>Matched Blade Runner 2049 (2017)</span></div>
+          <div class="errbox row" style="margin-top:1rem">
+            <svg><use href="#i-alert"/></svg>
+            <p>TMDB did not answer in time. Your message is saved as a draft.</p>
+            <div class="acts">
+              <button class="btn sm primary"><span style="display:inline-flex;gap:.4rem;align-items:center"><svg style="width:14px;height:14px"><use href="#i-retry"/></svg>Try again</span></button>
+              <button class="btn sm"><span style="display:inline-flex;gap:.4rem;align-items:center"><svg style="width:14px;height:14px"><use href="#i-globe"/></svg>Ask Polaris</span></button>
+              <button class="btn sm">Log it without details</button>
+            </div>
+          </div>
+        </div>
+        <div class="composer">
+          <div class="box">
+            <button class="attach" aria-label="Attach a screenshot"><svg><use href="#i-clip"/></svg></button>
+            <textarea rows="1" placeholder="Say what you thought"></textarea>
+            <button class="send" disabled aria-label="Send"><svg><use href="#i-send"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+<script src="icons.js"></script>
+<script src="cairn.js"></script>
+</body>
+</html>

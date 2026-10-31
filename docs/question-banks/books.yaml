@@ -1,61 +1,55 @@
 # DRAFT question bank: books. For Autumn to cut, reword and add to.
 #
-# How the agent uses a bank (rules live in code, not here):
-#   - It picks 3 to 6 questions per entry, highest `weight` first, and presents them as one short form.
-#   - A question is SKIPPED when its `topic` is a mentions_* flag that the decisions layer says the message already
-#     covered, so it never asks what I already said.
-#   - `applies_when` limits a question (by medium, format or a genre hint from the metadata).
-#   - At most two `short_text` questions per form, to keep the taps low.
-#   - Every question can be skipped. Skipping everything still saves the entry.
-#   - Option `value`s are STABLE keys stored with the answer, so answers stay comparable across
-#     reviews ("which books did I find too slow?"). Labels can be reworded freely.
-#   - A suggested answer is shown as a tappable hint, never pre-selected.
+# The form for a book has two parts, both skippable and neither pre-selected:
+#   1. DESCRIBE IT: tabs of multi-select chips (`categories`, plus the shared ones in `include`).
+#   2. A few single questions (`questions`), at most three, chosen by `weight`.
+#
+# Rules (enforced in code, not here):
+#   - A category whose `topic` is a mentions_* flag the decisions layer says the message covered is marked
+#     "you mentioned this" and gets dashed hint chips; it is never hidden and never auto-filled.
+#   - A single question is SKIPPED when its `topic` was already covered, or its `applies_when` fails.
+#   - At most one `short_text` question per form.
+#   - Option and chip `value`s are STABLE keys stored with the answer, so answers stay comparable and
+#     filterable. Labels can be reworded freely (see shared.yaml for how).
 #
 # topic values: sound, visuals, acting, story, pacing, ending, characters, world, writing, or null.
 
 medium: book
+include: [feel, content_warnings]
+
+categories:
+
+  characters:
+    label: Characters
+    topic: characters
+    positive: [believable, relatable, memorable, multilayered, likeable, original, distinct voices, vivid side characters, strong relationships, compelling villain, grow and change, diverse cast]
+    negative: [flat, one-dimensional, inconsistent, feel distant, stereotyped, limited growth, forgettable, hard to care about, too many to track]
+    mixed: [morally grey, hard to like but fascinating]
+
+  plot:
+    label: Plot
+    topic: story
+    positive: [gripping, clever plotting, addictive, twisty, well structured, satisfying conclusion, action-packed, epic scope, fast-paced, surprising]
+    negative: [predictable, slow-paced, meandering, rushed ending, loose ends, plot holes, confusing, repetitive, cliched, drags in the middle]
+    mixed: [predictable but satisfying, slow start strong finish, slow burn, ambiguous ending]
+    neutral: [nonlinear, episodic, quiet and small]
+
+  setting:
+    label: Setting and world
+    topic: world
+    positive: [immersive, vivid, atmospheric, richly detailed, lived-in, original, believable rules, strong sense of place]
+    negative: [generic, thin worldbuilding, under-explained, over-explained, inconsistent rules, info dumps]
+    neutral: [cozy, bleak, claustrophobic, sprawling, intimate]
+
+  writing:
+    label: Writing style
+    topic: writing
+    positive: [beautiful prose, lyrical, sharp dialogue, economical, funny, distinctive voice, easy to read, immersive, clear, precise]
+    negative: [clunky, overwritten, purple, stilted dialogue, too much telling, repetitive, jargon-heavy, confusing structure]
+    mixed: [dense, slow to get into, demanding but rewarding]
+    neutral: [simple, experimental, plain, conversational, translated]
 
 questions:
-  - id: book_pacing
-    topic: pacing
-    weight: 90
-    prompt: "How did the pacing feel?"
-    type: choice
-    options:
-      - { value: dragged, label: "It dragged" }
-      - { value: uneven, label: "Uneven" }
-      - { value: steady, label: "Steady" }
-      - { value: flew, label: "It flew by" }
-
-  - id: book_writing
-    topic: writing
-    weight: 85
-    prompt: "What did you think of the writing itself?"
-    type: choice
-    options:
-      - { value: hard_going, label: "Hard going" }
-      - { value: plain, label: "Plain" }
-      - { value: good, label: "Good" }
-      - { value: beautiful, label: "Beautiful" }
-
-  - id: book_characters
-    topic: characters
-    weight: 80
-    prompt: "Which character stayed with you?"
-    type: short_text
-    applies_when: { genre_hint: fiction }
-
-  - id: book_world
-    topic: world
-    weight: 70
-    prompt: "How was the world or setting?"
-    type: choice
-    applies_when: { genre_hint: fiction }
-    options:
-      - { value: forgettable, label: "Forgettable" }
-      - { value: solid, label: "Solid" }
-      - { value: vivid, label: "Vivid" }
-      - { value: immersive, label: "I lived in it" }
 
   - id: book_ending
     topic: ending
@@ -64,8 +58,11 @@ questions:
     type: choice
     options:
       - { value: let_down, label: "Let me down" }
+      - { value: rushed, label: "It felt rushed" }
+      - { value: ambiguous, label: "Left me unsure" }
       - { value: fine, label: "Fine" }
       - { value: landed, label: "It landed" }
+      - { value: perfect, label: "Perfect" }
       - { value: stayed, label: "It stuck with me" }
 
   - id: book_length
@@ -74,9 +71,24 @@ questions:
     prompt: "Was it the right length?"
     type: choice
     options:
-      - { value: too_short, label: "Too short" }
+      - { value: far_too_short, label: "Far too short" }
+      - { value: too_short, label: "A bit short" }
       - { value: right, label: "About right" }
-      - { value: too_long, label: "Too long" }
+      - { value: too_long, label: "A bit long" }
+      - { value: far_too_long, label: "Far too long" }
+
+  - id: book_narration
+    topic: null
+    weight: 70
+    prompt: "How was the narration?"
+    type: choice
+    applies_when: { format: audiobook }
+    options:
+      - { value: poor, label: "Distracting" }
+      - { value: flat, label: "Flat" }
+      - { value: fine, label: "Fine" }
+      - { value: great, label: "Great" }
+      - { value: elevated, label: "Made the book better" }
 
   - id: book_learned
     topic: story
@@ -90,27 +102,16 @@ questions:
       - { value: lot, label: "A lot" }
       - { value: changed, label: "It changed how I think" }
 
-  - id: book_narration
-    topic: null
-    weight: 70
-    prompt: "How was the narration?"
-    type: choice
-    applies_when: { format: audiobook }
-    options:
-      - { value: poor, label: "Distracting" }
-      - { value: fine, label: "Fine" }
-      - { value: great, label: "Great" }
-      - { value: elevated, label: "Made the book better" }
-
-  - id: book_moment
-    topic: null
-    weight: 50
-    prompt: "A moment or line worth remembering?"
+  - id: book_character_stayed
+    topic: characters
+    weight: 55
+    prompt: "Which character stayed with you?"
     type: short_text
+    applies_when: { genre_hint: fiction }
 
   - id: book_recommend
     topic: null
-    weight: 55
+    weight: 70
     prompt: "Would you recommend it?"
     type: choice
     options:
@@ -118,6 +119,7 @@ questions:
       - { value: caveats, label: "With caveats" }
       - { value: yes, label: "Yes" }
       - { value: everyone, label: "To everyone" }
+      - { value: only_some, label: "Only to the right person" }
 
   - id: book_reread
     topic: null
@@ -128,3 +130,4 @@ questions:
       - { value: no, label: "No" }
       - { value: maybe, label: "Maybe" }
       - { value: yes, label: "Yes" }
+      - { value: already, label: "I already have" }

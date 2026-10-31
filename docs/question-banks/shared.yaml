@@ -1,0 +1,57 @@
+# DRAFT shared descriptor vocabularies, used by every medium that lists them in `include`.
+# For Autumn to cut, reword and add to. Written fresh for Cairn, not copied from any other app.
+#
+# How a category works (rules live in code, not here):
+#   - A category is one tab in the "Describe it" step. It offers a closed list of chips; any number can be
+#     picked, and the whole step can be skipped.
+#   - The list is CLOSED. The agent may point at a chip it thinks you meant (shown dashed, never
+#     pre-selected), but it can never invent a descriptor you did not choose.
+#   - Entries are grouped by tone so adding one is a single line. A plain string is the label; the stored
+#     `value` is the slug of the label at first release ("slow-paced" is stored as slow_paced).
+#     To reword a label without breaking old entries, use { label: "new words", value: old_slug }.
+#   - `tone` is only for ordering and for later stats. Chips are shown alphabetically, with hints first.
+
+categories:
+
+  feel:
+    label: Feel
+    topic: null
+    positive: [comforting, cathartic, funny, hopeful, inspiring, moving, nostalgic, thought-provoking, uplifting, stayed with me, made me think, joyful, warm]
+    negative: [boring, disturbing, exhausting, forgettable, hollow, depressing, left me cold]
+    mixed: [bittersweet, haunting, heartbreaking, melancholy, tense, unsettling, bleak but worth it, uncomfortable but good]
+    neutral: [cozy, quiet, slow burn, intense, strange, dreamlike]
+
+  content_warnings:
+    label: Content warnings
+    kind: warnings          # factual, not opinion; shown on the entry as one quiet line
+    topic: null
+    media: [book, film, tv, game]
+    neutral:
+      - violence
+      - graphic violence
+      - gore
+      - sexual content
+      - sexual violence
+      - abuse
+      - child abuse
+      - domestic violence
+      - self-harm
+      - suicide
+      - death
+      - grief
+      - animal harm
+      - addiction
+      - drug use
+      - eating disorders
+      - bullying
+      - racism
+      - homophobia
+      - misogyny
+      - war
+      - torture
+      - mental illness
+      - medical content
+      - body horror
+      - strong language
+      - jump scares
+      - flashing lights

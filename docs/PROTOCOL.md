@@ -80,9 +80,11 @@ One mechanism for every question the service asks me. `interaction_request.kind`
 |---|---|---|---|
 | `choose_medium` | The medium read is split | `options[]` (for example book, film) | the chosen option |
 | `choose_candidate` | After a lookup | `candidates[]` (3 to 5, each with provider, id, title, year, creator, medium, thumb) and a "none of these" | a candidate id, or `none` |
-| `question_form` | The question bank was filtered | `questions[]` (id, prompt, type, options, optional `hint`) | `answers[]`, with skipped questions marked, or `skip_all` |
+| `describe` | The Describe it step | `categories[]` (id, label, `covered` when I already mentioned it, `tags[]` of `{value, label, tone}`, `hints[]` of tag values) | `selected` (a map of category id to tag values), or `skip_all`. Hints are never pre-selected |
+| `question_form` | The single questions that remain | `questions[]` (id, prompt, type, options, optional `hint`), at most three | `answers[]`, with skipped questions marked, or `skip_all` |
 | `revisit_choice` | The work is already in the library | the previous entry's summary | `new_entry` or `edit_existing` |
 | `fill_gap` | A required piece is missing and cannot be parsed (a rating, a few words of review) | `field`, `prompt` | the value |
+| `lookup_failed` | A metadata service errored, timed out or found nothing | `service`, `reason`, `can_ask_polaris` | `retry`, `ask_polaris` or `log_without_details` |
 
 The `hint` on a question is the suggested answer: shown as a tappable hint, **never pre-selected**.
 
@@ -115,6 +117,7 @@ the current `draft_snapshot`.
 - **Two devices on one session is fine.** Every event goes to both. The draft `version` increments on every
   change, whoever made it. An edit made against an old version is rejected and the editor is sent the
   current snapshot. The first `confirm` wins; the other device then receives `saved`.
+- **Offline outbox.** While the socket is down, the client keeps what I type, marked "will send when you are back online", and sends it on reconnect with its original `client_msg_id`, so a message typed in a tunnel is neither lost nor sent twice.
 - **Idempotency.** The server remembers each `client_msg_id` for the life of the session. A repeat gets
   `ack: duplicate` carrying the first outcome, and changes nothing.
 - **Resume.** On connect with `last_seq=N`, the server sends `hello`, then replays every persisted event

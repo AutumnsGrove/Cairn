@@ -96,10 +96,10 @@
       </div>
     </div>
 
-    <!-- 3: question form -->
+    <!-- 3: describe it -->
     <div class="step">
-      <h2>3. A few quick questions</h2>
-      <p>Pacing and the world were already in the message, so those are not asked again.</p>
+      <h2>3. Describe it</h2>
+      <p>Tabs of chips, any number from each, all optional. Your words already covered Setting and Plot, so those say so.</p>
       <div class="phone">
         <div class="topbar">
           <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
@@ -108,47 +108,11 @@
         </div>
         <div class="scroll">
           <div class="act"><svg><use href="#i-check"/></svg><span>Matched Dune (1965)</span></div>
-          <p class="agent">Four quick ones. Skip any you like.</p>
-
+          <p class="agent">How would you describe it? Pick any, or skip.</p>
           <div class="ix">
-            <div class="qf">
-              <div>
-                <p class="lab">What did you think of the writing itself?</p>
-                <div class="pills" data-pills>
-                  <button class="pill" aria-pressed="false">Hard going</button>
-                  <button class="pill" aria-pressed="false">Plain</button>
-                  <button class="pill" aria-pressed="true">Good</button>
-                  <button class="pill" aria-pressed="false">Beautiful</button>
-                </div>
-              </div>
-              <div>
-                <p class="lab">Which character stayed with you?</p>
-                <input class="field" value="Lady Jessica" aria-label="Character">
-              </div>
-              <div>
-                <p class="lab">How did the ending land?</p>
-                <div class="pills" data-pills>
-                  <button class="pill" aria-pressed="false">Let me down</button>
-                  <button class="pill" aria-pressed="false">Fine</button>
-                  <button class="pill" aria-pressed="false">It landed</button>
-                  <button class="pill" aria-pressed="false">It stuck with me</button>
-                </div>
-              </div>
-              <div>
-                <p class="lab">Would you recommend it?</p>
-                <div class="pills" data-pills>
-                  <button class="pill" aria-pressed="false">No</button>
-                  <button class="pill" aria-pressed="false">With caveats</button>
-                  <button class="pill hint" aria-pressed="false">Yes</button>
-                  <button class="pill" aria-pressed="false">To everyone</button>
-                </div>
-                <p class="hintnote">Dashed means suggested from what you wrote. Nothing is chosen until you tap.</p>
-              </div>
-            </div>
-            <div class="formfoot">
-              <button class="btn ghost">Skip the rest</button>
-              <button class="btn primary grow">Done</button>
-            </div>
+            <div class="tabs" role="tablist" data-tabs><button class="tab" role="tab" aria-selected="false" aria-controls="dsc-characters">Characters<span class="tc">2</span></button><button class="tab" role="tab" aria-selected="false" aria-controls="dsc-plot">Plot<span class="tc"></span></button><button class="tab" role="tab" aria-selected="true" aria-controls="dsc-setting">Setting<span class="tc">1</span></button><button class="tab" role="tab" aria-selected="false" aria-controls="dsc-writing">Writing<span class="tc">1</span></button><button class="tab" role="tab" aria-selected="false" aria-controls="dsc-feel">Feel<span class="tc"></span></button><button class="tab" role="tab" aria-selected="false" aria-controls="dsc-content_warnings">Warnings<span class="tc"></span></button></div>
+            <div id="dsc-characters" role="tabpanel" hidden><p class="cloudnote">Pick any that fit, or none.</p><div class="cloud"><button class="chip pick" aria-pressed="false">believable</button><button class="chip pick" aria-pressed="false">compelling villain</button><button class="chip pick" aria-pressed="false">distinct voices</button><button class="chip pick" aria-pressed="false">diverse cast</button><button class="chip pick" aria-pressed="false">feel distant</button><button class="chip pick" aria-pressed="false">flat</button><button class="chip pick" aria-pressed="false">forgettable</button><button class="chip pick" aria-pressed="false">grow and change</button><button class="chip pick" aria-pressed="false">hard to care about</button><button class="chip pick" aria-pressed="false">hard to like but fascinating</button><button class="chip pick" aria-pressed="false">inconsistent</button><button class="chip pick" aria-pressed="false">likeable</button><button class="chip pick" aria-pressed="false">limited growth</button><button class="chip pick" aria-pressed="true">memorable</button><button class="chip pick" aria-pressed="false">morally grey</button><button class="chip pick" aria-pressed="true">multilayered</button><button class="chip pick" aria-pressed="false">one-dimensional</button><button class="chip pick" aria-pressed="false">original</button><button class="chip pick" aria-pressed="false">relatable</button><button class="chip pick" aria-pressed="false">stereotyped</button><button class="chip pick" aria-pressed="false">strong relationships</button><button class="chip pick" aria-pressed="false">too many to track</button><button class="chip pick" aria-pressed="false">vivid side characters</button></div></div><div id="dsc-plot" role="tabpanel" hidden><p class="cloudnote">You mentioned this. Dashed ones are guesses from your words, and nothing is chosen until you tap.</p><div class="cloud"><button class="chip pick hint" aria-pressed="false">drags in the middle</button><button class="chip pick" aria-pressed="false">action-packed</button><button class="chip pick" aria-pressed="false">addictive</button><button class="chip pick" aria-pressed="false">ambiguous ending</button><button class="chip pick" aria-pressed="false">clever plotting</button><button class="chip pick" aria-pressed="false">cliched</button><button class="chip pick" aria-pressed="false">confusing</button><button class="chip pick" aria-pressed="false">epic scope</button><button class="chip pick" aria-pressed="false">episodic</button><button class="chip pick" aria-pressed="false">fast-paced</button><button class="chip pick" aria-pressed="false">gripping</button><button class="chip pick" aria-pressed="false">loose ends</button><button class="chip pick" aria-pressed="false">meandering</button><button class="chip pick" aria-pressed="false">nonlinear</button><button class="chip pick" aria-pressed="false">plot holes</button><button class="chip pick" aria-pressed="false">predictable</button><button class="chip pick" aria-pressed="false">predictable but satisfying</button><button class="chip pick" aria-pressed="false">quiet and small</button><button class="chip pick" aria-pressed="false">repetitive</button><button class="chip pick" aria-pressed="false">rushed ending</button><button class="chip pick" aria-pressed="false">satisfying conclusion</button><button class="chip pick" aria-pressed="false">slow burn</button><button class="chip pick" aria-pressed="false">slow start strong finish</button><button class="chip pick" aria-pressed="false">slow-paced</button><button class="chip pick" aria-pressed="false">surprising</button><button class="chip pick" aria-pressed="false">twisty</button><button class="chip pick" aria-pressed="false">well structured</button></div></div><div id="dsc-setting" role="tabpanel"><p class="cloudnote">You mentioned this. Dashed ones are guesses from your words, and nothing is chosen until you tap.</p><div class="cloud"><button class="chip pick hint" aria-pressed="false">lived-in</button><button class="chip pick" aria-pressed="false">atmospheric</button><button class="chip pick" aria-pressed="false">believable rules</button><button class="chip pick" aria-pressed="false">bleak</button><button class="chip pick" aria-pressed="false">claustrophobic</button><button class="chip pick" aria-pressed="false">cozy</button><button class="chip pick" aria-pressed="false">generic</button><button class="chip pick" aria-pressed="true">immersive</button><button class="chip pick" aria-pressed="false">inconsistent rules</button><button class="chip pick" aria-pressed="false">info dumps</button><button class="chip pick" aria-pressed="false">intimate</button><button class="chip pick" aria-pressed="false">original</button><button class="chip pick" aria-pressed="false">over-explained</button><button class="chip pick" aria-pressed="false">richly detailed</button><button class="chip pick" aria-pressed="false">sprawling</button><button class="chip pick" aria-pressed="false">strong sense of place</button><button class="chip pick" aria-pressed="false">thin worldbuilding</button><button class="chip pick" aria-pressed="false">under-explained</button><button class="chip pick" aria-pressed="false">vivid</button></div></div><div id="dsc-writing" role="tabpanel" hidden><p class="cloudnote">Pick any that fit, or none.</p><div class="cloud"><button class="chip pick" aria-pressed="true">beautiful prose</button><button class="chip pick" aria-pressed="false">clear</button><button class="chip pick" aria-pressed="false">clunky</button><button class="chip pick" aria-pressed="false">confusing structure</button><button class="chip pick" aria-pressed="false">conversational</button><button class="chip pick" aria-pressed="false">demanding but rewarding</button><button class="chip pick" aria-pressed="false">dense</button><button class="chip pick" aria-pressed="false">distinctive voice</button><button class="chip pick" aria-pressed="false">easy to read</button><button class="chip pick" aria-pressed="false">economical</button><button class="chip pick" aria-pressed="false">experimental</button><button class="chip pick" aria-pressed="false">funny</button><button class="chip pick" aria-pressed="false">immersive</button><button class="chip pick" aria-pressed="false">jargon-heavy</button><button class="chip pick" aria-pressed="false">lyrical</button><button class="chip pick" aria-pressed="false">overwritten</button><button class="chip pick" aria-pressed="false">plain</button><button class="chip pick" aria-pressed="false">precise</button><button class="chip pick" aria-pressed="false">purple</button><button class="chip pick" aria-pressed="false">repetitive</button><button class="chip pick" aria-pressed="false">sharp dialogue</button><button class="chip pick" aria-pressed="false">simple</button><button class="chip pick" aria-pressed="false">slow to get into</button><button class="chip pick" aria-pressed="false">stilted dialogue</button><button class="chip pick" aria-pressed="false">too much telling</button><button class="chip pick" aria-pressed="false">translated</button></div></div><div id="dsc-feel" role="tabpanel" hidden><p class="cloudnote">Pick any that fit, or none.</p><div class="cloud"><button class="chip pick" aria-pressed="false">bittersweet</button><button class="chip pick" aria-pressed="false">bleak but worth it</button><button class="chip pick" aria-pressed="false">boring</button><button class="chip pick" aria-pressed="false">cathartic</button><button class="chip pick" aria-pressed="false">comforting</button><button class="chip pick" aria-pressed="false">cozy</button><button class="chip pick" aria-pressed="false">depressing</button><button class="chip pick" aria-pressed="false">disturbing</button><button class="chip pick" aria-pressed="false">dreamlike</button><button class="chip pick" aria-pressed="false">exhausting</button><button class="chip pick" aria-pressed="false">forgettable</button><button class="chip pick" aria-pressed="false">funny</button><button class="chip pick" aria-pressed="false">haunting</button><button class="chip pick" aria-pressed="false">heartbreaking</button><button class="chip pick" aria-pressed="false">hollow</button><button class="chip pick" aria-pressed="false">hopeful</button><button class="chip pick" aria-pressed="false">inspiring</button><button class="chip pick" aria-pressed="false">intense</button><button class="chip pick" aria-pressed="false">joyful</button><button class="chip pick" aria-pressed="false">left me cold</button><button class="chip pick" aria-pressed="false">made me think</button><button class="chip pick" aria-pressed="false">melancholy</button><button class="chip pick" aria-pressed="false">moving</button><button class="chip pick" aria-pressed="false">nostalgic</button><button class="chip pick" aria-pressed="false">quiet</button><button class="chip pick" aria-pressed="false">slow burn</button><button class="chip pick" aria-pressed="false">stayed with me</button><button class="chip pick" aria-pressed="false">strange</button><button class="chip pick" aria-pressed="false">tense</button><button class="chip pick" aria-pressed="false">thought-provoking</button><button class="chip pick" aria-pressed="false">uncomfortable but good</button><button class="chip pick" aria-pressed="false">unsettling</button><button class="chip pick" aria-pressed="false">uplifting</button><button class="chip pick" aria-pressed="false">warm</button></div></div><div id="dsc-content_warnings" role="tabpanel" hidden><p class="cloudnote">Factual, not opinion. Pick any that apply.</p><div class="cloud"><button class="chip pick" aria-pressed="false">abuse</button><button class="chip pick" aria-pressed="false">addiction</button><button class="chip pick" aria-pressed="false">animal harm</button><button class="chip pick" aria-pressed="false">body horror</button><button class="chip pick" aria-pressed="false">bullying</button><button class="chip pick" aria-pressed="false">child abuse</button><button class="chip pick" aria-pressed="false">death</button><button class="chip pick" aria-pressed="false">domestic violence</button><button class="chip pick" aria-pressed="false">drug use</button><button class="chip pick" aria-pressed="false">eating disorders</button><button class="chip pick" aria-pressed="false">flashing lights</button><button class="chip pick" aria-pressed="false">gore</button><button class="chip pick" aria-pressed="false">graphic violence</button><button class="chip pick" aria-pressed="false">grief</button><button class="chip pick" aria-pressed="false">homophobia</button><button class="chip pick" aria-pressed="false">jump scares</button><button class="chip pick" aria-pressed="false">medical content</button><button class="chip pick" aria-pressed="false">mental illness</button><button class="chip pick" aria-pressed="false">misogyny</button><button class="chip pick" aria-pressed="false">racism</button><button class="chip pick" aria-pressed="false">self-harm</button><button class="chip pick" aria-pressed="false">sexual content</button><button class="chip pick" aria-pressed="false">sexual violence</button><button class="chip pick" aria-pressed="false">strong language</button><button class="chip pick" aria-pressed="false">suicide</button><button class="chip pick" aria-pressed="false">torture</button><button class="chip pick" aria-pressed="false">violence</button><button class="chip pick" aria-pressed="false">war</button></div></div>
+            <div class="formfoot"><button class="btn ghost">Skip the rest</button><button class="btn primary grow">Next</button></div>
           </div>
         </div>
         <div class="composer">
@@ -211,10 +175,13 @@
 
             <section>
               <p class="lbl">Answers</p>
-              <ul class="qa">
-                <li><span class="qq">Writing</span><span class="aa">Good</span></li>
-                <li><span class="qq">Character</span><span class="aa">Lady Jessica</span></li>
-                <li><span class="qq">Ending</span><span class="aa skipped">Skipped</span></li>
+              <div class="desc">
+                <div class="dg"><span class="dl">Characters</span><span class="chips"><span class="chip on">memorable</span><span class="chip on">multilayered</span></span></div>
+                <div class="dg"><span class="dl">Setting and world</span><span class="chips"><span class="chip on">immersive</span></span></div>
+                <div class="dg"><span class="dl">Writing style</span><span class="chips"><span class="chip on">beautiful prose</span></span></div>
+              </div>
+              <ul class="qa" style="margin-top:1rem">
+                <li><span class="qq">Ending</span><span class="aa">It landed</span></li>
                 <li><span class="qq">Recommend</span><span class="aa skipped">Skipped</span></li>
               </ul>
             </section>
@@ -222,7 +189,6 @@
             <section>
               <p class="lbl">Tags</p>
               <div class="chips">
-                <span class="chip on">world</span><span class="chip on">pacing</span>
                 <span class="chip sug">sci-fi</span><span class="chip sug">classic</span>
                 <button class="chip">+ add</button>
               </div>
@@ -283,14 +249,18 @@
             </section>
             <section>
               <p class="lbl">Answers</p>
-              <ul class="qa">
-                <li><span class="qq">Writing</span><span class="aa">Good</span></li>
-                <li><span class="qq">Character</span><span class="aa">Lady Jessica</span></li>
-              </ul>
+              <div class="desc">
+                <div class="dg"><span class="dl">Characters</span><span class="chips"><span class="chip on">memorable</span><span class="chip on">multilayered</span></span></div>
+                <div class="dg"><span class="dl">Setting and world</span><span class="chips"><span class="chip on">immersive</span></span></div>
+                <div class="dg"><span class="dl">Writing style</span><span class="chips"><span class="chip on">beautiful prose</span></span></div>
+              </div>
+              <ul class="qa" style="margin-top:1rem"><li><span class="qq">Ending</span><span class="aa">It landed</span></li></ul>
+              <p class="cw"><b>Content warnings</b> violence, war, death</p>
             </section>
             <section>
-              <div class="chips"><span class="chip on">world</span><span class="chip on">pacing</span></div>
+              <div class="chips"><span class="chip">sci-fi</span><span class="chip">classic</span></div>
             </section>
+            
           </div>
         </div>
         <div class="confirm">

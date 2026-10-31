@@ -54,3 +54,23 @@ document.querySelectorAll("[data-pills]").forEach((group) => {
 document.querySelectorAll("[data-toggle]").forEach((b) =>
   b.addEventListener("click", () => b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true")))
 );
+
+/* Describe it: category tabs and multi-select chip clouds */
+document.querySelectorAll("[data-tabs]").forEach((root) => {
+  const tabs = root.querySelectorAll("[role=tab]");
+  const panels = root.parentElement.querySelectorAll("[role=tabpanel]");
+  tabs.forEach((t) => t.addEventListener("click", () => {
+    tabs.forEach((x) => x.setAttribute("aria-selected", String(x === t)));
+    panels.forEach((p) => { p.hidden = p.id !== t.getAttribute("aria-controls"); });
+  }));
+});
+document.querySelectorAll(".cloud").forEach((c) => c.addEventListener("click", (e) => {
+  const b = e.target.closest(".pick");
+  if (!b) return;
+  b.setAttribute("aria-pressed", String(b.getAttribute("aria-pressed") !== "true"));
+  b.classList.remove("hint");
+  const panel = c.closest("[role=tabpanel]");
+  const n = panel.querySelectorAll(".pick[aria-pressed=true]").length;
+  const tc = document.querySelector('[aria-controls="' + panel.id + '"] .tc');
+  if (tc) tc.textContent = n || "";
+}));

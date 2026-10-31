@@ -1,64 +1,52 @@
 # DRAFT question bank: films and TV. For Autumn to cut, reword and add to.
 #
-# Same rules as books.yaml: 3 to 6 questions per entry by `weight`, skipped when the `topic` was already
-# covered, at most two `short_text`, all skippable, option `value`s are stable keys, suggested answers
-# are tappable hints and never pre-selected.
+# Same structure and rules as books.yaml: a "Describe it" step of multi-select chip tabs (these
+# `categories` plus the shared ones), then at most three single questions by `weight`. Chips are a
+# closed list, hints are dashed and never pre-selected, and values are stable keys.
 #
-# `medium` here is a list, since one bank serves both; `applies_when.medium` narrows a question.
+# `medium` is a list since one bank serves both; `applies_when.medium` narrows a question or category.
 # topic values: sound, visuals, acting, story, pacing, ending, characters, world, writing, or null.
 
 medium: [film, tv]
+include: [feel, content_warnings]
+
+categories:
+
+  story:
+    label: Story
+    topic: story
+    positive: [gripping, clever, original, surprising, emotional, tight, well structured, ambitious, thoughtful, satisfying ending, perfect ending, great twists]
+    negative: [predictable, cliched, confusing, convoluted, plot holes, rushed, thin, disappointing ending, forgettable, unearned]
+    mixed: [ambiguous ending, predictable but satisfying, slow start strong finish, messy but interesting]
+
+  performances:
+    label: Performances
+    topic: acting
+    positive: [standout lead, great ensemble, great chemistry, memorable villain, scene-stealing support, believable, nuanced, charismatic, great child performances, great voice acting]
+    negative: [wooden, over the top, miscast, uneven, forgettable, no chemistry]
+
+  visuals:
+    label: Visuals
+    topic: visuals
+    positive: [stunning, striking, beautiful cinematography, inventive framing, great production design, distinctive look, great costumes, practical effects, great visual effects, immersive]
+    negative: [dark and murky, flat lighting, shaky camera, weak CGI, cheap-looking, overstyled, generic]
+    neutral: [minimal, stylised, gritty, colourful, washed out]
+
+  sound:
+    label: Sound and music
+    topic: sound
+    positive: [great score, memorable soundtrack, sound design carries it, immersive mix, great use of silence, great song choices, haunting, tense music]
+    negative: [loud, muddy mix, hard to hear dialogue, intrusive score, forgettable music, repetitive]
+
+  pacing:
+    label: Pacing
+    topic: pacing
+    positive: [tight, propulsive, well paced, binge-able]
+    negative: [drags in the middle, rushed, too long, too short, padded, uneven, season dips]
+    mixed: [slow burn, slow start strong finish, builds slowly]
+    neutral: [episodic, leisurely]
 
 questions:
-  - id: ft_story
-    topic: story
-    weight: 90
-    prompt: "How was the story?"
-    type: choice
-    options:
-      - { value: predictable, label: "Predictable" }
-      - { value: fine, label: "Fine" }
-      - { value: gripping, label: "Gripping" }
-      - { value: surprising, label: "Surprising" }
-
-  - id: ft_acting
-    topic: acting
-    weight: 80
-    prompt: "Whose performance stood out?"
-    type: short_text
-
-  - id: ft_visuals
-    topic: visuals
-    weight: 85
-    prompt: "How did it look?"
-    type: choice
-    options:
-      - { value: unremarkable, label: "Unremarkable" }
-      - { value: good, label: "Good" }
-      - { value: striking, label: "Striking" }
-      - { value: stunning, label: "Stunning" }
-
-  - id: ft_sound
-    topic: sound
-    weight: 85
-    prompt: "How were the sound and score?"
-    type: choice
-    options:
-      - { value: forgettable, label: "Forgettable" }
-      - { value: good, label: "Good" }
-      - { value: memorable, label: "Memorable" }
-      - { value: carried_it, label: "It carried the whole thing" }
-
-  - id: ft_pacing
-    topic: pacing
-    weight: 80
-    prompt: "How was the pacing?"
-    type: choice
-    options:
-      - { value: dragged, label: "It dragged" }
-      - { value: uneven, label: "Uneven" }
-      - { value: steady, label: "Steady" }
-      - { value: flew, label: "It flew by" }
 
   - id: ft_ending
     topic: ending
@@ -67,27 +55,24 @@ questions:
     type: choice
     options:
       - { value: let_down, label: "Let me down" }
+      - { value: rushed, label: "It felt rushed" }
+      - { value: ambiguous, label: "Left me unsure" }
       - { value: fine, label: "Fine" }
       - { value: landed, label: "It landed" }
+      - { value: perfect, label: "Perfect" }
       - { value: stayed, label: "It stuck with me" }
 
-  - id: ft_characters
-    topic: characters
-    weight: 70
-    prompt: "Which character stayed with you?"
-    type: short_text
-
-  - id: ft_world
-    topic: world
-    weight: 60
-    prompt: "How was the world it built?"
+  - id: ft_length
+    topic: null
+    weight: 50
+    prompt: "Was it the right length?"
     type: choice
-    applies_when: { genre_hint: [scifi, fantasy] }
     options:
-      - { value: forgettable, label: "Forgettable" }
-      - { value: solid, label: "Solid" }
-      - { value: vivid, label: "Vivid" }
-      - { value: immersive, label: "I lived in it" }
+      - { value: far_too_short, label: "Far too short" }
+      - { value: too_short, label: "A bit short" }
+      - { value: right, label: "About right" }
+      - { value: too_long, label: "A bit long" }
+      - { value: far_too_long, label: "Far too long" }
 
   - id: ft_big_screen
     topic: null
@@ -99,6 +84,7 @@ questions:
       - { value: no, label: "Not needed" }
       - { value: nice, label: "Nice to have" }
       - { value: essential, label: "Essential" }
+      - { value: wrong_choice, label: "I would have preferred home" }
 
   - id: tv_held_up
     topic: null
@@ -111,20 +97,17 @@ questions:
       - { value: uneven, label: "Uneven" }
       - { value: held, label: "Held up" }
       - { value: got_better, label: "Got better" }
+      - { value: peaked_early, label: "Peaked early" }
 
-  - id: ft_length
-    topic: null
-    weight: 50
-    prompt: "Was it the right length?"
-    type: choice
-    options:
-      - { value: too_short, label: "Too short" }
-      - { value: right, label: "About right" }
-      - { value: too_long, label: "Too long" }
+  - id: ft_standout
+    topic: acting
+    weight: 55
+    prompt: "Whose performance stood out?"
+    type: short_text
 
   - id: ft_recommend
     topic: null
-    weight: 55
+    weight: 70
     prompt: "Would you recommend it?"
     type: choice
     options:
@@ -132,6 +115,7 @@ questions:
       - { value: caveats, label: "With caveats" }
       - { value: yes, label: "Yes" }
       - { value: everyone, label: "To everyone" }
+      - { value: only_some, label: "Only to the right person" }
 
   - id: ft_rewatch
     topic: null
@@ -142,3 +126,4 @@ questions:
       - { value: no, label: "No" }
       - { value: maybe, label: "Maybe" }
       - { value: yes, label: "Yes" }
+      - { value: already, label: "I already have" }

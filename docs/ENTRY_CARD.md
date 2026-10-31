@@ -14,8 +14,8 @@ off it. Decisions are from the 2026-10-31 planning session; the rules they serve
 | My words | Verdict (one line) and body | `extracted`, `typed`, `mixed`, `imported`; see section 3 |
 | Facts | Format, date finished | `parsed`, `suggested` (from the decisions layer), `empty` |
 | Left out | The parts of my messages not kept | collapsed; each segment has a tap to include it |
-| Answers | The question cards I answered | `answered`, `skipped` (greyed) |
-| Tags | Suggested chips and my own | `suggested`, `accepted` |
+| Answers | The descriptor chips I picked, grouped by category, then the single questions I answered | `answered`, `skipped` (greyed) |
+| Tags | Genres from the provider and my own free-text tags (not the descriptor chips, which are answers) | `suggested`, `accepted` |
 | Source | The screenshot(s) an import came from, beside the transcription | present only for imports; see section 10 |
 | Why | How the message was read | collapsed; see section 6 |
 
