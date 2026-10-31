@@ -19,7 +19,8 @@ export default defineConfig({
   // One baseline per screen, browser and platform. The same fonts rasterise differently on macOS and on the
   // Linux CI runner, and the potato is Linux, so CI's copy is the one that matters. A baseline is regenerated
   // on purpose by the `baselines` workflow, never by running --update-snapshots on whatever machine is handy.
-  snapshotPathTemplate: '{testDir}/__screenshots__/{testFileName}/{arg}-{projectName}-{platform}{ext}',
+  snapshotPathTemplate:
+    '{testDir}/__screenshots__/{testFileName}/{arg}-{projectName}-{platform}{ext}',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,
