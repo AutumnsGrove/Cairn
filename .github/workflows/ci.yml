@@ -90,14 +90,20 @@ jobs:
           set -euo pipefail
           go test -count=1 -coverprofile=/tmp/cover.out ./... >/dev/null
           go tool cover -func=/tmp/cover.out | tail -1
-          for pkg in internal/server internal/config internal/world; do
+          # The floor per package. domain is the heart: the span locator and the save guard live there, so it
+          # carries the highest bar in the project (docs/slices/S03-domain-core.md).
+          fail=0
+          for spec in "internal/domain:95" "internal/server:80" "internal/config:80" "internal/world:80"; do
+            pkg="${spec%%:*}"
+            floor="${spec##*:}"
             pct=$(go tool cover -func=/tmp/cover.out | grep "cairn/$pkg/" | awk '{gsub(/%/,"",$3); s+=$3; n++} END {if (n) printf "%.0f", s/n; else print 0}')
-            echo "$pkg coverage: ${pct}%"
-            if [ "$pct" -lt 80 ]; then
-              echo "::error::$pkg coverage is ${pct}%, below the 80% floor"
-              exit 1
+            echo "$pkg coverage: ${pct}% (floor ${floor}%)"
+            if [ "$pct" -lt "$floor" ]; then
+              echo "::error::$pkg coverage is ${pct}%, below the ${floor}% floor"
+              fail=1
             fi
           done
+          exit "$fail"
 
   web:
     name: web

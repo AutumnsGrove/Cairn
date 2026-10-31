@@ -64,3 +64,31 @@ workflow on the runner that compares against them.
 
 **Live checks left for Autumn:** the repository settings in [`REPO-SETTINGS.md`](REPO-SETTINGS.md), which are
 the only part of S00 that cannot live in the repository.
+
+## 2026-10-31, S03, the domain core
+
+**Built.** `internal/domain`: the rating parser (quarter-stars, snapping, Unicode digits), date resolution
+against the phone's zone, the span locator with its normaliser and closest-passage search, format cues, title
+matching, the merge, and the save guard with the entry and diff types. 95.6% coverage, two fuzz targets, and
+six property tests over generated input.
+
+**What is true now.** A quote the operator never wrote cannot become a body: it is dropped and logged, and
+`ValidateForSave` refuses an extracted body whose spans are not in her messages. A one-word slip or a homoglyph
+lands on her own wording; a short quote has to match exactly, because one edit turns "dune" into "done". A merge
+never takes a web field without an accept tap, never loses a trusted field, and is idempotent.
+
+**Learned, for the next agent.**
+
+- **Fuzzing paid immediately, three times.** `findExact` could spin forever when a quote only appeared inside
+  longer words; the normaliser appended one origin offset per *rune* while writing *bytes*, which shifted every
+  later span; and the Unicode digit helper counted back to a block start, which returns 10 for the mathematical
+  digits because their blocks abut. None of these would have been found by the example tests, and all three are
+  now regression seeds under `testdata/fuzz/`.
+- **A lookalike is not a failure to match.** The first instinct was to reject a Cyrillic "е" outright. The
+  invariant is about what is *stored*, not what is matched: matching it and storing the source's own word is
+  both safer and more useful for screenshot imports.
+- **`Compose` needs a separator rule, and the invariant needs to survive it.** Joining two passages with a
+  newline adds a character she did not write, so containment is proved per span and the newline is documented in
+  `ENTRY_CARD.md` rather than quietly appearing in a saved body.
+- **The thresholds are starting values.** The cutoff (0.72) and the minimum fuzzy length (12) are guesses with a
+  test, not measurements. G4 replaces them with real odds.

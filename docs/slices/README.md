@@ -58,7 +58,7 @@ S09 needs S02, S07 and S08. S13 needs a working app (S09 and S12).
 | S00 | [Walking skeleton](S00-walking-skeleton.md) | 0 | done |
 | S01 | [Spikes](S01-spikes.md) | 0 | planned |
 | S02 | [Contract first](S02-contract.md) | 1 | planned |
-| S03 | [Domain core](S03-domain-core.md) | 1 | planned |
+| S03 | [Domain core](S03-domain-core.md) | 1 | done |
 | S04 | [Data layer](S04-data-layer.md) | 1 | planned |
 | S05 | [Banks and decisions](S05-banks-and-decisions.md) | 1 | planned |
 | S06 | [Providers](S06-providers.md) | 1 | planned |

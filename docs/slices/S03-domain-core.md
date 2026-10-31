@@ -66,7 +66,25 @@ None.
 - The closest-passage cutoff and the title-distance thresholds are *starting values*; they are tuned from the
   fixture corpus in S08 (G4).
 
+## Decisions (settled while building, 2026-10-31)
+
+- **The closest-passage cutoff is 0.72** (one minus the edit distance over the longer normalised length), and a
+  quote shorter than **12 characters** is never matched approximately: below that, one edit turns one word into
+  another ("dune" and "done" are one edit apart). Both are starting values for G4.
+- **A homoglyph is matched, and the original is stored.** A model reading a screenshot may return a Cyrillic "е";
+  the locator finds the passage and stores the source's own "Dune". What must never be stored is the lookalike.
+- **`Compose` adds one newline between non-adjacent passages and nothing else.** Containment is proved per span
+  (`SpansContained`) rather than on the joined body, because the join is a separator, not content.
+- **Left out is the complement of the kept spans,** minus whitespace-only gaps, so the card offers back only
+  segments with words in them.
+
 ## Done when
 
 The domain package has no imports from elsewhere in the repo, every function has its three routes, the fuzz
 targets run clean for the nightly time box, and a reviewer can read `spans.go` and believe invariant 1.
+
+## Built (2026-10-31)
+
+`internal/domain` has rating, dates, spans, format cues, titles, merge and the save guard, with 95.6% coverage
+(the CI floor is 95% for this package alone) and two fuzz targets that have already paid for themselves. What
+they found, and the decisions the build settled, are in [`../BUILD-LOG.md`](../BUILD-LOG.md).

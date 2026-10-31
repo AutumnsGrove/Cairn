@@ -149,3 +149,14 @@ at S13. Recommendation and the trade-off are in `docs/slices/S13-deploy-and-upda
 
 Worth noting: with host networking, the "how does the container reach Polaris" question in `PLAN.md` 3
 disappears, because both processes share the host's loopback.
+
+## 2026-10-31 — S03, and what fuzzing found in a day
+
+- **Three real bugs in the span locator, all found by the fuzzer, none by the example tests:** an infinite loop
+  in exact matching, a byte-versus-rune offset bug in the normaliser, and a Unicode digit helper that assumed
+  blocks never abut. The lesson is not "fuzz more" but "the locator is subtle enough that examples are not
+  evidence".
+- **Unicode decimal blocks are not all ten long as a run.** The mathematical digit sets sit next to each other,
+  so the value is the offset from the start of the contiguous run modulo ten, not the offset from the block.
+- **A homoglyph should match.** Storing the source's own word is what matters; refusing the match would make
+  screenshot imports worse for no safety gain.
