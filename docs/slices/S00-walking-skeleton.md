@@ -74,3 +74,10 @@ None. The operator's action is applying the repository settings listed in S00.5.
 
 CI is green on `main` with every required check, `docker build` succeeds locally, the binary serves the page
 and `/healthz`, and a deliberately broken dependency rule or a stray file in the embed directory turns CI red.
+
+## Built (2026-10-31)
+
+CI is green on all seven jobs; `docker build` makes a 14.9 MB distroless image that serves the page and
+`/healthz` and drains on SIGTERM; the architecture test was seen red (a `domain -> store` import) and a stray
+file under the embed directory fails `guard`. What the build learned, and what is left for Autumn, is in
+[`../BUILD-LOG.md`](../BUILD-LOG.md) and [`../REPO-SETTINGS.md`](../REPO-SETTINGS.md).

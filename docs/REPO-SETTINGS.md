@@ -22,7 +22,8 @@ move onto the push. Apply these once:
   is what stops the first one being added by accident.
 - **Dependabot alerts** and **security updates**: on.
 - **Actions**: allow only the actions in `.github/workflows/` (GitHub-owned, plus `golangci`, `gitleaks`,
-  `pnpm/action-setup`). Default workflow permissions: read.
+  `pnpm/action-setup`). Default workflow permissions: read. Turn on **require actions to be pinned by SHA** if
+  the setting is offered: every action here is pinned, and this makes the check enforcement rather than habit.
 - **Environments**: create `evals` and `live-checks`, each with **Autumn** as a required reviewer. They hold
   the only secrets that will ever exist, and they are never triggered by a pull request
   ([`CI.md`](CI.md) 3).
