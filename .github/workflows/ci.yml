@@ -42,7 +42,7 @@ jobs:
       - name: golangci-lint
         uses: golangci/golangci-lint-action@4afd733a84b1f43292c63897423277bb7f4313a9 # v8
         with:
-          version: v2.12.1
+          version: v2.15.0
           args: --timeout=5m
       - name: Race tests
         run: CGO_ENABLED=1 go test -race -count=1 ./...
@@ -94,7 +94,7 @@ jobs:
           # The floor per package. domain is the heart: the span locator and the save guard live there, so it
           # carries the highest bar in the project (docs/slices/S03-domain-core.md).
           fail=0
-          for spec in "internal/domain:95" "internal/server:80" "internal/config:80" "internal/world:80"; do
+          for spec in "internal/domain:95" "internal/server:80" "internal/config:80" "internal/world:80" "internal/store:84"; do
             pkg="${spec%%:*}"
             floor="${spec##*:}"
             pct=$(go tool cover -func=/tmp/cover.out | grep "cairn/$pkg/" | awk '{gsub(/%/,"",$3); s+=$3; n++} END {if (n) printf "%.0f", s/n; else print 0}')

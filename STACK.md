@@ -11,6 +11,13 @@ Nothing yet. S00 has no Go dependency: the server is `net/http` with the pattern
 `log/slog`, the frontend is embedded with `embed`, and the architecture test shells out to `go list`
 rather than importing `golang.org/x/tools`.
 
+Added, with the slice that added it:
+
+| Module | Slice | Licence | Why | Cost |
+|---|---|---|---|---|
+| `modernc.org/sqlite` | S04 | BSD-3-Clause | The pure-Go SQLite driver. `CGO_ENABLED=0` holds and the potato needs no C toolchain. The same choice as Warbler | About 5 MB of binary, no cgo, no C library to patch |
+| `github.com/sqlc-dev/sqlc` | S04 | MIT | Generates the typed queries from plain `.sql`, so a column rename cannot leave a query behind. Run by `make gen`, pinned, never linked into the binary | A build tool and a generated package; the `drift` job keeps them honest |
+
 Planned, with the slice that adds it:
 
 | Module | Slice | Licence | Why | Cost |
@@ -67,5 +74,5 @@ runs as a separate process in CI and on the operator's machine only. If that eve
 | Image | Pinned by | Why |
 |---|---|---|
 | `node:26-alpine` | tag (S13 pins a digest) | The frontend build stage. Node 25 and later dropped `corepack`, so pnpm is installed at an exact version instead |
-| `golang:1.26-trixie` | tag (S13 pins a digest) | Builds the Go stage for the target architecture with `CGO_ENABLED=0` |
+| `golang:1.27-trixie` | tag (S13 pins a digest) | Builds the Go stage for the target architecture with `CGO_ENABLED=0` |
 | `gcr.io/distroless/static-debian12:nonroot` | tag (S13 pins a digest) | The run stage: no shell, no package manager, non-root, and nothing to exploit |

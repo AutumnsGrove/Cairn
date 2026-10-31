@@ -90,8 +90,9 @@ e2e: ## The Playwright suite against the real binary and the world (installs bro
 
 ## --- contract, guard, build ----------------------------------------------------------------------------
 
-gen: ## Regenerate everything derived from api/ (Go constants and TypeScript types)
+gen: ## Regenerate everything derived from api/ and the SQL
 	$(GO) run ./tools/gen
+	$(GO) run github.com/sqlc-dev/sqlc/cmd/sqlc@v1.30.0 generate
 	@test -d $(WEB_DIR)/node_modules || { echo "gen: run make web-check once first (pnpm install)"; exit 1; }
 	cd $(WEB_DIR) && $(PNPM) run gen:contract
 

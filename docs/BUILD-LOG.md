@@ -115,3 +115,29 @@ on one side and fail on the other. `make gen` is idempotent, and CI fails when i
   and the drift check never settles. They are still type-checked by `svelte-check`.
 - **The Go event structs wait for S07.** Nothing calls them yet, and generated code that nothing calls is where
   drift hides. The drift job covers what is generated today.
+
+## 2026-10-31, S04 in progress, the data layer's foundations
+
+**Built so far.** `internal/store`: the schema with every table and index from PLAN.md 6, eight triggers, the
+migration runner (append-only, positional, one transaction per file, refuses a newer file), the doctor (integrity,
+trigger presence and permissions) and its active probe, the writer/reader split, and `sqlc` with 45 queries
+generated into `internal/store/db`. `make gen` now regenerates the SQL code too, and `drift` covers it.
+
+**What is true now.** No SQL the application, a test or a manual shell can run will delete a review, rewrite a
+revision, edit a source snapshot, or drop an answer. A source may be accepted exactly once. A saved entry never
+returns to a draft. A process killed mid-transaction leaves a database that still opens, passes the integrity
+check, and has none of the half-written row. A database from a newer binary refuses to open.
+
+**Still to do in S04.** The repository layer over the generated queries (works, entries, answers, revisions,
+sessions, events, media, mirrors), the cursor-paginated library and drafts queries with `EXPLAIN QUERY PLAN`
+tests, event-log compaction, and the restore path. The slice stays "in progress" until those land.
+
+**Learned.**
+
+- **`sqlc` and repeated named arguments disagree.** A named argument used three times in one query produced three
+  `?` placeholders but one struct field, so the driver got fewer arguments than it wanted. The fix was a
+  row-value cursor comparison with positional parameters, which also lets SQLite walk the index.
+- **An empty table fires no trigger.** A probe that deletes from `entries` before any row exists passes whether or
+  not the protection is there, so the doctor writes probe rows inside a transaction and rolls the whole thing back.
+- **A failed migration must not stamp its version.** The schema change and `PRAGMA user_version` share one
+  transaction, and a test asserts the version does not move when the SQL is broken.

@@ -57,10 +57,16 @@ exactly when an entry is confirmed over a saved one. **Coverage floor** on the t
 
 None.
 
-## Open questions
+## Decisions (answered 2026-10-31, before starting)
 
-- *Assumed, confirm:* `sqlc`; the trigger rule for accepting a web field; retention of `session_events` after a
-  session closes (proposed: seven days).
+- **`sqlc` is used**, as the standards assumed. Plain `.sql` query files, generated typed Go committed, and the
+  `drift` job fails the build when the generated code and the queries disagree.
+- **`session_events` is kept forever.** It is not history (the conversation lives in `sessions.messages_json`),
+  but it is also never pruned: the log is small, and deleting the only record of what a reconnecting client was
+  told buys nothing.
+- **The accept trigger allows exactly one change**: `trust` from `unverified` to `accepted`, with `accepted_at`
+  going from null to a value. Every other update to `work_sources` aborts, and accepting the same row twice
+  aborts, because the second accept would be a change of an already-accepted row.
 
 ## Done when
 
