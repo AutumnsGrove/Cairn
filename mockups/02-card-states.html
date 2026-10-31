@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cairn: the entry card, harder states</title>
+<link rel="stylesheet" href="cairn.css">
+</head>
+<body>
+<main class="board">
+  <h1>The entry card, harder states</h1>
+  <p class="lede">What the card does when trust is uneven: facts from the web, a warning that something you said may be missing, a screenshot import, editing something already saved, and the one thing that blocks saving.</p>
+
+  <div class="row">
+
+    <!-- A: unverified web fields -->
+    <div class="step">
+      <h2>A. Facts from the web</h2>
+      <p>No API knew this play. Two fields came from a web search and carry a dashed marker. Tap one to see its source.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Draft</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="card">
+            <section class="work">
+              <div class="cover slate lg">THE SALT ROAD</div>
+              <div>
+                <h3>The Salt Road</h3>
+                <p class="meta"><span class="und">2026</span> · <span class="und">Marlowe Players</span> · Theatre</p>
+                <button class="markbtn u"><svg class="mk"><use href="#i-dash"/></svg><span>From the web, unverified</span></button>
+              </div>
+            </section>
+
+            <div class="src">
+              <span class="lnk"><svg><use href="#i-link"/></svg>marlowe-players.example/the-salt-road</span>
+              <blockquote>&ldquo;The Salt Road. A new play. Marlowe Players, spring 2026.&rdquo;</blockquote>
+              <div class="acts"><button class="btn sm">Accept</button><button class="btn sm ghost">Edit</button></div>
+            </div>
+
+            <div class="acceptrow">
+              <span class="t"><svg><use href="#i-dash"/></svg>2 fields from the web</span>
+              <button class="btn sm">Accept all</button>
+            </div>
+
+            <section>
+              <p class="lbl">Rating<button class="fav iconfav" data-toggle aria-pressed="false" aria-label="Favourite"><svg><use href="#i-heart"/></svg></button></p>
+              <div class="rate" data-rating data-value="4.25">
+                <button class="step-btn" data-step="-0.25" aria-label="Lower by a quarter">&minus;</button>
+                <span class="stars" role="slider" aria-valuemin="0.25" aria-valuemax="5"></span>
+                <button class="step-btn" data-step="0.25" aria-label="Raise by a quarter">+</button>
+                <span class="num"></span>
+              </div>
+            </section>
+            <section>
+              <p class="lbl">Your words</p>
+              <p class="words">small cast, no set to speak of and it still filled the room, the last scene has stayed with me all week</p>
+            </section>
+          </div>
+        </div>
+        <div class="confirm">
+          <button class="btn ghost">Discard</button>
+          <span class="need">Web fields stay unverified until accepted</span>
+          <button class="btn primary">Save</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- B: fidelity warning -->
+    <div class="step">
+      <h2>B. Something may be missing</h2>
+      <p>The words were cut out of your message. A second check noticed an opinion that did not make it, and points at it.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Draft</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="card">
+            <section class="work">
+              <div class="cover rust lg">HAMILTON</div>
+              <div>
+                <h3>Hamilton</h3>
+                <p class="meta">2015 · Lin-Manuel Miranda · Theatre</p>
+                <span class="tag v"><svg class="mk"><use href="#i-check"/></svg><span>Matched</span></span>
+              </div>
+            </section>
+            <section>
+              <p class="lbl">Rating<button class="fav iconfav" data-toggle aria-pressed="true" aria-label="Favourite"><svg><use href="#i-heart"/></svg></button></p>
+              <div class="rate" data-rating data-value="5">
+                <button class="step-btn" data-step="-0.25" aria-label="Lower by a quarter">&minus;</button>
+                <span class="stars" role="slider" aria-valuemin="0.25" aria-valuemax="5"></span>
+                <button class="step-btn" data-step="0.25" aria-label="Raise by a quarter">+</button>
+                <span class="num"></span>
+              </div>
+            </section>
+            <section>
+              <p class="lbl">Your words</p>
+              <p class="words">honestly blown away, 5/5 and the second act wrecked me</p>
+              <div class="warn"><svg><use href="#i-alert"/></svg><span>Something you said may be missing. Have a look at what was left out.</span></div>
+              <details class="left" open>
+                <summary><svg><use href="#i-chev"/></svg>Left out (2)</summary>
+                <div style="display:grid;gap:.5rem">
+                  <div class="seg"><span>just got home from hamilton,</span><button class="btn sm">Include</button></div>
+                  <div class="seg"><span><span class="hl">though the sound mix in the first half was muddy</span></span><button class="btn sm">Include</button></div>
+                </div>
+              </details>
+            </section>
+            <section>
+              <p class="lbl">Facts</p>
+              <div class="facts">
+                <button class="fact"><span class="k">Format</span><span class="val">Live</span></button>
+                <button class="fact"><span class="k">Finished</span><span class="val">Fri 30 Oct</span></button>
+              </div>
+            </section>
+          </div>
+        </div>
+        <div class="confirm">
+          <button class="btn ghost">Discard</button>
+          <span class="need"></span>
+          <button class="btn primary">Save entry</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- C: image import -->
+    <div class="step">
+      <h2>C. From a screenshot</h2>
+      <p>An import from Fable. The screenshot stays beside what was read from it, and the rating and date need your tap.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Import</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="card">
+            <section>
+              <p class="lbl">Source<span class="tag i"><svg class="mk"><use href="#i-img"/></svg><span>Imported from Fable</span></span></p>
+              <div class="shot">
+                <div class="h"><span class="c"></span><span><span class="tt">The Night Circus</span><br><span class="by">Erin Morgenstern</span><br><span class="st">&#9733;&#9733;&#9733;&#9733;&#9734;</span></span></div>
+                <span class="by">Read 12 Mar 2024</span>
+                <p>dreamy, a bit too slow in places but the atmosphere is unmatched</p>
+              </div>
+              <p class="shotcap"><span>Screenshot 1 of 1</span><span>Compare with the text below</span></p>
+            </section>
+            <section class="work">
+              <div class="cover green lg">THE NIGHT CIRCUS</div>
+              <div>
+                <h3>The Night Circus</h3>
+                <p class="meta">2011 · Erin Morgenstern · Book</p>
+                <span class="tag v"><svg class="mk"><use href="#i-check"/></svg><span>Open Library</span></span>
+              </div>
+            </section>
+            <section>
+              <p class="lbl">Rating</p>
+              <div class="rate" data-rating data-value="4">
+                <button class="step-btn" data-step="-0.25" aria-label="Lower by a quarter">&minus;</button>
+                <span class="stars" role="slider" aria-valuemin="0.25" aria-valuemax="5"></span>
+                <button class="step-btn" data-step="0.25" aria-label="Raise by a quarter">+</button>
+                <span class="num"></span>
+              </div>
+              <button class="markbtn i" style="margin-top:.5rem"><svg class="mk"><use href="#i-img"/></svg><span>Read from the image</span></button>
+            </section>
+            <section>
+              <p class="lbl">Your words</p>
+              <p class="words">dreamy, a bit too slow in places but the atmosphere is unmatched</p>
+            </section>
+            <section>
+              <p class="lbl">Facts</p>
+              <div class="facts">
+                <button class="fact"><span class="k">Format</span><span class="val" style="color:var(--text-3)">Add format</span></button>
+                <button class="fact"><span class="k">Finished</span><span class="val">12 Mar 2024<svg class="mk" style="color:var(--imageread)"><use href="#i-img"/></svg></span></button>
+              </div>
+            </section>
+            <div class="acceptrow img">
+              <span class="t"><svg><use href="#i-img"/></svg>Rating and date were read from the image</span>
+              <button class="btn sm">Accept</button>
+            </div>
+          </div>
+        </div>
+        <div class="confirm">
+          <button class="btn ghost">Discard</button>
+          <span class="need"></span>
+          <button class="btn primary">Save entry</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- D: editing a saved entry -->
+    <div class="step">
+      <h2>D. Editing a saved entry</h2>
+      <p>Edit opens a draft of a saved entry. Nothing changes until you confirm, and the old version is kept.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Editing</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="banner"><svg><use href="#i-info"/></svg><span>You are editing a saved entry. Saving keeps the previous version.</span></div>
+          <div class="card">
+            <section class="work">
+              <div class="cover sand lg">DUNE</div>
+              <div>
+                <h3>Dune</h3>
+                <p class="meta">1965 · Frank Herbert · Book</p>
+                <span class="tag v"><svg class="mk"><use href="#i-check"/></svg><span>Open Library</span></span>
+              </div>
+            </section>
+            <section>
+              <p class="lbl">Rating</p>
+              <div class="rate" data-rating data-value="4.75">
+                <button class="step-btn" data-step="-0.25" aria-label="Lower by a quarter">&minus;</button>
+                <span class="stars" role="slider" aria-valuemin="0.25" aria-valuemax="5"></span>
+                <button class="step-btn" data-step="0.25" aria-label="Raise by a quarter">+</button>
+                <span class="num"></span>
+              </div>
+            </section>
+            <section>
+              <p class="lbl">Your words</p>
+              <textarea class="edit" rows="5" aria-label="Your words">loved it honestly, easy 4.5, the world felt so lived in but the middle dragged a bit, still thinking about it the next day</textarea>
+            </section>
+            <section>
+              <p class="lbl">What will change</p>
+              <ul class="diff">
+                <li><span class="k">Rating</span><span><span class="was">4.5</span>4.75</span></li>
+                <li><span class="k">Your words</span><span>edited</span></li>
+              </ul>
+            </section>
+            <button class="linkbtn"><svg><use href="#i-history"/></svg>2 earlier versions</button>
+          </div>
+        </div>
+        <div class="confirm">
+          <button class="btn ghost">Cancel</button>
+          <span class="need"></span>
+          <button class="btn primary">Save changes</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- E: missing rating -->
+    <div class="step">
+      <h2>E. The one thing that blocks saving</h2>
+      <p>No rating was given, so the agent says so and Save stays off. A rating and a few of your words are the only requirements.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Draft</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="you">
+            <div class="who">You</div>
+            <p>just finished the bear season 3, so good, that finale though</p>
+          </div>
+          <p class="agent">I did not catch a rating. Tap the stars to add one.</p>
+          <div class="card">
+            <section class="work">
+              <div class="cover rust lg">THE BEAR</div>
+              <div>
+                <h3>The Bear</h3>
+                <p class="meta">2022 · Christopher Storer · TV</p>
+                <span class="tag v"><svg class="mk"><use href="#i-check"/></svg><span>TMDB</span></span>
+              </div>
+            </section>
+            <section>
+              <p class="lbl">Rating<span class="tag u"><svg class="mk"><use href="#i-dash"/></svg><span>Needed</span></span></p>
+              <div class="rate" data-rating data-value="0">
+                <button class="step-btn" data-step="-0.25" aria-label="Lower by a quarter">&minus;</button>
+                <span class="stars" role="slider" aria-valuemin="0.25" aria-valuemax="5"></span>
+                <button class="step-btn" data-step="0.25" aria-label="Raise by a quarter">+</button>
+                <span class="num"></span>
+              </div>
+            </section>
+            <section>
+              <p class="lbl">Your words</p>
+              <p class="words">so good, that finale though</p>
+            </section>
+            <section>
+              <p class="lbl">Facts</p>
+              <div class="facts">
+                <button class="fact"><span class="k">Format</span><span class="val" style="color:var(--text-3)">Add format</span></button>
+                <button class="fact"><span class="k">Finished</span><span class="val">Sat 31 Oct</span></button>
+              </div>
+            </section>
+          </div>
+        </div>
+        <div class="confirm">
+          <button class="btn ghost">Discard</button>
+          <span class="need">Add a rating to save</span>
+          <button class="btn primary" disabled>Save entry</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+<script src="icons.js"></script>
+<script src="cairn.js"></script>
+</body>
+</html>

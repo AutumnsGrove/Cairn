@@ -1,0 +1,230 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cairn: entries, versions and the library chat</title>
+<link rel="stylesheet" href="cairn.css">
+</head>
+<body>
+<main class="board">
+  <h1>Entries, versions and the library chat</h1>
+  <p class="lede">What a saved entry looks like when you come back to it, how its history is kept, how a question or an edit is handled in the general chat, and how deleting works without ever erasing anything.</p>
+
+  <div class="row">
+
+    <!-- 1: entry page -->
+    <div class="step">
+      <h2>1. A saved entry</h2>
+      <p>Plain reading surface. Your words come first, the history of the same work sits below.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Entry</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll page">
+          <section class="work">
+            <div class="cover sand lg">DUNE</div>
+            <div>
+              <h3>Dune</h3>
+              <p class="meta">1965 · Frank Herbert · Book</p>
+              <span class="tag v"><svg class="mk"><use href="#i-check"/></svg><span>Open Library</span></span>
+            </div>
+          </section>
+
+          <section class="sec">
+            <p class="stamp">Fri 30 Oct · Print</p>
+            <div class="rate" data-rating data-value="4.75"><span class="stars" role="img"></span><span class="num"></span></div>
+            <p class="words" style="margin-top:1.1rem">loved it honestly, easy 4.5, the world felt so lived in but the middle dragged a bit, still thinking about it the next day</p>
+            <ul class="qa" style="margin-top:1.1rem">
+              <li><span class="qq">Writing</span><span class="aa">Good</span></li>
+              <li><span class="qq">Character</span><span class="aa">Lady Jessica</span></li>
+            </ul>
+            <div class="chips" style="margin-top:1rem"><span class="chip on">world</span><span class="chip on">pacing</span></div>
+            <div class="btnrow"><button class="btn grow">Edit</button><button class="btn grow">Log again</button></div>
+            <button class="linkbtn" style="margin-top:.5rem"><svg><use href="#i-history"/></svg>2 earlier versions</button>
+          </section>
+
+          <section class="sec">
+            <p class="lbl">Also on this work (1)</p>
+            <div class="tlrow">
+              <div class="top"><span>Mon 15 Jan 2024 · Audiobook</span><span class="rt-inline"><svg><use href="#i-star"/></svg>4</span></div>
+              <p class="sn">great narrator, the pacing felt better listening than reading</p>
+            </div>
+          </section>
+
+          <details class="why">
+            <summary>Details<svg><use href="#i-chev"/></svg></summary>
+            <dl class="kv">
+              <dt>Edition read</dt><dd>Ace paperback, 1990</dd>
+              <dt>Series</dt><dd>Dune Chronicles, book 1</dd>
+              <dt>Source</dt><dd>Open Library, fetched 30 Oct</dd>
+            </dl>
+          </details>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2: earlier versions -->
+    <div class="step">
+      <h2>2. Earlier versions</h2>
+      <p>Every confirmed edit keeps the version before it. Restoring one opens it as a new draft.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Earlier versions</div>
+          <span style="width:44px"></span>
+        </div>
+        <div class="scroll">
+          <p class="agent" style="margin-top:.25rem">Nothing is overwritten. Dune has three versions.</p>
+          <div class="ver">
+            <div class="vh"><b>Version 3<span class="pillcur">Current</span></b><span>Sat 31 Oct, 18:02</span></div>
+            <p class="ch">Rating 4.5 to 4.75. Words extended.</p>
+            <p class="words">loved it honestly, easy 4.5, the world felt so lived in but the middle dragged a bit, still thinking about it the next day</p>
+          </div>
+          <div class="ver">
+            <div class="vh"><b>Version 2</b><span>Fri 30 Oct, 21:31</span></div>
+            <p class="ch">Format set to Print.</p>
+            <p class="words">loved it honestly, easy 4.5, the world felt so lived in but the middle dragged a bit</p>
+            <div class="btnrow" style="margin:0"><button class="btn sm"><span>Restore as draft</span></button></div>
+          </div>
+          <div class="ver">
+            <div class="vh"><b>Version 1</b><span>Fri 30 Oct, 21:14</span></div>
+            <p class="ch">First saved.</p>
+            <p class="words">loved it honestly, easy 4.5, the world felt so lived in but the middle dragged a bit</p>
+            <div class="btnrow" style="margin:0"><button class="btn sm"><span>Restore as draft</span></button></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3: library chat -->
+    <div class="step">
+      <h2>3. Asking the library</h2>
+      <p>Questions are answered inline. A change is shown as a card and nothing happens until you confirm.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Ask your library</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="you"><div class="who">You</div><p>what did i read in march 2024?</p></div>
+          <div class="act"><svg><use href="#i-search"/></svg><span>Searched your library</span></div>
+          <p class="agent">One book.</p>
+          <div class="res">
+            <button class="ent"><span class="cover green">NIGHT CIRCUS</span><span><p class="tt">The Night Circus</p><p class="mm">Book · 12 Mar 2024</p></span><span class="rt"><svg><use href="#i-star"/></svg>4</span></button>
+          </div>
+
+          <div class="you" style="margin-top:1.6rem"><div class="who">You</div><p>make hades 2 a 4.5</p></div>
+          <p class="agent">Here is the change. Nothing is saved until you confirm.</p>
+          <div class="confirmbox">
+            <p style="margin:0 0 .6rem"><span style="font:500 1.125rem 'Fraunces',serif;color:var(--text)">Hades II</span></p>
+            <ul class="chg"><li><span class="k">Rating</span><span><span class="was">4.25</span>4.5</span></li></ul>
+            <div class="formfoot" style="margin-top:0"><button class="btn ghost">Cancel</button><button class="btn primary grow">Confirm change</button></div>
+            <p class="note">The previous version is kept.</p>
+          </div>
+        </div>
+        <div class="composer">
+          <div class="box">
+            <button class="attach" aria-label="Attach a screenshot"><svg><use href="#i-clip"/></svg></button>
+            <textarea rows="1" placeholder="Ask about your library"></textarea>
+            <button class="send" disabled aria-label="Send"><svg><use href="#i-send"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4: entry menu -->
+    <div class="step">
+      <h2>4. The entry menu</h2>
+      <p>Delete lives here and only here. It is never offered in chat.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Entry</div>
+          <button class="iconbtn" aria-label="More" style="background:var(--panel);color:var(--text)"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="menu" role="menu">
+          <button role="menuitem"><svg><use href="#i-pencil"/></svg>Edit</button>
+          <button role="menuitem"><svg><use href="#i-plus"/></svg>Log again</button>
+          <button role="menuitem"><svg><use href="#i-history"/></svg>Earlier versions</button>
+          <button role="menuitem" class="dangerbtn"><svg><use href="#i-trash"/></svg>Delete</button>
+        </div>
+        <div class="scroll page">
+          <section class="work">
+            <div class="cover sand lg">DUNE</div>
+            <div>
+              <h3>Dune</h3>
+              <p class="meta">1965 · Frank Herbert · Book</p>
+              <span class="tag v"><svg class="mk"><use href="#i-check"/></svg><span>Open Library</span></span>
+            </div>
+          </section>
+          <section class="sec">
+            <p class="stamp">Fri 30 Oct · Print</p>
+            <div class="rate" data-rating data-value="4.75"><span class="stars" role="img"></span><span class="num"></span></div>
+            <p class="words" style="margin-top:1.1rem">loved it honestly, easy 4.5, the world felt so lived in but the middle dragged a bit, still thinking about it the next day</p>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5: delete confirm, inline -->
+    <div class="step">
+      <h2>5. Deleting, inline</h2>
+      <p>No modal. The confirmation appears in the page, says what will happen, and the default is to keep.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Entry</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll page">
+          <section class="work">
+            <div class="cover sand lg">DUNE</div>
+            <div>
+              <h3>Dune</h3>
+              <p class="meta">1965 · Frank Herbert · Book</p>
+              <span class="tag v"><svg class="mk"><use href="#i-check"/></svg><span>Open Library</span></span>
+            </div>
+          </section>
+          <div class="confirmbox">
+            <p><b>Delete this entry?</b> It moves to Deleted and disappears from your library. Nothing is erased, and you can restore it any time.</p>
+            <div class="formfoot" style="margin-top:0"><button class="btn primary grow">Keep it</button><button class="btn danger">Delete</button></div>
+          </div>
+          <section class="sec">
+            <p class="stamp">Fri 30 Oct · Print</p>
+            <div class="rate" data-rating data-value="4.75"><span class="stars" role="img"></span><span class="num"></span></div>
+            <p class="words" style="margin-top:1.1rem">loved it honestly, easy 4.5, the world felt so lived in but the middle dragged a bit, still thinking about it the next day</p>
+          </section>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6: deleted -->
+    <div class="step">
+      <h2>6. Deleted</h2>
+      <p>Hidden, never erased. Restoring puts an entry straight back in the library.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Deleted</div>
+          <span style="width:44px"></span>
+        </div>
+        <div class="scroll">
+          <p class="agent" style="margin-top:.25rem">Deleted entries stay in your backups. This list is the only place they show up.</p>
+          <ul class="list" style="margin-top:.5rem">
+            <li><div class="ent"><span class="cover sand">DUNE</span><span><p class="tt">Dune</p><p class="mm">Deleted Fri 30 Oct · a duplicate</p></span><button class="btn sm"><span style="display:inline-flex;gap:.4rem;align-items:center"><svg style="width:14px;height:14px"><use href="#i-restore"/></svg>Restore</span></button></div></li>
+            <li><div class="ent"><span class="cover plum">HADES II</span><span><p class="tt">Hades II</p><p class="mm">Deleted Tue 20 Oct · logged too early</p></span><button class="btn sm"><span style="display:inline-flex;gap:.4rem;align-items:center"><svg style="width:14px;height:14px"><use href="#i-restore"/></svg>Restore</span></button></div></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+<script src="icons.js"></script>
+<script src="cairn.js"></script>
+</body>
+</html>

@@ -17,7 +17,8 @@ function mountRating(root) {
       s.innerHTML = '<span class="base">' + STAR + '</span><span class="fillbox" style="width:' + pct + '%">' + STAR + "</span>";
       stars.appendChild(s);
     }
-    num.textContent = value ? value.toFixed(2).replace(/0$/, "") : "0";
+    num.textContent = value ? value.toFixed(2).replace(/0$/, "") : "Not rated";
+    num.classList.toggle("dim", !value);
     stars.setAttribute("aria-label", value + " out of 5");
   }
   function set(v) { value = Math.max(0.25, Math.min(5, Math.round(v * 4) / 4)); paint(); }

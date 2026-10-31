@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cairn: home, drafts and library</title>
+<link rel="stylesheet" href="cairn.css">
+</head>
+<body>
+<main class="board">
+  <h1>Home, drafts and library</h1>
+  <p class="lede">Home is a launcher, not a chat: the composer sits where the thumb is, and anything above it is one tap from where you left off. Reading happens on plain lists, with no cards and no clutter.</p>
+
+  <div class="row">
+
+    <!-- 1: home -->
+    <div class="step">
+      <h2>1. Home</h2>
+      <p>The composer is the front door. Drafts that are waiting on you sit above recent entries.</p>
+      <div class="phone">
+        <div class="topbar">
+          <div class="wordmark">Cairn</div>
+          <button class="iconbtn badge" aria-label="Drafts, 2 waiting"><svg><use href="#i-drafts"/></svg><i>2</i></button>
+          <button class="iconbtn" aria-label="Library"><svg><use href="#i-library"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="sect">
+            <p class="lbl">Waiting for you<a class="more" href="#">All drafts</a></p>
+            <ul class="list">
+              <li><button class="ent d">
+                <span><p class="tt">The Bear</p><p class="st"><svg><use href="#i-dash"/></svg>Needs a rating</p></span>
+                <span class="age">2 h ago</span>
+              </button></li>
+              <li><button class="ent d">
+                <span><p class="tt">The Salt Road</p><p class="st"><svg><use href="#i-dash"/></svg>Web fields to accept</p></span>
+                <span class="age">Yesterday</span>
+              </button></li>
+            </ul>
+          </div>
+
+          <div class="sect">
+            <p class="lbl">Recent<a class="more" href="#">Library</a></p>
+            <ul class="list">
+              <li><button class="ent"><span class="cover sand">DUNE</span><span><p class="tt">Dune</p><p class="mm">Book · 30 Oct</p></span><span class="rt"><svg><use href="#i-star"/></svg>4.5</span></button></li>
+              <li><button class="ent"><span class="cover slate">BLADE RUNNER</span><span><p class="tt">Blade Runner 2049</p><p class="mm">Film · 27 Oct</p></span><span class="rt"><span class="hrt"><svg><use href="#i-heart"/></svg></span><svg><use href="#i-star"/></svg>4.75</span></button></li>
+              <li><button class="ent"><span class="cover rust">HAMILTON</span><span><p class="tt">Hamilton</p><p class="mm">Theatre · 18 Oct</p></span><span class="rt"><span class="hrt"><svg><use href="#i-heart"/></svg></span><svg><use href="#i-star"/></svg>5</span></button></li>
+              <li><button class="ent"><span class="cover plum">HADES II</span><span><p class="tt">Hades II</p><p class="mm">Game · 12 Oct</p></span><span class="rt"><svg><use href="#i-star"/></svg>4.25</span></button></li>
+            </ul>
+          </div>
+        </div>
+        <div class="composer">
+          <div class="box">
+            <button class="attach" aria-label="Attach a screenshot"><svg><use href="#i-clip"/></svg></button>
+            <textarea rows="1" placeholder="Say what you thought"></textarea>
+            <button class="send" disabled aria-label="Send"><svg><use href="#i-send"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2: first run -->
+    <div class="step">
+      <h2>2. First run</h2>
+      <p>An empty library teaches by example. Tapping one fills the composer, and nothing is sent until you do.</p>
+      <div class="phone">
+        <div class="topbar">
+          <div class="wordmark">Cairn</div>
+          <button class="iconbtn" aria-label="Drafts"><svg><use href="#i-drafts"/></svg></button>
+          <button class="iconbtn" aria-label="Library"><svg><use href="#i-library"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="empty">
+            <h2>Finished something?</h2>
+            <p>Say what you thought, the way you would out loud. Cairn finds the details and asks a few questions.</p>
+            <div class="ex">
+              <button>finished dune last night, loved it, easy 4.5, the world felt so lived in</button>
+              <button>watched blade runner 2049 at the cinema, 5/5, the sound design carried it</button>
+              <button>just beat hades 2, 4 stars, the boss fights were great but the story dragged</button>
+            </div>
+          </div>
+        </div>
+        <div class="composer">
+          <div class="box">
+            <button class="attach" aria-label="Attach a screenshot"><svg><use href="#i-clip"/></svg></button>
+            <textarea rows="1" placeholder="Say what you thought"></textarea>
+            <button class="send" disabled aria-label="Send"><svg><use href="#i-send"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3: drafts -->
+    <div class="step">
+      <h2>3. Drafts</h2>
+      <p>Each row says exactly what it is waiting for. Drafts never expire, so nothing is lost.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Drafts</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <ul class="list">
+            <li><button class="ent d">
+              <span><p class="tt">The Bear</p><p class="st"><svg><use href="#i-dash"/></svg>Needs a rating</p><p class="mm">&ldquo;just finished the bear season 3, so good&hellip;&rdquo;</p></span>
+              <span class="age">2 h ago</span>
+            </button></li>
+            <li><button class="ent d">
+              <span><p class="tt">The Salt Road</p><p class="st"><svg><use href="#i-dash"/></svg>Web fields to accept, then ready to save</p><p class="mm">&ldquo;small cast, no set to speak of&hellip;&rdquo;</p></span>
+              <span class="age">Yesterday</span>
+            </button></li>
+            <li><button class="ent d">
+              <span><p class="tt" style="font-style:italic;font-weight:400">Not identified yet</p><p class="st"><svg><use href="#i-dash"/></svg>Waiting for you to pick which one</p><p class="mm">&ldquo;reread the left hand of darkness again, still&hellip;&rdquo;</p></span>
+              <span class="age">3 days ago</span>
+            </button></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4: library -->
+    <div class="step">
+      <h2>4. Library</h2>
+      <p>One list across every medium, grouped by month. Filter by medium, or search your own words.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Library</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <label class="search"><svg><use href="#i-search"/></svg><input placeholder="Search titles and your words" aria-label="Search"></label>
+          <div class="chipsrow" data-pillsrow>
+            <button class="chip" aria-pressed="true">All</button>
+            <button class="chip" aria-pressed="false">Film</button>
+            <button class="chip" aria-pressed="false">TV</button>
+            <button class="chip" aria-pressed="false">Book</button>
+            <button class="chip" aria-pressed="false">Game</button>
+            <button class="chip" aria-pressed="false">Album</button>
+            <button class="chip" aria-pressed="false">Theatre</button>
+          </div>
+          <div class="toolrow"><span>42 entries</span><button class="linkbtn"><svg><use href="#i-sort"/></svg>Newest first</button></div>
+
+          <p class="grp">October 2026</p>
+          <ul class="list">
+            <li><button class="ent"><span class="cover sand">DUNE</span><span><p class="tt">Dune</p><p class="mm">Book · 30 Oct</p></span><span class="rt"><svg><use href="#i-star"/></svg>4.5</span></button></li>
+            <li><button class="ent"><span class="cover slate">BLADE RUNNER</span><span><p class="tt">Blade Runner 2049</p><p class="mm">Film · 27 Oct</p></span><span class="rt"><span class="hrt"><svg><use href="#i-heart"/></svg></span><svg><use href="#i-star"/></svg>4.75</span></button></li>
+            <li><button class="ent"><span class="cover rust">HAMILTON</span><span><p class="tt">Hamilton</p><p class="mm">Theatre · 18 Oct</p></span><span class="rt"><span class="hrt"><svg><use href="#i-heart"/></svg></span><svg><use href="#i-star"/></svg>5</span></button></li>
+            <li><button class="ent"><span class="cover plum">HADES II</span><span><p class="tt">Hades II</p><p class="mm">Game · 12 Oct</p></span><span class="rt"><svg><use href="#i-star"/></svg>4.25</span></button></li>
+          </ul>
+          <p class="grp">September 2026</p>
+          <ul class="list">
+            <li><button class="ent"><span class="cover teal">PIRANESI</span><span><p class="tt">Piranesi</p><p class="mm">Book · 28 Sep</p></span><span class="rt"><svg><use href="#i-star"/></svg>4.75</span></button></li>
+            <li><button class="ent"><span class="cover ink">SEVERANCE</span><span><p class="tt">Severance</p><p class="mm">TV · 14 Sep</p></span><span class="rt"><svg><use href="#i-star"/></svg>4.5</span></button></li>
+            <li><button class="ent"><span class="cover green">PARABLE</span><span><p class="tt">Parable of the Sower</p><p class="mm">Book · 2 Sep</p></span><span class="rt"><svg><use href="#i-star"/></svg>3.75</span></button></li>
+          </ul>
+          <p class="grp">March 2024</p>
+          <ul class="list">
+            <li><button class="ent"><span class="cover green">NIGHT CIRCUS</span><span><p class="tt">The Night Circus</p><p class="mm">Book · 12 Mar · <span class="tag i" style="vertical-align:baseline"><svg class="mk" style="width:12px;height:12px"><use href="#i-img"/></svg><span>Imported</span></span></p></span><span class="rt"><svg><use href="#i-star"/></svg>4</span></button></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5: searching your own words -->
+    <div class="step">
+      <h2>5. Searching your words</h2>
+      <p>Search reads what you wrote, not just titles, and shows the sentence it found.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Library</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <label class="search"><svg><use href="#i-search"/></svg><input value="slow" aria-label="Search"><button class="iconbtn" style="width:36px;height:36px;margin-right:-.5rem" aria-label="Clear"><svg><use href="#i-x"/></svg></button></label>
+          <div class="toolrow" style="margin-top:.9rem"><span>3 entries mention &ldquo;slow&rdquo;</span><button class="linkbtn"><svg><use href="#i-sort"/></svg>Best match</button></div>
+          <ul class="list" style="margin-top:.4rem">
+            <li><button class="ent"><span class="cover green">NIGHT CIRCUS</span><span><p class="tt">The Night Circus</p><p class="mm">Book · 12 Mar 2024</p><p class="sn">&hellip;a bit too <mark class="m">slow</mark> in places but the atmosphere is unmatched</p></span><span class="rt"><svg><use href="#i-star"/></svg>4</span></button></li>
+            <li><button class="ent"><span class="cover teal">PIRANESI</span><span><p class="tt">Piranesi</p><p class="mm">Book · 28 Sep</p><p class="sn">&hellip;started <mark class="m">slow</mark> but then it grabbed me and would not let go</p></span><span class="rt"><svg><use href="#i-star"/></svg>4.75</span></button></li>
+            <li><button class="ent"><span class="cover ink">SEVERANCE</span><span><p class="tt">Severance</p><p class="mm">TV · 14 Sep</p><p class="sn">&hellip;season two felt <mark class="m">slow</mark> to me, though the finale paid it off</p></span><span class="rt"><svg><use href="#i-star"/></svg>4.5</span></button></li>
+          </ul>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+<script src="icons.js"></script>
+<script src="cairn.js"></script>
+<script>
+  document.querySelectorAll("[data-pillsrow]").forEach((g) => g.addEventListener("click", (e) => {
+    const b = e.target.closest(".chip"); if (!b) return;
+    g.querySelectorAll(".chip").forEach((x) => x.setAttribute("aria-pressed", "false"));
+    b.setAttribute("aria-pressed", "true");
+  }));
+</script>
+</body>
+</html>
