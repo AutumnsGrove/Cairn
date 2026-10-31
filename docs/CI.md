@@ -22,8 +22,9 @@ and Playwright browsers.
 | `bench` | Short benchmarks compared with the base commit via `benchstat`, advisory until the numbers are trusted |
 | `coverage` | Coverage floors on the critical packages: spans, rating, merge, guards, protocol, decisions, update, database triggers |
 
-Required status checks on main: `go`, `nocgo`, `drift`, `web`, `e2e`, `guard`, `deps`, `codeql`,
-`coverage`. `bench` stays advisory.
+Required status checks on main: `go`, `nocgo`, `coverage`, `web`, `e2e`, `guard`, `deps`, `codeql`.
+`drift` joins them in S02, when `api/` first has something to generate, and `bench` stays advisory until its
+numbers are trusted.
 
 ## 2. On merge to main (`docker-publish.yml`)
 
@@ -56,8 +57,15 @@ pulls the image and compiles nothing. This is what the update flow ([`UPDATE.md`
 4. **No self-hosted runners,** because a public repo plus a self-hosted runner lets any PR run code on that
    machine. GitHub-hosted runners only.
 5. **Secrets:** none in the repo or at repository level. Eval credentials live in protected Environments.
-6. **Repository settings:** secret scanning and push protection on, a branch ruleset on main (PRs required,
-   required checks, no force-push), a `CODEOWNERS` file, and a `SECURITY.md` with a private reporting route.
+6. **Repository settings:** secret scanning and push protection on, a `CODEOWNERS` file, and a `SECURITY.md`
+   with a private reporting route. The branch ruleset on `main` has two phases, because a single-user repo
+   pushing straight to `main` cannot also require a pull request:
+   - **S00 to S12 (now):** direct pushes allowed; **force-push and deletion blocked**; required checks run on
+     `push` as well as `pull_request`, so `main` is never ahead of a green run for long; linear history.
+   - **From S13 (deploy and update):** pull requests required, the required checks below plus one approving
+     review, no direct pushes. This is the phase [`../docs/BUILD.md`](../docs/BUILD.md) 5 describes as the
+     default.
+   The switch is a repository setting, not a code change, and it is listed on the S13 checklist.
 7. **Logs are public.** Tests use **synthetic reviews and invented titles only**. A real review of yours must
    never appear in a test, a fixture or a CI log.
 8. **Untrusted workflow inputs** (PR titles, branch names, commit messages) are never interpolated into shell
@@ -65,7 +73,9 @@ pulls the image and compiles nothing. This is what the update flow ([`UPDATE.md`
 
 ## 5. Definition of done for CI
 
-- A pull request cannot merge with a failing required check, and a force-push to main is impossible.
+- A failing required check on `main` is visible in the run for that push, and a force-push or branch deletion
+  is impossible in either phase.
+- After S13, a pull request cannot merge with a failing required check.
 - A brand-new fuzz target without a seed corpus fails `guard`.
 - `govulncheck` fails the build on a reachable vulnerability, and the nightly run catches advisories
   published after a merge.

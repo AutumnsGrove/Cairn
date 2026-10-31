@@ -1,0 +1,48 @@
+version: 2
+
+# Cairn is a public repository with no secrets at repository level and no self-hosted runners
+# (docs/CI.md 4). Dependabot keeps the three dependency surfaces current, each update going through
+# the same required checks as any other change.
+
+updates:
+  - package-ecosystem: gomod
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      go-minor-and-patch:
+        patterns: ['*']
+        update-types: [minor, patch]
+
+  - package-ecosystem: npm
+    directory: /web
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      web-minor-and-patch:
+        patterns: ['*']
+        update-types: [minor, patch]
+
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 5
+    groups:
+      actions:
+        patterns: ['*']
+
+  - package-ecosystem: docker
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    ignore:
+      # The image's base is pinned by digest and bumped deliberately, with the update flow tested (S13).
+      - dependency-name: '*'
+        update-types: [version-update:semver-major]

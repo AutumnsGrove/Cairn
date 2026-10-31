@@ -54,15 +54,20 @@ never guess otherwise.
 - Pure Go, no cgo (except `go test -race`). Standard library first; a new dependency needs a `STACK.md` entry.
 - Update the docs, the plan and the slice status in the same commit as the code.
 
-## Commands (created by S00)
+## Commands (built in S00)
 
 ```bash
-make check      # format, vet, lint, race tests, a short fuzz smoke, frontend checks
+make check      # format, vet, lint, race tests, a short fuzz smoke, frontend checks, guard
 make test       # go test -race ./... (cgo on for the race runtime only)
-make gen        # regenerate types from api/ (CI fails on drift)
-make web        # build the frontend into a scratch directory
-go run ./cmd/cairn-dev   # the real service against the in-process world, offline
+make e2e        # Playwright against the real binary and the world, on a phone viewport
+make gen        # regenerate types from api/ (nothing to generate until S02)
+make web        # build the frontend into a scratch directory and into internal/webui/dist
+make dev        # the real service against the in-process world, offline
+make guard      # embed placeholder, fuzz seeds, no live provider in tests, gitleaks
 ```
+
+The frontend lives in `web/` and needs `pnpm install` once. `make web-check` runs svelte-check,
+ESLint, Prettier and Vitest.
 
 ## Checking UI by eye
 

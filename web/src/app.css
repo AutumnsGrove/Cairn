@@ -1,0 +1,82 @@
+/* Cairn: the design tokens, taken from mockups/cairn.css, which is the source of truth.
+ *
+ * A token value or name may not drift from the mockup: src/lib/tokens.test.ts reads both files and fails if
+ * this block is missing one of the mockup's tokens, so "it looked fine on my screen" is not the only check.
+ * Dark only. Lexend for the interface, Fraunces for titles. */
+
+@font-face {
+  font-family: 'Lexend';
+  src: url('/fonts/lexend-latin-wght-normal.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+@font-face {
+  font-family: 'Fraunces';
+  src: url('/fonts/fraunces-latin-opsz-normal.woff2') format('woff2');
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+:root {
+  /* Warm-tinted neutrals, one hue, no pure black or white */
+  --bg: oklch(0.175 0.008 70);
+  --panel: oklch(0.215 0.01 70);
+  --raised: oklch(0.255 0.011 70);
+  --line: oklch(0.33 0.01 70);
+  --text: oklch(0.91 0.012 82);
+  --text-2: oklch(0.74 0.012 78);
+  --text-3: oklch(0.65 0.01 74);
+
+  /* Lichen: a little more chroma than the first sketch */
+  --accent: oklch(0.74 0.115 138);
+  --accent-ink: oklch(0.2 0.04 138);
+  --accent-soft: oklch(0.31 0.06 138);
+
+  --unverified: oklch(0.79 0.1 82);
+  --unverified-soft: oklch(0.29 0.045 82);
+  --imageread: oklch(0.76 0.06 235);
+  --danger: oklch(0.7 0.12 30);
+
+  --r-sm: 8px;
+  --r-md: 12px;
+  --r-lg: 16px;
+  --ease: cubic-bezier(0.25, 1, 0.5, 1); /* ease-out-quart */
+  color-scheme: dark;
+}
+
+* {
+  box-sizing: border-box;
+}
+html {
+  background: var(--bg);
+}
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font:
+    400 1rem/1.5 'Lexend',
+    system-ui,
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+button,
+input,
+textarea {
+  font: inherit;
+  color: inherit;
+}
+:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}

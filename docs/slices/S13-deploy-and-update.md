@@ -62,6 +62,18 @@ scratch container, and the secrets plan.
 
 ## Open questions
 
+- **Host networking or a published port?** (opened by S00). The service refuses any bind that is not loopback,
+  which is the rule in `STANDARDS.md` 6 and is enforced in `config.Load`; the container proved it by refusing
+  `CAIRN_ADDR=0.0.0.0:8893` and exiting 1. That leaves two coherent shapes:
+  - **Host networking** (`network_mode: host`): the container's `127.0.0.1` is the potato's, so the loopback
+    rule stays literally true, a compose mistake cannot publish the port, and the Cairn container can reach
+    Polaris on `127.0.0.1:8899` directly, which closes `PLAN.md` open question 3. Cost: no port mapping, no
+    per-container health isolation, and it only behaves on Linux, so `cairn-dev` stays the macOS story.
+  - **Published loopback port** (`127.0.0.1:8893:8893`, the Warbler pattern): the process must bind all
+    interfaces *inside* its own namespace, so the loopback-only rule in `config.Load` needs an explicit,
+    narrowly named exception. The safety then rests on the compose line and the Host check.
+  *Recommended: host networking*, because it keeps the rule true in the code rather than in a YAML file. This
+  needs Autumn's decision before S13.1.
 - Whether the watcher also fast-forwards the checkout as Polaris's does (proposed: yes, so config templates land
   with the image).
 

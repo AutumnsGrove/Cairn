@@ -125,3 +125,27 @@ only in the `backend:` block of the decisions config, so another model can repla
   not copied (`docs/question-banks/`).
 - **Testing and CI standard** adapted from Ivy: `docs/TESTING.md` and `docs/CI.md`. The repo is public, so the
   public-repo security rules apply, and tests use synthetic reviews only.
+
+## 2026-10-31 (later) — what S00 taught
+
+- **SvelteKit 3 is a different shape.** No `svelte.config.js` (it is an error, not a warning): the adapter,
+  CSP and prerender settings go in `sveltekit({...})` inside `vite.config.ts`, and `sveltekit()` returns a
+  promise of plugins. `tsconfig.json` extends `"$app/tsconfig"`. Worth knowing before S10 touches the shell.
+- **Node 26 + pnpm 10 resolve from `web/node_modules` first,** so a package that a *build output* imports must
+  be a dependency of the app, not only of Kit. `cookie` is the first one.
+- **The mockups are boards, not phone pages.** Each page is a 390px frame laid out in a row for a desktop
+  window; a phone viewport shows the first frame cut off. Render the board wide to review it, and compare a
+  single frame when checking the app.
+- **A borrowed global `node_modules` in `$HOME` breaks builds in confusing ways.** If a build fails with a
+  CommonJS named-export error from inside `.svelte-kit/output`, look up the directory tree before debugging
+  the app.
+
+### 2026-10-31 — the container bind question, opened by S00
+
+The service refused to start in the container with `CAIRN_ADDR=0.0.0.0:8893`, which is the right refusal: the
+loopback rule lives in `config.Load`, not in a compose file. That leaves the potato's deployment with two
+shapes (host networking, or a published loopback port with an explicit exception), and the decision is Autumn's
+at S13. Recommendation and the trade-off are in `docs/slices/S13-deploy-and-update.md`.
+
+Worth noting: with host networking, the "how does the container reach Polaris" question in `PLAN.md` 3
+disappears, because both processes share the host's loopback.
