@@ -10,9 +10,9 @@ off it. Decisions are from the 2026-10-31 planning session; the rules they serve
 | Block | Contents | States |
 |---|---|---|
 | Work | Cover, title, year, creators, medium | `verified` (an API), `unverified` (web or manual), `accepted` (a web field I tapped) |
-| Rating | Quarter-star rating and the favourite flag | `set`, or `empty` (shown as needed) |
+| Rating | Quarter-star rating, with the favourite heart in the label row | `set`, or `empty` (shown as needed) |
+| My words | Verdict (one line) and body | `extracted`, `typed`, `mixed`, `imported`; see section 3 |
 | Facts | Format, date finished | `parsed`, `suggested` (from the decisions layer), `empty` |
-| My words | Verdict (one line) and body | `extracted`, `typed`, `mixed`; see section 3 |
 | Left out | The parts of my messages not kept | collapsed; each segment has a tap to include it |
 | Answers | The question cards I answered | `answered`, `skipped` (greyed) |
 | Tags | Suggested chips and my own | `suggested`, `accepted` |

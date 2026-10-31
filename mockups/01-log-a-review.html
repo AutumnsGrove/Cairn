@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cairn: logging a review</title>
+<link rel="stylesheet" href="cairn.css">
+</head>
+<body>
+
+<main class="board">
+  <h1>Logging a review</h1>
+  <p class="lede">One message, five moments. Dune is a real split case: the title could be the book or a film, so the app asks first. Everything here is clickable: drag the stars, tap the pills, open the sections.</p>
+
+  <div class="row">
+
+    <!-- 1: the split medium read -->
+    <div class="step">
+      <h2>1. A split read</h2>
+      <p>The pre-read could not tell the book from the film, so it asks before looking anything up.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">New entry</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="you">
+            <div class="who">You</div>
+            <p>finished dune last night, loved it honestly, easy 4.5, the world felt so lived in but the middle dragged a bit</p>
+          </div>
+          <div class="act"><svg><use href="#i-read"/></svg><span>Read your message</span><button class="why">why</button></div>
+
+          <div class="ix">
+            <p class="q">Book or film?</p>
+            <p class="hintline">Dune could be either.</p>
+            <div class="opts" data-choice>
+              <button class="opt" aria-checked="false"><span class="l">The book</span><span class="s">novel</span></button>
+              <button class="opt" aria-checked="false"><span class="l">A film</span><span class="s">movie</span></button>
+              <button class="opt" aria-checked="false"><span class="l">Something else</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="composer">
+          <div class="box">
+            <button class="attach" aria-label="Attach a screenshot"><svg><use href="#i-clip"/></svg></button>
+            <textarea rows="1" placeholder="Say what you thought"></textarea>
+            <button class="send" disabled aria-label="Send"><svg><use href="#i-send"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2: candidates -->
+    <div class="step">
+      <h2>2. Pick the right one</h2>
+      <p>Open Library returns a few candidates. The book is the work, not an edition.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">New entry</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="you">
+            <div class="who">You</div>
+            <p>finished dune last night, loved it honestly, easy 4.5, the world felt so lived in but the middle dragged a bit</p>
+          </div>
+          <div class="act"><svg><use href="#i-read"/></svg><span>Read as a book</span><button class="why">why</button></div>
+          <div class="act"><svg><use href="#i-search"/></svg><span>Looked up Open Library</span></div>
+
+          <div class="ix">
+            <p class="q">Which one?</p>
+            <p class="hintline">Tap the one you finished.</p>
+            <div class="opts" data-choice>
+              <button class="opt sel" aria-checked="true">
+                <span class="cand"><span class="cover sand">DUNE</span><span><p class="tt">Dune</p><p class="mm">Frank Herbert · 1965</p></span></span>
+              </button>
+              <button class="opt" aria-checked="false">
+                <span class="cand"><span class="cover rust">DUNE MESSIAH</span><span><p class="tt">Dune Messiah</p><p class="mm">Frank Herbert · 1969</p></span></span>
+              </button>
+              <button class="opt" aria-checked="false">
+                <span class="cand"><span class="cover slate">DUNE</span><span><p class="tt">Dune: The Graphic Novel</p><p class="mm">Brian Herbert, Kevin J. Anderson · 2020</p></span></span>
+              </button>
+              <button class="opt" aria-checked="false"><span class="l">None of these</span></button>
+            </div>
+          </div>
+        </div>
+        <div class="composer">
+          <div class="box">
+            <button class="attach" aria-label="Attach a screenshot"><svg><use href="#i-clip"/></svg></button>
+            <textarea rows="1" placeholder="Say what you thought"></textarea>
+            <button class="send" disabled aria-label="Send"><svg><use href="#i-send"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3: question form -->
+    <div class="step">
+      <h2>3. A few quick questions</h2>
+      <p>Pacing and the world were already in the message, so those are not asked again.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Dune</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="act"><svg><use href="#i-check"/></svg><span>Matched Dune (1965)</span></div>
+          <p class="agent">Four quick ones. Skip any you like.</p>
+
+          <div class="ix">
+            <div class="qf">
+              <div>
+                <p class="lab">What did you think of the writing itself?</p>
+                <div class="pills" data-pills>
+                  <button class="pill" aria-pressed="false">Hard going</button>
+                  <button class="pill" aria-pressed="false">Plain</button>
+                  <button class="pill" aria-pressed="true">Good</button>
+                  <button class="pill" aria-pressed="false">Beautiful</button>
+                </div>
+              </div>
+              <div>
+                <p class="lab">Which character stayed with you?</p>
+                <input class="field" value="Lady Jessica" aria-label="Character">
+              </div>
+              <div>
+                <p class="lab">How did the ending land?</p>
+                <div class="pills" data-pills>
+                  <button class="pill" aria-pressed="false">Let me down</button>
+                  <button class="pill" aria-pressed="false">Fine</button>
+                  <button class="pill" aria-pressed="false">It landed</button>
+                  <button class="pill" aria-pressed="false">It stuck with me</button>
+                </div>
+              </div>
+              <div>
+                <p class="lab">Would you recommend it?</p>
+                <div class="pills" data-pills>
+                  <button class="pill" aria-pressed="false">No</button>
+                  <button class="pill" aria-pressed="false">With caveats</button>
+                  <button class="pill hint" aria-pressed="false">Yes</button>
+                  <button class="pill" aria-pressed="false">To everyone</button>
+                </div>
+                <p class="hintnote">Dashed means suggested from what you wrote. Nothing is chosen until you tap.</p>
+              </div>
+            </div>
+            <div class="formfoot">
+              <button class="btn ghost">Skip the rest</button>
+              <button class="btn primary grow">Done</button>
+            </div>
+          </div>
+        </div>
+        <div class="composer">
+          <div class="box">
+            <button class="attach" aria-label="Attach a screenshot"><svg><use href="#i-clip"/></svg></button>
+            <textarea rows="1" placeholder="Or just tell me more"></textarea>
+            <button class="send" disabled aria-label="Send"><svg><use href="#i-send"/></svg></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4: the draft card -->
+    <div class="step">
+      <h2>4. Check the card</h2>
+      <p>Tap anything to fix it, or type a correction below. Your words are cut out of your message, never rewritten.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Draft</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="card">
+            <section class="work">
+              <div class="cover sand lg">DUNE</div>
+              <div>
+                <h3>Dune</h3>
+                <p class="meta">1965 · Frank Herbert · Book</p>
+                <span class="tag v"><svg class="mk"><use href="#i-check"/></svg><span>Open Library</span></span>
+              </div>
+            </section>
+
+            <section>
+              <p class="lbl">Rating<button class="fav iconfav" data-toggle aria-pressed="false" aria-label="Favourite"><svg><use href="#i-heart"/></svg></button></p>
+              <div class="rate" data-rating data-value="4.5">
+                <button class="step-btn" data-step="-0.25" aria-label="Lower by a quarter">&minus;</button>
+                <span class="stars" role="slider" aria-valuemin="0.25" aria-valuemax="5"></span>
+                <button class="step-btn" data-step="0.25" aria-label="Raise by a quarter">+</button>
+                <span class="num"></span>
+              </div>
+            </section>
+
+            <section>
+              <p class="lbl">Your words</p>
+              <p class="words">loved it honestly, easy 4.5, the world felt so lived in but the middle dragged a bit</p>
+              <details class="left">
+                <summary><svg><use href="#i-chev"/></svg>Left out (1)</summary>
+                <div class="seg"><span>finished dune last night,</span><button class="btn sm">Include</button></div>
+              </details>
+            </section>
+
+            <section>
+              <p class="lbl">Facts</p>
+              <div class="facts">
+                <button class="fact"><span class="k">Format</span><span class="val" style="color:var(--text-3)">Add format</span></button>
+                <button class="fact"><span class="k">Finished</span><span class="val">Fri 30 Oct</span></button>
+              </div>
+            </section>
+
+            <section>
+              <p class="lbl">Answers</p>
+              <ul class="qa">
+                <li><span class="qq">Writing</span><span class="aa">Good</span></li>
+                <li><span class="qq">Character</span><span class="aa">Lady Jessica</span></li>
+                <li><span class="qq">Ending</span><span class="aa skipped">Skipped</span></li>
+                <li><span class="qq">Recommend</span><span class="aa skipped">Skipped</span></li>
+              </ul>
+            </section>
+
+            <section>
+              <p class="lbl">Tags</p>
+              <div class="chips">
+                <span class="chip on">world</span><span class="chip on">pacing</span>
+                <span class="chip sug">sci-fi</span><span class="chip sug">classic</span>
+                <button class="chip">+ add</button>
+              </div>
+            </section>
+
+            <details class="why">
+              <summary>How this was read<svg><use href="#i-chev"/></svg></summary>
+              <div class="odds-list">
+                <div class="o"><span>Intent: log</span><span class="bar"><i class="hit" style="width:94%"></i></span><span class="p">94%</span></div>
+                <div class="o"><span>Medium: book</span><span class="bar"><i style="width:55%"></i></span><span class="p">55%</span></div>
+                <div class="o"><span>Medium: film</span><span class="bar"><i style="width:40%"></i></span><span class="p">40%</span></div>
+                <div class="o"><span>Mentions world</span><span class="bar"><i class="hit" style="width:91%"></i></span><span class="p">91%</span></div>
+                <div class="o"><span>Mentions pacing</span><span class="bar"><i class="hit" style="width:87%"></i></span><span class="p">87%</span></div>
+                <div class="o"><span>Format stated</span><span class="bar"><i style="width:9%"></i></span><span class="p">9%</span></div>
+              </div>
+            </details>
+          </div>
+        </div>
+        <div class="confirm">
+          <button class="btn ghost">Discard</button>
+          <span class="need"></span>
+          <button class="btn primary">Save entry</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5: saved -->
+    <div class="step">
+      <h2>5. Saved</h2>
+      <p>Quiet and final. The session closes, and later changes start a new draft revision.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Dune</div>
+          <button class="iconbtn" aria-label="More"><svg><use href="#i-more"/></svg></button>
+        </div>
+        <div class="scroll">
+          <p class="saved-note"><svg><use href="#i-check"/></svg>Saved to your library</p>
+          <div class="card">
+            <section class="work">
+              <div class="cover sand lg">DUNE</div>
+              <div>
+                <h3>Dune</h3>
+                <p class="meta">1965 · Frank Herbert · Book</p>
+                <span class="tag v"><svg class="mk"><use href="#i-check"/></svg><span>Open Library</span></span>
+              </div>
+            </section>
+            <section>
+              <p class="lbl">Rating</p>
+              <div class="rate" data-rating data-value="4.5">
+                <span class="stars" role="img"></span>
+                <span class="num"></span>
+              </div>
+            </section>
+            <section>
+              <p class="lbl">Your words</p>
+              <p class="words">loved it honestly, easy 4.5, the world felt so lived in but the middle dragged a bit</p>
+            </section>
+            <section>
+              <p class="lbl">Answers</p>
+              <ul class="qa">
+                <li><span class="qq">Writing</span><span class="aa">Good</span></li>
+                <li><span class="qq">Character</span><span class="aa">Lady Jessica</span></li>
+              </ul>
+            </section>
+            <section>
+              <div class="chips"><span class="chip on">world</span><span class="chip on">pacing</span></div>
+            </section>
+          </div>
+        </div>
+        <div class="confirm">
+          <button class="btn grow">Edit</button>
+          <button class="btn primary grow">Log another</button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+<script src="icons.js"></script>
+<script src="cairn.js"></script>
+</body>
+</html>

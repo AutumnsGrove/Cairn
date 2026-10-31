@@ -1,0 +1,212 @@
+<!doctype html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cairn: foundations</title>
+<style>
+  @font-face { font-family: "Lexend"; src: url("fonts/lexend-latin-wght-normal.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+  @font-face { font-family: "Fraunces"; src: url("fonts/fraunces-latin-opsz-normal.woff2") format("woff2"); font-weight: 100 900; font-display: swap; }
+  @font-face { font-family: "Newsreader"; src: url("fonts/newsreader-latin-opsz-normal.woff2") format("woff2"); font-weight: 200 800; font-display: swap; }
+  @font-face { font-family: "Instrument Serif"; src: url("fonts/instrument-serif-latin-400-normal.woff2") format("woff2"); font-weight: 400; font-display: swap; }
+
+  /* Tokens. Dark is designed first (evening, dim room); light follows. All neutrals share one warm hue. */
+  :root, [data-theme="dark"] {
+    --bg:        oklch(0.175 0.008 70);
+    --panel:     oklch(0.215 0.010 70);
+    --raised:    oklch(0.255 0.011 70);
+    --line:      oklch(0.33 0.010 70);
+    --text:      oklch(0.91 0.012 82);
+    --text-2:    oklch(0.74 0.012 78);
+    --text-3:    oklch(0.58 0.010 74);
+    --accent:    oklch(0.73 0.085 135);
+    --accent-ink:oklch(0.20 0.030 135);
+    --accent-soft:oklch(0.30 0.040 135);
+    --unverified:oklch(0.79 0.100 82);
+    --imageread: oklch(0.76 0.060 235);
+    --danger:    oklch(0.70 0.120 30);
+    color-scheme: dark;
+  }
+  [data-theme="light"] {
+    --bg:        oklch(0.955 0.010 85);
+    --panel:     oklch(0.978 0.008 85);
+    --raised:    oklch(0.992 0.005 85);
+    --line:      oklch(0.87 0.010 80);
+    --text:      oklch(0.24 0.012 70);
+    --text-2:    oklch(0.42 0.012 70);
+    --text-3:    oklch(0.55 0.010 72);
+    --accent:    oklch(0.47 0.085 135);
+    --accent-ink:oklch(0.97 0.012 135);
+    --accent-soft:oklch(0.90 0.035 135);
+    --unverified:oklch(0.50 0.100 70);
+    --imageread: oklch(0.45 0.070 240);
+    --danger:    oklch(0.50 0.140 30);
+    color-scheme: light;
+  }
+
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 400 1rem/1.5 "Lexend", system-ui, sans-serif;
+    transition: background 200ms ease-out, color 200ms ease-out;
+  }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 2.5rem 1.25rem 5rem; }
+  header.top { display: flex; justify-content: space-between; align-items: end; gap: 1rem; flex-wrap: wrap; margin-bottom: 2.5rem; }
+  h1 { font: 400 2.25rem/1.1 "Fraunces", serif; margin: 0 0 .35rem; letter-spacing: -0.01em; }
+  .sub { margin: 0; color: var(--text-2); max-width: 52ch; }
+  .toggle { display: inline-flex; border: 1px solid var(--line); border-radius: 999px; padding: 3px; background: var(--panel); }
+  .toggle button { font: 500 .8125rem "Lexend", sans-serif; border: 0; background: none; color: var(--text-2); padding: .5rem 1rem; border-radius: 999px; cursor: pointer; min-height: 40px; }
+  .toggle button[aria-pressed="true"] { background: var(--raised); color: var(--text); }
+  .toggle button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+
+  h2 { font: 500 .75rem/1 "Lexend", sans-serif; letter-spacing: .09em; text-transform: uppercase; color: var(--text-3); margin: 3rem 0 1rem; }
+  .note { color: var(--text-2); max-width: 64ch; margin: 0 0 1.25rem; font-size: .9375rem; }
+
+  /* Palette */
+  .swatches { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: .75rem; }
+  .sw { border: 1px solid var(--line); border-radius: 10px; overflow: hidden; background: var(--panel); }
+  .sw i { display: block; height: 56px; }
+  .sw b { display: block; font: 500 .8125rem "Lexend"; padding: .55rem .7rem 0; }
+  .sw span { display: block; font-size: .75rem; color: var(--text-3); padding: .1rem .7rem .6rem; }
+
+  /* Header-face candidates */
+  .faces { display: grid; grid-template-columns: repeat(auto-fit, minmax(330px, 1fr)); gap: 1.25rem; }
+  .face { background: var(--panel); border: 1px solid var(--line); border-radius: 14px; padding: 1.25rem 1.25rem 1.5rem; }
+  .face-label { font: 500 .75rem "Lexend"; letter-spacing: .09em; text-transform: uppercase; color: var(--text-3); margin-bottom: 1rem; display: flex; justify-content: space-between; }
+  .work { display: grid; grid-template-columns: 76px 1fr; gap: 1rem; align-items: start; }
+  .cover { width: 76px; aspect-ratio: 2/3; border-radius: 4px; background: oklch(0.38 0.05 45); display: grid; place-items: end start; padding: 6px; font: 600 .5rem/1.1 "Lexend"; color: oklch(0.88 0.06 60); letter-spacing: .04em; }
+  .title { margin: 0; font-size: 1.75rem; line-height: 1.1; color: var(--text); }
+  .f-fraunces .title { font-family: "Fraunces", serif; font-weight: 500; font-variation-settings: "opsz" 72; letter-spacing: -0.01em; }
+  .f-newsreader .title { font-family: "Newsreader", serif; font-weight: 500; font-size: 1.85rem; font-variation-settings: "opsz" 72; letter-spacing: -0.005em; }
+  .f-instrument .title { font-family: "Instrument Serif", serif; font-weight: 400; font-size: 2.05rem; letter-spacing: 0; }
+  .meta { margin: .4rem 0 0; font-size: .8125rem; color: var(--text-2); }
+  .meta .dot { color: var(--text-3); padding: 0 .25rem; }
+
+  .rating { display: flex; align-items: center; gap: .6rem; margin: 1.25rem 0 0; }
+  .stars { display: inline-flex; gap: 2px; color: var(--text); }
+  .star { position: relative; width: 22px; height: 22px; display: inline-block; }
+  .star svg { position: absolute; inset: 0; width: 100%; height: 100%; }
+  .star .base { color: var(--line); }
+  .star .fill { overflow: hidden; position: absolute; inset: 0 auto 0 0; }
+  .star .fill svg { width: 22px; }
+  .num { font: 500 1rem "Lexend"; font-variant-numeric: tabular-nums; }
+  .fav { margin-left: auto; font: 500 .8125rem "Lexend"; color: var(--text-2); display: inline-flex; align-items: center; gap: .35rem; }
+
+  .body { margin: 1.25rem 0 0; font-size: 1.0625rem; line-height: 1.7; max-width: 62ch; color: var(--text); }
+  .chips { display: flex; flex-wrap: wrap; gap: .4rem; margin-top: 1.1rem; }
+  .chip { font: 400 .8125rem "Lexend"; padding: .3rem .7rem; border-radius: 999px; border: 1px solid var(--line); color: var(--text-2); }
+  .chip.on { background: var(--accent-soft); border-color: transparent; color: var(--text); }
+
+  /* State markers: shape plus label, never colour alone */
+  .states { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: .75rem; }
+  .state { background: var(--panel); border: 1px solid var(--line); border-radius: 10px; padding: .9rem 1rem; }
+  .state .row { display: flex; align-items: center; gap: .55rem; font: 500 .875rem "Lexend"; }
+  .state p { margin: .45rem 0 0; font-size: .8125rem; color: var(--text-2); }
+  .mk { width: 18px; height: 18px; flex: none; }
+  .v { color: var(--accent); } .u { color: var(--unverified); } .i { color: var(--imageread); }
+  .field-u { border-bottom: 1.5px dashed var(--unverified); padding-bottom: 1px; }
+
+  /* Buttons */
+  .btns { display: flex; flex-wrap: wrap; gap: .75rem; align-items: center; }
+  button.b { font: 500 .9375rem "Lexend"; min-height: 48px; padding: 0 1.4rem; border-radius: 12px; border: 1px solid var(--line); background: var(--panel); color: var(--text); cursor: pointer; transition: background 150ms ease-out, border-color 150ms ease-out; }
+  button.b:hover { background: var(--raised); }
+  button.b.primary { background: var(--accent); color: var(--accent-ink); border-color: transparent; }
+  button.b.primary:hover { background: color-mix(in oklch, var(--accent) 88%, var(--text)); }
+  button.b:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+  button.b[disabled] { opacity: .45; cursor: not-allowed; }
+
+  @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+
+  <header class="top">
+    <div>
+      <h1>Cairn: foundations</h1>
+      <p class="sub">The palette, the type, and the state markers. Pick a header face below; everything else follows from it.</p>
+    </div>
+    <div class="toggle" role="group" aria-label="Theme">
+      <button type="button" data-set="dark" aria-pressed="true">Dark</button>
+      <button type="button" data-set="light" aria-pressed="false">Light</button>
+    </div>
+  </header>
+
+  <h2>Header face: same entry, three voices</h2>
+  <p class="note">Lexend carries the interface and the review. The header face is only for work titles and section headings. Pick the one that feels like a title in your own journal.</p>
+
+  <div class="faces" id="faces"></div>
+
+  <h2>Palette</h2>
+  <p class="note">Warm-tinted neutrals and one lichen accent. The accent only marks primary actions, the current selection and accepted state. Covers carry the colour.</p>
+  <div class="swatches">
+    <div class="sw"><i style="background:var(--bg)"></i><b>Page</b><span>--bg</span></div>
+    <div class="sw"><i style="background:var(--panel)"></i><b>Panel</b><span>--panel</span></div>
+    <div class="sw"><i style="background:var(--raised)"></i><b>Raised</b><span>--raised</span></div>
+    <div class="sw"><i style="background:var(--line)"></i><b>Line</b><span>--line</span></div>
+    <div class="sw"><i style="background:var(--text)"></i><b>Text</b><span>--text</span></div>
+    <div class="sw"><i style="background:var(--text-2)"></i><b>Text, quiet</b><span>--text-2</span></div>
+    <div class="sw"><i style="background:var(--accent)"></i><b>Lichen</b><span>--accent</span></div>
+    <div class="sw"><i style="background:var(--unverified)"></i><b>Unverified</b><span>--unverified</span></div>
+    <div class="sw"><i style="background:var(--imageread)"></i><b>Image-read</b><span>--imageread</span></div>
+    <div class="sw"><i style="background:var(--danger)"></i><b>Error</b><span>--danger</span></div>
+  </div>
+
+  <h2>State markers</h2>
+  <p class="note">Each state has its own shape and a label, so none relies on colour alone.</p>
+  <div class="states">
+    <div class="state"><div class="row v"><svg class="mk" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3.5 9.5l3.5 3.5 7.5-8"/></svg><span style="color:var(--text)">Verified</span></div><p>From an API such as TMDB or Open Library. Shown quietly, a small check.</p></div>
+    <div class="state"><div class="row u"><svg class="mk" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-dasharray="2.4 2.4" aria-hidden="true"><circle cx="9" cy="9" r="6.8"/></svg><span style="color:var(--text)">Unverified</span></div><p>From the web or entered by hand. A dashed ring, with the field <span class="field-u">underlined</span>. Tap for the source.</p></div>
+    <div class="state"><div class="row i"><svg class="mk" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" aria-hidden="true"><rect x="2.8" y="3.8" width="12.4" height="10.4" rx="1.6"/><circle cx="6.6" cy="7.6" r="1.1"/><path d="M3.2 13l4-3.4 3 2.4 2-1.6 2.8 2.6"/></svg><span style="color:var(--text)">Read from image</span></div><p>Taken from a screenshot. A small picture glyph, with the screenshot beside the card.</p></div>
+  </div>
+
+  <h2>Actions</h2>
+  <div class="btns">
+    <button class="b primary" type="button">Save entry</button>
+    <button class="b" type="button">Accept all</button>
+    <button class="b" type="button">Discard</button>
+    <button class="b primary" type="button" disabled>Save entry</button>
+  </div>
+
+</div>
+
+<script>
+  const REVIEW = "i really loved it, easy 5/5, the sound design carried the whole thing and i did not expect the ending to land like that";
+  const FACES = [
+    { key: "fraunces",   name: "Fraunces",         note: "soft, warm serif" },
+    { key: "newsreader", name: "Newsreader",       note: "book-like text serif" },
+    { key: "instrument", name: "Instrument Serif", note: "elegant, high contrast" },
+  ];
+  const STAR = '<svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M12 2.6l2.9 6.1 6.7.8-4.9 4.6 1.3 6.6L12 17.4 6 20.7l1.3-6.6L2.4 9.5l6.7-.8z"/></svg>';
+  function stars(value) {
+    let out = "";
+    for (let n = 1; n <= 5; n++) {
+      const pct = Math.max(0, Math.min(1, value - (n - 1))) * 100;
+      out += '<span class="star"><span class="base">' + STAR + '</span><span class="fill" style="width:' + pct + '%"><span style="display:block;width:22px;height:22px">' + STAR + '</span></span></span>';
+    }
+    return '<span class="stars" role="img" aria-label="' + value.toFixed(2) + ' out of 5">' + out + '</span>';
+  }
+  document.getElementById("faces").innerHTML = FACES.map(f => `
+    <article class="face f-${f.key}">
+      <div class="face-label"><span>${f.name}</span><span>${f.note}</span></div>
+      <div class="work">
+        <div class="cover" aria-hidden="true">BLADE RUNNER 2049</div>
+        <div>
+          <h3 class="title">Blade Runner 2049</h3>
+          <p class="meta">2017<span class="dot">&middot;</span>Denis Villeneuve<span class="dot">&middot;</span>Film</p>
+        </div>
+      </div>
+      <div class="rating">${stars(4.75)}<span class="num">4.75</span><span class="fav" aria-label="Favourite">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" aria-hidden="true"><path d="M12 20.5s-7.5-4.6-7.5-10A4.3 4.3 0 0 1 12 7.6a4.3 4.3 0 0 1 7.5 2.9c0 5.4-7.5 10-7.5 10z"/></svg>Favourite</span></div>
+      <p class="body">${REVIEW}</p>
+      <div class="chips"><span class="chip on">sound</span><span class="chip on">ending</span><span class="chip">sci-fi</span><span class="chip">cinema</span></div>
+    </article>`).join("");
+
+  const root = document.documentElement;
+  document.querySelectorAll(".toggle button").forEach(b => b.addEventListener("click", () => {
+    root.dataset.theme = b.dataset.set;
+    document.querySelectorAll(".toggle button").forEach(x => x.setAttribute("aria-pressed", String(x === b)));
+  }));
+</script>
+</body>
+</html>
