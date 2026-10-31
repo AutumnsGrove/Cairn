@@ -15,7 +15,7 @@ MAP = {
     "heart": "heart", "alert": "circle-alert", "star": "star",
     "info": "info", "pencil": "pencil", "history": "history", "link": "external-link", "x": "x",
     "library": "library", "sort": "arrow-up-down", "trash": "trash-2", "restore": "rotate-ccw", "plus": "plus",
-    "wifioff": "wifi-off", "chat": "message-circle", "drafts": "file-pen-line",
+    "wifioff": "wifi-off", "chat": "message-circle", "drafts": "file-pen-line", "settings": "settings",
 }
 
 src = sys.argv[1].rstrip("/") + "/icons/"

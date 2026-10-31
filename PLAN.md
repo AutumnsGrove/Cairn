@@ -121,7 +121,7 @@ That entry is then browsable, searchable and filterable across media in plain vi
 | Storage | SQLite on the potato (`modernc.org/sqlite`, pure Go — the same choice as Warbler), plus plain files for covers |
 | Backups | Nightly mirror to Cloudflare R2 using the **existing `rclone` remote** already configured for Vaultwarden (`r2:`), plus a JSON export |
 | Hosting | The potato: Go binary with an embedded SvelteKit frontend (`go:embed`), Docker Compose, image pinned by digest in GHCR, `tailscale serve` on port **8893** (verified free) |
-| Updates | The Meridian/Polaris/Warbler pattern: host-side watcher, digest pinned in `.env`, health check, rollback |
+| Updates | The Meridian/Polaris/Warbler pattern: host-side watcher, digest pinned in `.env`, health check, rollback. **A settings panel with an Updates screen** (check, update now, restart, the eight states from Warbler) and a Services screen showing what each dependency does when it is down. Update is refused while a reply is being written. Spec: [`docs/UPDATE.md`](docs/UPDATE.md) |
 | Discovery in Meridian | A tile with a health probe and one vital (see [§8](#8-where-it-runs)) |
 | Auth | None. Tailnet-only is the boundary, exactly like Polaris and Warbler. No passwords to manage |
 | Export | JSON (one file per work + review, plus a single archive) — the format the data model below *is* |

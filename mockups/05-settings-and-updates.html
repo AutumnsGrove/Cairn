@@ -1,0 +1,209 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Cairn: settings and updates</title>
+<link rel="stylesheet" href="cairn.css">
+</head>
+<body>
+<main class="board">
+  <h1>Settings and updates</h1>
+  <p class="lede">Cairn updates itself the way Polaris, Ivy and Warbler do: the page asks, a host-side watcher pulls the pinned image and checks it works, and a failed update rolls back by itself. The container never touches Docker. Open sessions survive because drafts live in the database.</p>
+
+  <div class="row">
+
+    <!-- 1: settings -->
+    <div class="step">
+      <h2>1. Settings</h2>
+      <p>Few things to set, because most are decided in config. What is here is what you would actually want to change or check.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Settings</div>
+          <span style="width:44px"></span>
+        </div>
+        <div class="scroll">
+          <div class="setgrp">
+            <p class="lbl">Cairn</p>
+            <button class="srow"><span>Updates</span><span class="v"><svg class="ok"><use href="#i-check"/></svg>Up to date<svg><use href="#i-chev"/></svg></span></button>
+            <button class="srow"><span>Services</span><span class="v"><svg class="ok"><use href="#i-check"/></svg>All reachable<svg><use href="#i-chev"/></svg></span></button>
+          </div>
+          <div class="setgrp">
+            <p class="lbl">Behaviour</p>
+            <div class="srow">
+              <span class="lblcol"><span>Quick pre-read</span><span class="sub">Reads each message first to route it and skip questions you already answered. Off sends every message straight to the agent.</span></span>
+              <button class="switch" role="switch" aria-checked="true" aria-label="Quick pre-read"><i></i></button>
+            </div>
+          </div>
+          <div class="setgrp">
+            <p class="lbl">Your data</p>
+            <button class="srow"><span>Backups and export</span><span class="v">Backed up 03:30<svg><use href="#i-chev"/></svg></span></button>
+            <button class="srow"><span>Deleted entries</span><span class="v">2<svg><use href="#i-chev"/></svg></span></button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2: up to date -->
+    <div class="step">
+      <h2>2. Up to date</h2>
+      <p>The version, how it is installed, and whether the update helper on the potato is alive.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Updates</div>
+          <span style="width:44px"></span>
+        </div>
+        <div class="scroll">
+          <dl class="kv" style="margin-top:.5rem">
+            <dt>Version</dt><dd class="mono">r214.a1b2c3d</dd>
+            <dt>Installed</dt><dd>Docker</dd>
+            <dt>Update helper</dt><dd><span class="tag v" style="font-size:.875rem"><svg class="mk"><use href="#i-check"/></svg><span style="color:var(--text)">Running</span></span></dd>
+          </dl>
+          <div class="upd">
+            <p class="big">Up to date.</p>
+            <p class="small" style="margin:-.5rem 0 1rem">Last checked 2 minutes ago.</p>
+            <button class="btn">Check for updates</button>
+          </div>
+          <div class="upd" style="margin-top:2rem;border-top:1px solid var(--line);padding-top:.5rem">
+            <button class="linkbtn"><svg><use href="#i-restore"/></svg>Restart Cairn</button>
+            <p class="small" style="margin-top:0">Restart only. No new version, no rebuild.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 3: available -->
+    <div class="step">
+      <h2>3. An update is ready</h2>
+      <p>Cairn checks quietly. Nothing installs until you press the button.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Updates</div>
+          <span style="width:44px"></span>
+        </div>
+        <div class="scroll">
+          <dl class="kv" style="margin-top:.5rem">
+            <dt>Version</dt><dd class="mono">r214.a1b2c3d</dd>
+            <dt>Installed</dt><dd>Docker</dd>
+            <dt>Update helper</dt><dd><span class="tag v" style="font-size:.875rem"><svg class="mk"><use href="#i-check"/></svg><span style="color:var(--text)">Running</span></span></dd>
+          </dl>
+          <div class="upd">
+            <p class="big">A newer version is ready.</p>
+            <p style="margin:-.4rem 0 1.1rem;color:var(--text-2)"><span class="mono" style="color:var(--text)">r219.e4f5a6b</span></p>
+            <button class="btn primary" style="width:100%">Update now</button>
+            <p class="small">Takes about a minute. Your drafts are saved, and this page reconnects by itself.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 4: updating -->
+    <div class="step">
+      <h2>4. Updating</h2>
+      <p>A calm indeterminate bar, no spinner. If it runs long, a line says it is still working. The page reloads itself when done.</p>
+      <div class="phone">
+        <div class="topbar">
+          <span style="width:44px"></span>
+          <div class="t">Updates</div>
+          <span style="width:44px"></span>
+        </div>
+        <div class="scroll">
+          <dl class="kv" style="margin-top:.5rem">
+            <dt>Version</dt><dd class="mono">r214.a1b2c3d</dd>
+            <dt>Installing</dt><dd class="mono">r219.e4f5a6b</dd>
+          </dl>
+          <div class="upd">
+            <p class="big">Updating</p>
+            <div class="prog" role="progressbar" aria-label="Updating"><i></i></div>
+            <p style="color:var(--text-2)">This takes a minute. Cairn will reload when it is done.</p>
+            <p class="small">This is taking longer than expected. It is still working.</p>
+            <button class="btn" style="width:100%;margin-top:1.1rem" disabled>Update now</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 5: failed, rolled back -->
+    <div class="step">
+      <h2>5. It did not work</h2>
+      <p>The new version failed its health check, so the old one is running again. The reason is shown as plain text.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Updates</div>
+          <span style="width:44px"></span>
+        </div>
+        <div class="scroll">
+          <dl class="kv" style="margin-top:.5rem">
+            <dt>Version</dt><dd class="mono">r214.a1b2c3d</dd>
+            <dt>Installed</dt><dd>Docker</dd>
+          </dl>
+          <div class="upd">
+            <div class="errbox"><svg><use href="#i-alert"/></svg><p>The update did not work, and the previous version is running again.</p></div>
+            <p class="detail mono">health check failed on r219.e4f5a6b after 60 s; rolled back to r214.a1b2c3d</p>
+            <button class="btn primary" style="width:100%">Try again</button>
+            <p class="small">Nothing was lost. Your entries and drafts are untouched.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 6: no updater -->
+    <div class="step">
+      <h2>6. No update helper</h2>
+      <p>If the helper on the potato is not installed, or has gone quiet, the panel says so and where to look.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Updates</div>
+          <span style="width:44px"></span>
+        </div>
+        <div class="scroll">
+          <dl class="kv" style="margin-top:.5rem">
+            <dt>Version</dt><dd class="mono">r214.a1b2c3d</dd>
+            <dt>Installed</dt><dd>Docker</dd>
+            <dt>Update helper</dt><dd><span class="tag u" style="font-size:.875rem"><svg class="mk"><use href="#i-dash"/></svg><span style="color:var(--text)">Gone quiet</span></span></dd>
+          </dl>
+          <div class="upd">
+            <p>Updates are not working on this server. The update helper has gone quiet.</p>
+            <p class="detail mono cmd">systemctl status cairn-update.path</p>
+            <p class="small" style="margin-top:0">Run that on the potato to see why. See docs/UPDATE.md for the install steps.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 7: services -->
+    <div class="step">
+      <h2>7. Services</h2>
+      <p>Everything Cairn depends on, and what stops working if it is down. One unreachable service never blocks the rest.</p>
+      <div class="phone">
+        <div class="topbar">
+          <button class="iconbtn" aria-label="Back"><svg><use href="#i-back"/></svg></button>
+          <div class="t">Services</div>
+          <button class="iconbtn" aria-label="Check again"><svg><use href="#i-restore"/></svg></button>
+        </div>
+        <div class="scroll">
+          <div class="svc"><svg><use href="#i-check"/></svg><div><p class="nm">Main model</p><p class="dt mono">deepseek-v4.1-flash-1017</p></div><span class="rt2">Reachable</span></div>
+          <div class="svc"><svg><use href="#i-check"/></svg><div><p class="nm">Decisions</p><p class="dt mono">jev-1.14</p></div><span class="rt2">240 ms</span></div>
+          <div class="svc"><svg><use href="#i-check"/></svg><div><p class="nm">TMDB</p><p class="dt">Films and TV</p></div><span class="rt2">Reachable</span></div>
+          <div class="svc"><svg><use href="#i-check"/></svg><div><p class="nm">Open Library</p><p class="dt">Books</p></div><span class="rt2">Reachable</span></div>
+          <div class="svc bad"><svg><use href="#i-alert"/></svg><div><p class="nm">Polaris</p><p class="dt">Web lookups are off. Everything else still works, and anything the APIs miss is logged by hand.</p></div><span class="rt2">Not reachable</span></div>
+          <div class="svc"><svg><use href="#i-check"/></svg><div><p class="nm">Backups</p><p class="dt">Last run 03:30, 4.2 MB</p></div><span class="rt2">Ok</span></div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</main>
+<script src="icons.js"></script>
+<script src="cairn.js"></script>
+<script>
+  document.querySelectorAll(".switch").forEach((s) => s.addEventListener("click", () =>
+    s.setAttribute("aria-checked", String(s.getAttribute("aria-checked") !== "true"))));
+</script>
+</body>
+</html>

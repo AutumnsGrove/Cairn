@@ -52,7 +52,7 @@ cannot be applied twice.
 
 | Type | Persisted | Data | Meaning |
 |---|---|---|---|
-| `hello` | no | `session`, `state`, `draft` (latest snapshot or null), `open_interactions[]`, `head_seq`, `full_state` | Sent first on every connect. If `full_state` is true the client rebuilds from this and ignores replay (the log was compacted past `last_seq`) |
+| `hello` | no | `session`, `state`, `draft` (latest snapshot or null), `open_interactions[]`, `head_seq`, `full_state`, `server_version` | Sent first on every connect. If `full_state` is true the client rebuilds from this and ignores replay (the log was compacted past `last_seq`). If `server_version` differs from the version the page was loaded with, the client reloads, so an old frontend never talks to a new server after an update |
 | `user_message` | yes | `message_id`, `client_msg_id`, `text` | The persisted ID of what I typed, sent as soon as it is saved, so the UI can show it and retry or edit from it |
 | `preread` | yes | `odds` (every check), `fired`, `cost_usd` | The decisions result for this message. Feeds the "why" sheet |
 | `activity` | no | `label` (for example "Reading", "Looking up TMDB") | Drives the small progress indicator while the agent works |
@@ -151,6 +151,7 @@ Plain requests, all behind the same origin check. Detailed shapes belong with th
 - `GET /api/works/{id}`, `GET /api/search?q=`
 - `POST /api/sessions/{id}/media` (multipart upload, returns a `media_id`), `GET /media/{id}` (Phase 3)
 - `GET /covers/{id}` (static), `GET /healthz`, `POST /api/export`
+- `GET /api/version`, `POST /api/update/check`, `GET /api/update/available`, `POST /api/update/start`, `GET /api/update/status`, `POST /api/restart`, `GET /api/services` (see [`UPDATE.md`](UPDATE.md))
 
 ## 9. Fixture cases to write
 
