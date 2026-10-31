@@ -59,6 +59,13 @@ are two AI-agent tools, `oritera/Cairn` and `cairn-dev/cairn`), which only matte
 our own namespaces. The GHCR check (`ghcr.io/autumnsgrove/cairn`) failed on a shell quoting error and was
 **not** confirmed; re-run it before the first image is published.
 
+### Fable has no export (2026-10-31)
+
+Confirmed by Autumn: there is no way to export reviews from Fable. The migration is therefore image import
+inside Cairn (Phase 3), not a script and not a coding-agent insert, because a direct insert would bypass the
+draft, confirm tap and span rules. The pinned model's OpenRouter listing shows `text` and `image` input, but
+that is metadata, not a test; Phase 0 tries it on real Fable screenshots before anything depends on it.
+
 ### Nova already has the decisions contract
 
 `nova/decide` defines `Decider`, a typed `Request` (shared `State`, a map of named `Question`s), an OpenRouter

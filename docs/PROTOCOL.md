@@ -95,7 +95,7 @@ something new.
 
 | Type | Data | Effect |
 |---|---|---|
-| `message` | `text`, `client_date`, `tz` | A normal chat message. The date and timezone make "last night" resolve against where I am |
+| `message` | `text`, `attachments[]` (media ids), `client_date`, `tz` | A normal chat message; `attachments` are images already uploaded to the session (Phase 3). The date and timezone make "last night" resolve against where I am |
 | `interaction_response` | `interaction_id`, `value` | Answers an open interaction; this is the tool result the agent is waiting on |
 | `draft_edit` | `base_version`, `set` (field to value map) | Direct edit of the card. Stale `base_version` means `rejected` plus a fresh `draft_snapshot` |
 | `accept_unverified` | `base_version`, `fields[]` or `all` | Accept web-derived or manual fields into the canonical work |
@@ -149,6 +149,7 @@ Plain requests, all behind the same origin check. Detailed shapes belong with th
 - `GET /api/entries`, `GET /api/entries/{id}`, `GET /api/entries/{id}/revisions`,
   `POST /api/entries/{id}/delete` (soft; plain entry view only)
 - `GET /api/works/{id}`, `GET /api/search?q=`
+- `POST /api/sessions/{id}/media` (multipart upload, returns a `media_id`), `GET /media/{id}` (Phase 3)
 - `GET /covers/{id}` (static), `GET /healthz`, `POST /api/export`
 
 ## 9. Fixture cases to write

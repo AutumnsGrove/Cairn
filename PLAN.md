@@ -74,7 +74,7 @@ That entry is then browsable, searchable and filterable across media in plain vi
 - Being a media *catalogue* (no "browse everything ever released"). The library only holds things I
   have something to say about.
 - Public exposure in v1. Tailnet-only, like everything else here. (A static published subset is a later
-  phase, see [Phase 5](#phase-5-optional-publication).)
+  phase, see [Phase 6](#phase-6-optional-publication).)
 - Rewriting or re-scraping provider metadata wholesale; we snapshot, we don't mirror their databases.
 - Native iOS/Android apps.
 - Voice input and spoiler handling (both deliberately out of v1, see [§2](#2-decisions-already-made)).
@@ -98,7 +98,7 @@ That entry is then browsable, searchable and filterable across media in plain vi
 | Web trust | Web-derived fields are **proposed, never canonical**: shown on the card as unverified with their source URL, accepted with one tap |
 | Transport | **WebSocket both ways, one socket per open session**; the library, drafts count and search are plain REST that refresh on focus. A small Cairn event vocabulary (nova's events stay server-side). The server keeps a per-session event log with sequence numbers: a client that reconnects (a sleeping phone, a killed PWA) says the last number it saw and gets everything after it replayed. The draft card syncs as a **full snapshot with a version number**; an edit made against a stale version is rejected. Every question the service asks is one `interaction_request`. The same session may be open on two devices; the first confirm wins. Spec: [`docs/PROTOCOL.md`](docs/PROTOCOL.md) |
 | Question sets | **Per-medium YAML templates**: a curated bank of questions per medium, each with a type. The model picks 3 to 6 that the message hasn't already answered and phrases them; it does not invent the questions. Answers stay comparable across entries. The questions appear **as one short form** (all 3 to 6 at once, skippable as a whole), and a suggested answer is a **tappable hint, never pre-selected**. First drafts for [books](docs/question-banks/books.yaml) and [films and TV](docs/question-banks/film-tv.yaml) |
-| Pre-read checks (v1) | `intent` (chitchat, log_review, find_entries, edit_entry, answer_pending), `medium`, `format`, `revisit`, `extract_fidelity` (faithful, drops_opinion, adds_content; runs on the body extract), and nine `mentions_*` yes/no flags (sound, visuals, acting, story, pacing, ending, characters, world, writing). Defined in a **hot-reloaded YAML registry**, baked into the image and bind-mounted over top as Polaris does for `prompts.yaml`. Thresholds are set from real odds in Phase 0 |
+| Pre-read checks (v1) | `intent` (chitchat, log_review, import_review, find_entries, edit_entry, answer_pending), `medium`, `format`, `revisit`, `extract_fidelity` (faithful, drops_opinion, adds_content; runs on the body extract), and nine `mentions_*` yes/no flags (sound, visuals, acting, story, pacing, ending, characters, world, writing). Defined in a **hot-reloaded YAML registry**, baked into the image and bind-mounted over top as Polaris does for `prompts.yaml`. Thresholds are set from real odds in Phase 0 |
 | Revisits | Logging something already in the library asks: **new entry on the same work, or edit the old one**, showing the previous entry and rating. Several entries per work form a timeline |
 | Edits and history | Editing a saved entry is a draft revision with a confirm tap. Every confirmed edit stores the previous version in an **append-only revisions table, kept forever** |
 | Deleting | **Soft-delete only, and hard deletes are blocked by the database itself** (a `BEFORE DELETE` trigger aborts on entries, revisions, snapshots and answers). Deleting exists only on the plain entry view, never in chat. **There is no purge**: soft-delete is permanent, and backups hold every copy |
@@ -109,7 +109,8 @@ That entry is then browsable, searchable and filterable across media in plain vi
 | Entry card | One component for the draft and the saved entry. Rating is dragged across the stars and snaps to quarters, with +/- buttons and the number always visible. Unverified fields carry a dashed marker (tap for the source) and one Accept all button. A collapsed "why" sheet shows the decision odds, the tools that ran and their sources. After confirm the session closes and the card becomes the saved entry with an Edit button. Spec: [`docs/ENTRY_CARD.md`](docs/ENTRY_CARD.md) |
 | Home | The chat input at the bottom, with recent entries and the drafts count above it. Library, search and the general chat are one tap away |
 | Testing | A **fixture corpus** of sample messages with the expected parse, expected decision outcome and expected tool sequence (the Oracle model: hand-written prompts with expected winners), run against **fake TMDB, Open Library, Jev and Polaris servers**. A separate live eval runs on demand |
-| Photos | Deferred to Phase 4. The `media` table stays in the schema so adding them is not a migration |
+| Photos | My own photos on a review (a ticket, a shelf) are deferred to Phase 5. The `media` table is used earlier, by screenshot import in Phase 3 |
+| Fable import | **Fable has no export.** The migration is a first-class image import in Phase 3: I attach screenshots in the chat and the agent transcribes them into drafts, asking only about gaps. **One session per title**, with any number of images for it. Originals are kept as the entry's source and mirrored to R2. The pinned model reads the images (its listing shows image input), tested on real screenshots in Phase 0, with its own role so another model can replace it |
 | First media | **Books (Open Library) and films and TV (TMDB) together** in Phase 1, so the merge and disambiguation logic is proven against two real sources |
 | Ratings | **Quarter-star steps from 0.25 to 5.0**, stored as an **integer 1–20 (quarter-stars)** plus the scale name, so the scale can change later without a migration. **Favourite is a separate flag**, not the same as a top rating |
 | TV | A work is the **series** in v1. The schema lets an entry point at a season later, so there is no migration, but only the series flow is built |
@@ -130,14 +131,12 @@ That entry is then browsable, searchable and filterable across media in plain vi
 
 What is still open, each with the phase that needs it. None of these blocks the rest of the plan.
 
-1. **Fable migration** (Phase 4). Can Fable export book reviews (CSV/markdown/JSON)? If yes, an import
-   command; if no, copy-paste as manual entries. Needs a look inside the app.
-2. **Providers beyond film, TV and books** (Phase 2). MusicBrainz needs a user agent and 1 req/s; IGDB
+1. **Providers beyond film, TV and books** (Phase 2). MusicBrainz needs a user agent and 1 req/s; IGDB
    needs Twitch OAuth; podcasts and theatre have no obvious single source. Decide per medium as each is
    reached, and let Polaris cover the rest until then.
-3. **TMDB's image and attribution terms** (Phase 0). The cover-caching decision in [§2](#2-decisions-already-made)
+2. **TMDB's image and attribution terms** (Phase 0). The cover-caching decision in [§2](#2-decisions-already-made)
    is final only once this is read.
-4. **Polaris's ask endpoint and container networking** (Phase 0). The exact path, and how the Cairn
+3. **Polaris's ask endpoint and container networking** (Phase 0). The exact path, and how the Cairn
    container reaches Polaris's host-published port.
 
 Defaults assumed without asking, because they follow from decisions above. Say so if any is wrong:
@@ -256,6 +255,7 @@ Branches off the main flow:
 | `merge_candidates` | `provider`, `provider_id` | merged canonical draft + `sources[]` snapshots; flags conflicting fields and any web-derived (unverified) ones |
 | `ask_reviewer` | `medium`, `questions[]` (each with `id`, `prompt`, `type`, `options?`, `skipped_ok`) | `answers[]` — typed values, plus what was skipped |
 | `save_entry` | the full draft | committed entry id |
+| `read_source_image` | `media_id` | a transcription: `title`, `creator`, `rating_shown`, `date_shown`, `text`. Stored as the media row's `transcript_json`; used as the "original" for span extraction. Phase 3 |
 | `search_library` | text, filters | my own past entries (so "have I reviewed this already?" and "what did I watch in March?" are answerable). Reads only; edits happen through a draft revision and the confirm card |
 
 The decisions layer is not a model-callable tool. It is a pipeline step the service runs before each turn.
@@ -309,11 +309,12 @@ entries (                    -- my review of a work; one work can have several o
   season INTEGER,                      -- NULL = the whole work; reserved for TV seasons
   verdict TEXT,                        -- one line, a verbatim span of my text or empty
   body TEXT,                           -- my words
-  body_origin TEXT,                    -- extracted | typed | mixed
+  body_origin TEXT,                    -- extracted | typed | mixed | imported
+  imported_from TEXT,                  -- e.g. fable; NULL for entries written in Cairn
   body_spans_json TEXT,                -- where each kept span sits in the session's messages
   format TEXT,                         -- cinema | streaming | audiobook | hardback | …
   finished_on TEXT,                    -- local date
-  status TEXT,                         -- draft | saved | published (published is Phase 5)
+  status TEXT,                         -- draft | saved | published (published is Phase 6)
   deleted_at TEXT,                     -- soft delete only; hard deletes are blocked by trigger
   created_at, updated_at
 )
@@ -346,7 +347,8 @@ decision_calls (            -- every decisions call, so thresholds can be tuned 
 )
 
 tags (id, name) · entry_tags (entry_id, tag_id, source)   -- source: genre | mentioned | mine
-media (id, entry_id, path, kind)        -- optional photos, Phase 4+
+media (id, entry_id, session_id, path, kind,   -- kind: source_screenshot (Phase 3) | photo (Phase 5)
+       transcript_json)                -- what the model read from the image, for source_screenshot
 mirrors (id, ran_at, target, status, bytes)   -- R2 backup receipts
 ```
 
@@ -371,7 +373,8 @@ The "one nice entry" promise, in order of what wins:
 
 1. **Match by provider ID** when a provider is canonical for that medium (a TMDB id is stable).
 2. **Match by external IDs** across providers (`imdb`, `isbn`, `musicbrainz`, `igdb`) — the join key
-   that makes "book + audiobook + film adaptation" still be three works, not one.
+   that lets Open Library and a web source agree they mean the same book. A film adaptation has its own
+   IDs and stays a separate work.
 3. **Match by (title, year, primary creator)** normalised — and when two candidates are within a small
    distance, **ask me** rather than guess. Wrong merges are worse than duplicates.
 
@@ -386,6 +389,19 @@ Field-level merge rules:
 | Details | Union of medium-specific fields; conflicts recorded, never silently overwritten |
 | Web-sourced fields | Never merged in automatically. They sit as `unverified` until I accept them; accepting writes the field and marks the snapshot `accepted` |
 
+### What counts as one work
+
+- **Books.** A work is the Open Library *work* (the abstract book), not an edition. A translation or a
+  different printing is the same work. The edition I actually read (ISBN, publisher, pages, narrator)
+  is kept in `details_json`, and the year is the work's first publication year, not the edition's.
+- **Audiobooks.** The same work as the book. Print versus audiobook is the entry's `format`, so reading and
+  then listening gives two entries on one work, shown as a timeline.
+- **Series.** A work is what I actually read. A volume is its own work; the series name and position live
+  in `details_json` so the library can filter by series. An omnibus is one work if that is what I read.
+  There is no parent "series" work in v1.
+- **Film and TV.** TMDB's movie and TV ids are distinct, a miniseries is TV, and a remake or adaptation is
+  its own work. TV is series-level in v1 (see [§2](#2-decisions-already-made)).
+
 A merge never deletes a snapshot. `work_sources` is the audit trail, and re-merging is a command, not a
 migration.
 
@@ -396,7 +412,7 @@ migration.
 | URL | `https://lepotato.taild95077.ts.net:8893` (tailnet only) |
 | Port | `8893` — **verified free** on the potato 2026-10-30 (in use: 22 53 80 443 5335 8080 8081 8418 8766 8888 8890 8891 8892 8899 11434) |
 | Container | Compose project at `~/Cairn`, image pinned by digest in `.env`, published `127.0.0.1:8893` only, non-root, read-only rootfs |
-| Data | `~/Cairn/data/` — `cairn.db`, `covers/`, `exports/`, `backups/` |
+| Data | `~/Cairn/data/` — `cairn.db`, `covers/`, `media/` (source screenshots, later photos), `exports/`, `backups/` |
 | Config | `decisions.yaml` (the checks: wording, options, thresholds, backend) and `questions/<medium>.yaml` (question banks), baked into the image and bind-mounted over top so host edits hot-reload, the way Polaris handles `prompts.yaml` |
 | Health | `GET /healthz` → `{"status":"ok","version":"r…"}` only (two fields, like Warbler's) |
 | Secrets | `OPENROUTER_API_KEY` (main model and the Jev decisions backend, one key) and metadata-provider keys in `~/Cairn/.env`; `rclone` config for R2 already exists on the box |
@@ -426,6 +442,9 @@ Each phase ends with "Done when". Stop and ask at every **[HUMAN]** item.
   spike showed.
 - Get a TMDB key and an Open Library client working (rate limits and attribution requirements written down).
 - **UI mockups of every screen** (home, session with its cards, the entry card in each state, drafts, library, entry page, general chat, trash), viewed in a browser, before any Phase 1 UI code.
+- Pull a handful of real Open Library works and editions (a series volume, a translated book, an audiobook
+  edition) and write down which fields are reliable: first publication year, series, ISBNs, covers.
+- Test the pinned model on about five real Fable screenshots (star icons, small type, a long review across two images) and record what it gets wrong.
 - Read TMDB's image and attribution terms and write the cover-caching decision down.
 - Write the first **fixture corpus** (about 30 sample messages with expected parse, expected decision outcome
   and expected tool sequence), then run the pre-read and the pinned model against it. Set the first decision
@@ -461,7 +480,25 @@ from the phone, over Tailscale, with no manual field entry, for both a book and 
 
 **Done when:** reviews of four different media coexist in one library and the filters work on a phone.
 
-### Phase 3: Trust it with the data
+### Phase 3: Import from screenshots
+
+- Attach images in the chat: an upload to the session (`POST /api/sessions/{id}/media`), stored under
+  `data/media/`, with a `media` row per image.
+- `read_source_image`: the pinned model transcribes a screenshot into title, creator, the rating and date
+  as shown, and the review text. A message with images and no text defaults to the import intent by
+  plain code; the decisions layer reads only the accompanying text (it takes text, not images).
+- **One session per title, any number of images** (a long review can span two screenshots). The draft goes
+  through the normal flow: the transcription is the "original" the body spans are taken from, the
+  screenshot sits beside the card, fields read from the image carry a marker and need my tap, and the
+  agent asks only about gaps (a date, an ambiguous title).
+- Entries record `imported_from` (for example `fable`) and `body_origin = imported`; the screenshots are
+  kept as the entry's source and mirrored to R2.
+- Fable has no export, so this is the migration: the first real use is bringing the Fable reviews in.
+
+**Done when:** a Fable screenshot becomes a saved entry with the screenshot kept beside it, and ten real
+Fable reviews have been imported and read back correctly.
+
+### Phase 4: Trust it with the data
 
 - Nightly snapshot + `rclone` mirror to R2, with receipts in the app; restore exercised for real.
 - JSON export (single file + per-entry) and an import that round-trips.
@@ -470,15 +507,14 @@ from the phone, over Tailscale, with no manual field entry, for both a book and 
 **Done when:** I can export everything, wipe a test copy, import it back, and diff clean; and an R2
 restore has actually been performed, not just designed.
 
-### Phase 4: Comfort
+### Phase 5: Comfort
 
 - Photos, season-level TV reviews, voice input, spoiler handling — whichever of these turned out to
   matter.
-- Fable import, if Fable exports anything usable ([§3](#3-open-questions) q1).
 
 **Done when:** the thing I reach for is this app, not a notes file.
 
-### Phase 5: Optional publication
+### Phase 6: Optional publication
 
 A static, read-only build of published entries, no login, no writes. Entries already carry a `status`
 field, so this adds a build step and a way to mark an entry published, and nothing else.
@@ -491,7 +527,7 @@ field, so this adds a build step and a way to mark an entry published, and nothi
 | Decisions pre-read | on the Jev backend about $0.042 per million input tokens and free output, so a batched call is a fraction of a cent. Logged in `decision_calls.cost_usd` |
 | Polaris web lookups | Polaris reports `cost_usd` per ask; it is stored with the snapshot. Most reviews should never need one |
 | Metadata | TMDB and Open Library free (attribution required); MusicBrainz free with a rate limit |
-| Storage on the potato | a review is kilobytes; covers are the growth (~100 KB each), so a thousand entries is ~100 MB |
+| Storage on the potato | a review is kilobytes; covers are ~100 KB each, so a thousand entries is ~100 MB. Kept screenshots add roughly 300 KB to 1 MB each, so 200 imported reviews is about 100 to 200 MB |
 | R2 | the free tier is far beyond this |
 | Electricity | the potato is already running |
 
@@ -507,7 +543,7 @@ not a cheaper model.
 3. **Local-first.** SQLite before R2, always. A mirror failure is a warning, never a lost review.
 4. **Source snapshots are append-only.** A silent metadata rewrite of my history is a bug. Web-derived
    facts are proposed and marked unverified until I accept them.
-5. **Review text goes only where the plan names.** The LLM (OpenRouter, including the decisions backend) sees my text; that
+5. **Review text goes only where the plan names.** The LLM (OpenRouter, including the decisions backend) sees my text and any screenshots I attach; that
    is the cost of the feature. Metadata APIs and Polaris get titles, creators and ids, via structured
    arguments by default. The one path where free text could reach a web search is
    `ask_polaris_freeform`, which is the deliberate escape hatch and is always logged.

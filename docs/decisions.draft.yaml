@@ -15,6 +15,8 @@
 #   message          the latest thing I typed
 #   pending_question the question card the app just asked, if one is open (so replies are readable)
 #   work             the title of the work this session is about, if one has been chosen
+#   Images are never sent: the decision model takes text only, so a message with screenshots is read
+#   on its accompanying text. A message with images and no text defaults to import_review in code.
 #   For extract_fidelity only: original (my messages) and extract (the proposed body).
 
 wording:
@@ -34,6 +36,7 @@ wording:
         find_entries: Asks about reviews they have already recorded - what they watched or read, a count, a list, a comparison, or whether they have reviewed something.
         edit_entry: Asks to change, correct or add to a review that is already saved.
         answer_pending: Replies to the question the app just asked, rather than starting something new.
+        import_review: Brings in a review they wrote somewhere else (another app, a note), by pasting it or attaching screenshots, and asks for it to be added.
 
     medium:
       instructions: >-
@@ -128,7 +131,7 @@ policy:
   checks:
     intent:
       threshold: 0.65
-      option_thresholds: { edit_entry: 0.80, answer_pending: 0.75 }
+      option_thresholds: { edit_entry: 0.80, answer_pending: 0.75, import_review: 0.75 }
     medium:
       threshold: 0.70
       # Split read: ask "book or film?" first. Triggers when the runner-up is not negligible and the

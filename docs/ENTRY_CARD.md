@@ -16,6 +16,7 @@ off it. Decisions are from the 2026-10-31 planning session; the rules they serve
 | Left out | The parts of my messages not kept | collapsed; each segment has a tap to include it |
 | Answers | The question cards I answered | `answered`, `skipped` (greyed) |
 | Tags | Suggested chips and my own | `suggested`, `accepted` |
+| Source | The screenshot(s) an import came from, beside the transcription | present only for imports; see section 10 |
 | Why | How the message was read | collapsed; see section 6 |
 
 The draft card and the saved entry are the same component. A saved entry is the card with editing
@@ -56,7 +57,7 @@ words to keep.
    - `adds_content` can only be a bug, since step 2 makes additions impossible. It is logged loudly.
 6. **Typing it myself is always allowed.** Editing the body on the card replaces the extracted text with
    what I typed. Text I type counts as my own input for the `save_entry` guard. The entry records which
-   case it is: `body_origin` is `extracted`, `typed` or `mixed`.
+   case it is: `body_origin` is `extracted`, `typed`, `mixed` or `imported`.
 
 What is stored with the entry: the body text, the verdict, `body_origin`, and `body_spans_json` (where
 each kept span sits in which session message), so containment can be re-checked later.
@@ -121,3 +122,23 @@ For the Phase 0 corpus, so this behaviour has tests before it has code:
 - a message with two separate opinions where the agent keeps one -> `drops_opinion` warning;
 - a body I edited by hand -> `body_origin = typed`, still saves;
 - a vague rating -> empty control, not a guessed value.
+
+## 10. Imports
+
+A review brought in from screenshots (the Fable migration) uses the same card with three differences.
+
+- **The "original" is a transcription.** The model reads the image into text, and the body spans are
+  taken from that transcription. Because the transcription step is where a word could slip, **the
+  screenshot is shown beside the card** so I can compare against the real source.
+- **Fields read from the image carry a marker** (the rating and date as shown, the title, the creator)
+  and need my tap, like unverified web fields. The `save_entry` guard accepts a value read from an
+  attached image as my own input only once I have accepted it.
+- **The entry records where it came from:** `body_origin = imported` and `imported_from` (for example
+  `fable`). The screenshots stay with the entry as its source and are mirrored to R2.
+- Bank questions are not asked for an import unless something required is missing; a review written
+  months ago is not re-interviewed. A missing date or an ambiguous title is a `fill_gap` or
+  `choose_candidate` interaction as usual.
+
+Fixture cases: a rating drawn as star icons; a review split across two images; a screenshot that is not a
+review at all; a transcription that differs from the image by one word (caught by the side-by-side, not
+by code).
