@@ -1,0 +1,63 @@
+version: "2"
+
+run:
+  timeout: 5m
+  tests: true
+
+linters:
+  default: none
+  enable:
+    - bodyclose
+    - contextcheck
+    - errcheck
+    - errorlint
+    - exhaustive
+    - gosec
+    - govet
+    - ineffassign
+    - misspell
+    - noctx
+    - revive
+    - staticcheck
+    - unconvert
+    - unparam
+    - unused
+  settings:
+    revive:
+      rules:
+        - name: exported
+        - name: indent-error-flow
+        - name: errorf
+        - name: context-as-argument
+        - name: context-keys-type
+    exhaustive:
+      default-signifies-exhaustive: true
+    gosec:
+      excludes:
+        # G104: duplicate of errcheck. G114: net/http Serve is not used, the server is wrapped.
+        - G104
+    govet:
+      enable-all: true
+      disable:
+        # fieldalignment is an optimisation, not a correctness rule, and it fights readability.
+        - fieldalignment
+  exclusions:
+    generated: strict
+    # Never ignore an error that matters: these two presets only silence the standard library's own idioms
+    # (writing to a terminal, closing a body whose data was already read) and known false positives.
+    presets:
+      - std-error-handling
+      - common-false-positives
+    rules:
+      - path: _test\.go
+        linters:
+          - gosec
+          - contextcheck
+          - unparam
+
+formatters:
+  enable:
+    - gofumpt
+  settings:
+    gofumpt:
+      module-path: github.com/AutumnsGrove/cairn

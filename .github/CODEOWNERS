@@ -1,0 +1,3 @@
+# CODEOWNERS: Cairn is a single-operator repository.
+# Every path belongs to Autumn, who is also the only reviewer.
+* @AutumnsGrove

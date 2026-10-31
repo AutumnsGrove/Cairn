@@ -106,6 +106,9 @@ cairn/
   cmd/cairn-dev/         the offline dev stack: the real service against the world (never shipped)
   api/                   openapi.yaml and events.schema.json: the contract, written first
   internal/
+    archtest/            the dependency rule as a test (test-only package)
+    version/             the build's version string, set at link time
+    webui/               the embedded frontend; only a placeholder is committed under dist/
     domain/              pure: rating, dates, spans, title matching, merge, work identity
     store/               SQLite, migrations, triggers, repositories (sqlc)
     banks/               question-bank loader and selection (pure)
@@ -121,7 +124,7 @@ cairn/
   config/                shipped defaults: decisions.yaml, questions/*.yaml
   web/                   SvelteKit (Svelte 5), adapter-static, embedded into the binary
   compose/               docker-compose.yml, the host watcher, systemd units
-  docs/  mockups/
+  docs/  mockups/  scripts/  spikes/
 ```
 
 **The dependency rule** (an architecture test fails the build on a violation): `domain` imports nothing
@@ -144,8 +147,12 @@ names a provider endpoint, and nothing outside `agent` imports nova.
 6. Update the slice's status in `slices/README.md` and add a line to [`BUILD-LOG.md`](BUILD-LOG.md).
 7. If you hit a gate or a trigger, **stop** (section 7).
 
-Branching (assumed, confirm at S00): `main` is protected once CI exists; each slice is a branch and a pull
-request that must pass the required checks. Before S00 lands, commits go to `main`.
+Branching (settled at S00, 2026-10-31): **commits go straight to `main` until S13.** The ruleset on `main`
+forbids force-pushes and branch deletion but allows direct pushes, and **every required check runs on each
+push**, so a red `main` is visible within the run, not after a merge. At S13 the ruleset flips to
+PR-required and each slice becomes a branch and a pull request. [`../docs/CI.md`](CI.md) 4.6 holds the exact
+settings for both phases. Nothing else about the workflow changes; a slice is still one coherent commit
+series with its docs updated in the same commit.
 
 ## 6. Escalation gates
 
@@ -201,6 +208,7 @@ has answered.
 | File | Holds |
 |---|---|
 | [`BUILD-LOG.md`](BUILD-LOG.md) | What was built, when, by which slice, and what was learned. Append-only |
+| [`../STACK.md`](../STACK.md) | Every dependency: version, licence, reason, and its compressed cost |
 | `../NOTES.md` | Findings and uncertainties, dated |
 | `handoffs/` | One file per gate or stop |
 | `slices/README.md` | The status table. Keep it true |

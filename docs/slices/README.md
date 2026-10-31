@@ -55,7 +55,7 @@ S09 needs S02, S07 and S08. S13 needs a working app (S09 and S12).
 
 | Slice | Plan | Phase | Status |
 |---|---|---|---|
-| S00 | [Walking skeleton](S00-walking-skeleton.md) | 0 | planned |
+| S00 | [Walking skeleton](S00-walking-skeleton.md) | 0 | built; first CI run pending |
 | S01 | [Spikes](S01-spikes.md) | 0 | planned |
 | S02 | [Contract first](S02-contract.md) | 1 | planned |
 | S03 | [Domain core](S03-domain-core.md) | 1 | planned |

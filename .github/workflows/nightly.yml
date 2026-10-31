@@ -1,0 +1,91 @@
+name: nightly
+
+# Fuzzing and fresh advisories, off the critical path. A crasher is committed as a regression seed by hand:
+# the fuzzer's own corpus is cached between runs so a seed is not lost with the runner.
+
+on:
+  schedule:
+    - cron: '17 4 * * *'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: nightly
+  cancel-in-progress: true
+
+env:
+  GOTOOLCHAIN: local
+
+jobs:
+  fuzz:
+    name: fuzz
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: actions/cache@0057852bfaa89a56745cba8c7296529d2fc39830 # v4
+        with:
+          path: |
+            ~/.cache/go-build/fuzz
+          key: fuzz-${{ github.run_id }}
+          restore-keys: fuzz-
+      - name: Fuzz every target for five minutes
+        run: |
+          set -euo pipefail
+          for target in $(grep -rhoE '^func (Fuzz[A-Za-z0-9_]+)' --include='*_test.go' . | awk '{print $2}' | sort -u); do
+            pkg=$(dirname "$(grep -rlE "^func ${target}\(" --include='*_test.go' .)")
+            echo "::group::${target} in ${pkg}"
+            (cd "$pkg" && go test -run '^$' -fuzz "^${target}$" -fuzztime=5m .) || {
+              echo "::error::${target} failed; commit the new crasher under testdata/fuzz/${target}/ as a seed"
+              exit 1
+            }
+            echo "::endgroup::"
+          done
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        if: failure()
+        with:
+          name: fuzz-corpus
+          path: '**/testdata/fuzz/**'
+          retention-days: 14
+
+  advisories:
+    name: advisories
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+      - name: govulncheck
+        run: go run golang.org/x/vuln/cmd/govulncheck@latest ./...
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 26
+      - name: pnpm audit
+        working-directory: web
+        run: pnpm audit --audit-level high
+
+  codeql-weekly:
+    name: codeql weekly
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      security-events: write
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: github/codeql-action/init@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3
+        with:
+          languages: go, javascript-typescript
+      - uses: github/codeql-action/analyze@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3

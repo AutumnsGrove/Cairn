@@ -21,7 +21,10 @@ node_modules/
 /web/build/
 /web/.svelte-kit/
 /web/.vite/
-!/web/build/.gitkeep
+
+# The embedded frontend build. Only the placeholder is ever committed: the build is made from source.
+/internal/webui/dist/*
+!/internal/webui/dist/.gitkeep
 
 # Python (spike scripts only)
 __pycache__/

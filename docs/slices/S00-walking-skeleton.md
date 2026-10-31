@@ -57,10 +57,18 @@ Fuzz: the Host and Origin parser has a target and a seed corpus.
 
 None. The operator's action is applying the repository settings listed in S00.5.
 
-## Open questions
+## Decisions (answered 2026-10-31, before starting)
 
-- *Assumed, confirm:* module path `github.com/AutumnsGrove/cairn`; branch-per-slice with required checks.
-- Which Go version to pin (current stable at build time).
+- **Module path** is `github.com/AutumnsGrove/cairn`, capitalised like Warbler, Ivy and Coffer. Meridian's
+  lowercase path is not the house style; it is left as it is.
+- **Go is pinned to the minor, `go 1.26`,** in `go.mod`. CI reads `go-version-file` and takes the latest
+  1.26.x; patch bumps arrive as ordinary Dependabot pull requests. The machine here has go1.26.1.
+- **No branch-per-slice yet.** Commits go straight to `main` until S13 (deploy and update), when the
+  PR-required ruleset is switched on. This supersedes the earlier assumption in [`../BUILD.md`](../BUILD.md) 5
+  and the PR-required ruleset in [`../CI.md`](../CI.md) 4.6; both are amended to match. Required checks still
+  run on **every push to `main`**, force-push and branch deletion stay blocked, so nothing lands unreviewed by
+  CI, only unreviewed by a second human. Because the repo is public and `main` is directly pushable, `guard`,
+  `gitleaks` and push protection carry the weight a review would otherwise carry.
 
 ## Done when
 
