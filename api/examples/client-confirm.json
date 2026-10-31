@@ -1,0 +1,7 @@
+{
+  "type": "confirm",
+  "client_msg_id": "c_01",
+  "data": {
+    "base_version": 4
+  }
+}

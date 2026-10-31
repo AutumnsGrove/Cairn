@@ -1,0 +1,10 @@
+{
+  "seq": null,
+  "type": "ack",
+  "session_id": "s_8f2",
+  "ts": "2026-10-31T14:03:22Z",
+  "data": {
+    "client_msg_id": "c_01",
+    "status": "accepted"
+  }
+}

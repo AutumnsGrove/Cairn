@@ -1,0 +1,10 @@
+{
+  "seq": 54,
+  "type": "interaction_resolved",
+  "session_id": "s_8f2",
+  "ts": "2026-10-31T14:03:22Z",
+  "data": {
+    "interaction_id": "i_1",
+    "by": "user"
+  }
+}

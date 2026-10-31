@@ -1,0 +1,10 @@
+{
+  "seq": 43,
+  "type": "text_delta",
+  "session_id": "s_8f2",
+  "ts": "2026-10-31T14:03:22Z",
+  "data": {
+    "message_id": "m_8",
+    "text": "Found it. "
+  }
+}

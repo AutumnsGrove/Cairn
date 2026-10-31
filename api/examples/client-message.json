@@ -1,0 +1,10 @@
+{
+  "type": "message",
+  "client_msg_id": "c_01",
+  "data": {
+    "text": "finished dune last night, easy 4.5",
+    "attachments": [],
+    "client_date": "2026-10-31",
+    "tz": "Europe/London"
+  }
+}

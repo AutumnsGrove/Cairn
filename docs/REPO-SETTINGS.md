@@ -15,7 +15,7 @@ move onto the push. Apply these once:
   - **Require status checks to pass before merging**: on, and add the required checks below. Because direct
     pushes are allowed, the checks are reported on the push itself; a red run is visible within the run.
   - **Require a pull request**: **off**, for now.
-- **Required status checks:** `go`, `nocgo`, `coverage`, `web`, `e2e`, `guard`, `deps`, `codeql`. `deps` only
+- **Required status checks:** `go`, `nocgo`, `coverage`, `drift`, `web`, `e2e`, `guard`, `deps`, `codeql`. `deps` only
   runs on pull requests, so it is required only once pull requests are required (S13); until then it is listed
   but not enforced.
 - **Secret scanning** and **push protection**: on. The repo is public and holds no keys, and push protection

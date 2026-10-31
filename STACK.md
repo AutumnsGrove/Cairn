@@ -16,6 +16,7 @@ Planned, with the slice that adds it:
 | Module | Slice | Licence | Why | Cost |
 |---|---|---|---|---|
 | `modernc.org/sqlite` | S04 | BSD-3-Clause | Pure-Go SQLite, so `CGO_ENABLED=0` holds and the potato needs no C toolchain. The same choice as Warbler | Large module, binary grows by roughly 5 MB; no cgo, no CVE surface from a bundled C library |
+| `github.com/santhosh-tekuri/jsonschema/v6` | S02 | Apache-2.0 | Validates the session protocol in Go, so the server tests, the Vitest tests and the Playwright tests all check the same document. A hand-written validator would be a second, weaker contract | Small, pure Go, no cgo. Pulls `golang.org/x/text` for format assertions |
 | `github.com/AutumnsGrove/nova` | S08 | MIT | The agent loop, tools, providers and the `decide` package. A new app should not re-implement tool calling. Pinned to a tag once nova's embed shape is confirmed at S01 | Submodule of the house code; the import rule excludes `mode`, `config`, `session`, `tui`, `bundled` |
 
 ## Runtime (frontend)
@@ -25,6 +26,8 @@ Planned, with the slice that adds it:
 | `svelte`, `@sveltejs/kit`, `@sveltejs/adapter-static`, `vite`, `typescript` | S00 | MIT | The app shell, statically built and embedded. Svelte 5 runes | Build-time only; the output is a handful of small files |
 | `@lucide/svelte` | S10 | ISC | Icons as components, so only the ones used are bundled and nothing loads from a CDN | Tree-shaken to the icons imported |
 | `vitest`, `@testing-library/svelte`, `@playwright/test`, `@axe-core/playwright` | S00 | MIT / MPL-2.0 (axe-core) | Unit, end-to-end and accessibility checks | Dev dependencies, never shipped |
+| `ajv`, `ajv-formats` | S02 | MIT | The TypeScript side of the contract validator, so a fixture that validates in Go validates in a browser test too | Dev dependencies, never shipped |
+| `json-schema-to-typescript`, `openapi-typescript` | S02 | MIT | Generate the frontend's types from `api/`, so a component can never hand-copy a shape | Dev dependencies; run by `make gen`, and CI fails on a diff |
 
 ## Build and CI tools (never shipped)
 

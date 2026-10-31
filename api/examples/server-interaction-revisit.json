@@ -1,0 +1,28 @@
+{
+  "seq": 51,
+  "type": "interaction_request",
+  "session_id": "s_8f2",
+  "ts": "2026-10-31T14:03:22Z",
+  "data": {
+    "interaction_id": "i_5",
+    "kind": "revisit_choice",
+    "payload": {
+      "previous": {
+        "entry_id": "e_12",
+        "rating_q": 14,
+        "finished_on": "2024-03-02",
+        "verdict": "good, not great"
+      },
+      "options": [
+        {
+          "value": "new_entry",
+          "label": "A new entry"
+        },
+        {
+          "value": "edit_existing",
+          "label": "Edit the old one"
+        }
+      ]
+    }
+  }
+}

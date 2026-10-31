@@ -4,7 +4,15 @@ import globals from 'globals';
 
 export default [
   {
-    ignores: ['build/', '.svelte-kit/', 'node_modules/', 'test-results/', 'playwright-report/'],
+    ignores: [
+      'build/',
+      '.svelte-kit/',
+      'node_modules/',
+      'test-results/',
+      'playwright-report/',
+      // Generated from api/ by make gen; linting it would fight the generator.
+      'src/lib/contract/',
+    ],
   },
   ...ts.configs.recommended,
   ...svelte.configs.recommended,

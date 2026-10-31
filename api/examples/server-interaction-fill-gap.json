@@ -1,0 +1,14 @@
+{
+  "seq": 52,
+  "type": "interaction_request",
+  "session_id": "s_8f2",
+  "ts": "2026-10-31T14:03:22Z",
+  "data": {
+    "interaction_id": "i_6",
+    "kind": "fill_gap",
+    "payload": {
+      "field": "rating",
+      "prompt": "How many stars would you give it?"
+    }
+  }
+}

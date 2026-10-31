@@ -1,0 +1,10 @@
+{
+  "type": "interaction_response",
+  "client_msg_id": "c_01",
+  "data": {
+    "interaction_id": "i_1",
+    "value": {
+      "choice": "book"
+    }
+  }
+}

@@ -1,0 +1,11 @@
+{
+  "type": "draft_edit",
+  "client_msg_id": "c_01",
+  "data": {
+    "base_version": 4,
+    "set": {
+      "rating": "4.5",
+      "format": "paperback"
+    }
+  }
+}

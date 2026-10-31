@@ -1,0 +1,22 @@
+{
+  "seq": 46,
+  "type": "tool_end",
+  "session_id": "s_8f2",
+  "ts": "2026-10-31T14:03:22Z",
+  "data": {
+    "tool": "media_lookup",
+    "ok": true,
+    "inputs": {
+      "title": "Dune",
+      "medium": "book"
+    },
+    "summary": "Open Library returned 3 candidates",
+    "sources": [
+      {
+        "url": "https://openlibrary.org/works/OL893415W",
+        "title": "Dune"
+      }
+    ],
+    "cost_usd": 0.0
+  }
+}

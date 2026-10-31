@@ -1,0 +1,23 @@
+{
+  "seq": 41,
+  "type": "preread",
+  "session_id": "s_8f2",
+  "ts": "2026-10-31T14:03:22Z",
+  "data": {
+    "odds": {
+      "intent": {
+        "log_review": 0.93,
+        "chitchat": 0.05
+      },
+      "medium": {
+        "book": 0.81,
+        "film": 0.14
+      }
+    },
+    "fired": [
+      "intent",
+      "medium"
+    ],
+    "cost_usd": 0.0004
+  }
+}

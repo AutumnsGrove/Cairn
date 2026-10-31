@@ -1,0 +1,11 @@
+{
+  "seq": 40,
+  "type": "user_message",
+  "session_id": "s_8f2",
+  "ts": "2026-10-31T14:03:22Z",
+  "data": {
+    "message_id": "m_7",
+    "client_msg_id": "c_01",
+    "text": "hey so i finished reading dune last night, loved it honestly, easy 4.5"
+  }
+}

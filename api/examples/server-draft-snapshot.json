@@ -1,0 +1,121 @@
+{
+  "seq": 55,
+  "type": "draft_snapshot",
+  "session_id": "s_8f2",
+  "ts": "2026-10-31T14:03:22Z",
+  "data": {
+    "version": 4,
+    "draft": {
+      "version": 4,
+      "work": {
+        "id": "w_dune65",
+        "medium": "book",
+        "title": "Dune",
+        "year": 1965,
+        "creators": [
+          {
+            "role": "author",
+            "name": "Frank Herbert"
+          }
+        ],
+        "cover_url": "/covers/w_dune65.jpg",
+        "verified": true,
+        "primary_provider": "openlibrary",
+        "primary_id": "OL893415W"
+      },
+      "rating": {
+        "quarters": 18,
+        "scale": "quarter_stars_20",
+        "favourite": false
+      },
+      "verdict": "would read again",
+      "body": "the world felt so lived in but the middle dragged a bit",
+      "body_origin": "extracted",
+      "body_spans": [
+        {
+          "start": 120,
+          "end": 173,
+          "text": "the world felt so lived in but the middle dragged a bit"
+        }
+      ],
+      "format": "paperback",
+      "finished_on": "2026-10-29",
+      "blocks": {
+        "work": "verified",
+        "rating": "set",
+        "body": "extracted",
+        "facts": "parsed",
+        "answers": "answered"
+      },
+      "left_out": [
+        {
+          "id": "seg_1",
+          "text": "hey so i finished reading dune last night"
+        }
+      ],
+      "answers": [
+        {
+          "question_id": "setting",
+          "category": "Setting and world",
+          "prompt": "How was the world?",
+          "answer_type": "tags",
+          "values": [
+            "immersive",
+            "lived-in"
+          ]
+        },
+        {
+          "question_id": "recommend",
+          "prompt": "Would you recommend it?",
+          "answer_type": "choice",
+          "values": [
+            "yes"
+          ],
+          "skipped": false
+        }
+      ],
+      "tags": [
+        {
+          "name": "science fiction",
+          "source": "genre"
+        },
+        {
+          "name": "desert",
+          "source": "mine"
+        }
+      ],
+      "unverified": [
+        {
+          "field": "year",
+          "value": "1965",
+          "source_url": "https://example.test/dune",
+          "snippet": "first published in 1965"
+        }
+      ],
+      "fidelity": {
+        "status": "faithful"
+      },
+      "why": {
+        "checks": [
+          {
+            "check": "intent",
+            "option": "log_review",
+            "probability": 0.93,
+            "fired": true
+          }
+        ],
+        "tools": [
+          {
+            "tool": "media_lookup",
+            "ok": true,
+            "summary": "Open Library, one match"
+          }
+        ],
+        "preread_cost_usd": 0.0004,
+        "turn_cost_usd": 0.0021
+      },
+      "can_confirm": true,
+      "missing": []
+    }
+  }
+}

@@ -90,10 +90,10 @@ e2e: ## The Playwright suite against the real binary and the world (installs bro
 
 ## --- contract, guard, build ----------------------------------------------------------------------------
 
-gen: ## Regenerate types from api/ (nothing to generate until S02 lands the contract)
-	@if [ -d api ] && [ -n "$$(ls api/*.yaml api/*.json 2>/dev/null)" ]; then \
-	  echo "gen: the api/ directory exists; S02 supplies the generators"; \
-	else echo "gen: no api/ contract yet, nothing to generate"; fi
+gen: ## Regenerate everything derived from api/ (Go constants and TypeScript types)
+	$(GO) run ./tools/gen
+	@test -d $(WEB_DIR)/node_modules || { echo "gen: run make web-check once first (pnpm install)"; exit 1; }
+	cd $(WEB_DIR) && $(PNPM) run gen:contract
 
 verify-embed: ## Only the placeholder may be committed under the embed directory
 	@bash scripts/guard.sh embed

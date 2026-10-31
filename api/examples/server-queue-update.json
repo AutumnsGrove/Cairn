@@ -1,0 +1,9 @@
+{
+  "seq": null,
+  "type": "queue_update",
+  "session_id": "s_8f2",
+  "ts": "2026-10-31T14:03:22Z",
+  "data": {
+    "queued": 1
+  }
+}

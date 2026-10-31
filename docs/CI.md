@@ -22,9 +22,8 @@ and Playwright browsers.
 | `bench` | Short benchmarks compared with the base commit via `benchstat`, advisory until the numbers are trusted |
 | `coverage` | Coverage floors on the critical packages: spans, rating, merge, guards, protocol, decisions, update, database triggers |
 
-Required status checks on main: `go`, `nocgo`, `coverage`, `web`, `e2e`, `guard`, `deps`, `codeql`.
-`drift` joins them in S02, when `api/` first has something to generate, and `bench` stays advisory until its
-numbers are trusted.
+Required status checks on main: `go`, `nocgo`, `coverage`, `drift`, `web`, `e2e`, `guard`, `deps`,
+`codeql`. `bench` stays advisory until its numbers are trusted.
 
 ## 2. On merge to main (`docker-publish.yml`)
 

@@ -92,3 +92,26 @@ never takes a web field without an accept tap, never loses a trusted field, and 
   `ENTRY_CARD.md` rather than quietly appearing in a saved body.
 - **The thresholds are starting values.** The cutoff (0.72) and the minimum fuzzy length (12) are guesses with a
   test, not measurements. G4 replaces them with real odds.
+
+## 2026-10-31, S02, the contract
+
+**Built.** `api/events.schema.json`, `api/openapi.yaml`, `api/error-codes.json`, 34 golden examples in
+`api/examples/`, `internal/contract` (the Go validator and the generated code registry), the TypeScript types
+and validator under `web/src/lib/contract/`, `tools/gen`, `web/scripts/gen-contract.mjs`, `make gen`, and the
+`drift` CI job.
+
+**What is true now.** A frontend agent can build a screen from the generated types and an example without
+reading server code; a backend agent can build a handler from the schema without reading the UI. The same
+schema document validates in Go (santhosh-tekuri/jsonschema) and in TypeScript (ajv), so a fixture cannot pass
+on one side and fail on the other. `make gen` is idempotent, and CI fails when it is not.
+
+**Learned, for the next agent.**
+
+- **A colon in an unquoted YAML scalar is a parse error**, which `openapi-typescript` found in a `summary`. The
+  contract files are linted by being parsed, so a typo fails the generator rather than the frontend.
+- **Two ajv entry points cannot share a `$id`.** The schema is compiled twice, once for server events and once for
+  client messages, so the `$id` is dropped when the entry point is attached.
+- **Generated files must be excluded from ESLint and Prettier**, or every run of `make gen` fights the formatter
+  and the drift check never settles. They are still type-checked by `svelte-check`.
+- **The Go event structs wait for S07.** Nothing calls them yet, and generated code that nothing calls is where
+  drift hides. The drift job covers what is generated today.

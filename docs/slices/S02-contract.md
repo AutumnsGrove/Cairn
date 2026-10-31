@@ -61,8 +61,29 @@ None.
 - *Assumed, confirm:* the generators named in S02.3; REST under `/api/v1` kept internal.
 - Whether to model the WebSocket in AsyncAPI instead of plain JSON Schema (recommended: JSON Schema, simpler).
 
+## Decisions (settled while building, 2026-10-31)
+
+- **JSON Schema, not AsyncAPI** (the open question's recommendation): one document, one validator, and the same
+  file generates the TypeScript types.
+- **The Go event structs are generated when the session engine first needs them (S07).** Generating them now would
+  put a large file in the tree that nothing calls, and dead generated code is where drift hides. The schema, the
+  codes and the TypeScript types are generated today, and the drift job guards them.
+- **REST stays under `/api/v1` in spirit but is written as `/api/...`** for now, because nothing outside the app
+  calls it and the version segment would be a promise about an API that has one user. If that changes, the
+  version goes in the path and in the contract, in one commit.
+- **The schema and the error codes are generated *into* `internal/contract`** by `tools/gen`, because a Go package
+  cannot embed a file outside its own directory and a hand-kept second copy would drift.
+
 ## Done when
 
 A frontend agent can build any screen from the generated types and a golden example without reading server
 code, a backend agent can build any handler from the schema without reading UI code, and CI fails if either
 drifts.
+
+## Built (2026-10-31)
+
+`api/events.schema.json` (19 server events, 9 client messages, 7 interaction kinds, the whole draft card),
+`api/openapi.yaml` (18 paths), `api/error-codes.json` (25 codes, 7 notices, each with its UI copy), and 34
+golden examples named after the frames they came from. `internal/contract` validates them in Go and
+`web/src/lib/contract` validates them in TypeScript, against the same generated document. `make gen` is
+idempotent and the `drift` job fails the build when it is not.

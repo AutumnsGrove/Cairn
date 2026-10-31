@@ -4,3 +4,5 @@ node_modules/
 pnpm-lock.yaml
 test-results/
 playwright-report/
+# Generated from api/ by make gen: formatted by the generator, never by hand.
+src/lib/contract/

@@ -1,0 +1,9 @@
+{
+  "seq": null,
+  "type": "cost_update",
+  "session_id": "s_8f2",
+  "ts": "2026-10-31T14:03:22Z",
+  "data": {
+    "session_total_usd": 0.0031
+  }
+}

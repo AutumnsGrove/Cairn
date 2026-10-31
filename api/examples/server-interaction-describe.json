@@ -1,0 +1,59 @@
+{
+  "seq": 49,
+  "type": "interaction_request",
+  "session_id": "s_8f2",
+  "ts": "2026-10-31T14:03:22Z",
+  "data": {
+    "interaction_id": "i_3",
+    "kind": "describe",
+    "payload": {
+      "categories": [
+        {
+          "id": "characters",
+          "label": "Characters",
+          "covered": false,
+          "tags": [
+            {
+              "value": "believable",
+              "label": "believable",
+              "tone": "positive"
+            },
+            {
+              "value": "flat",
+              "label": "flat",
+              "tone": "negative"
+            },
+            {
+              "value": "morally-grey",
+              "label": "morally grey",
+              "tone": "mixed"
+            }
+          ],
+          "hints": [
+            "believable"
+          ]
+        },
+        {
+          "id": "setting",
+          "label": "Setting and world",
+          "covered": true,
+          "tags": [
+            {
+              "value": "immersive",
+              "label": "immersive",
+              "tone": "positive"
+            },
+            {
+              "value": "lived-in",
+              "label": "lived in",
+              "tone": "positive"
+            }
+          ],
+          "hints": [
+            "immersive"
+          ]
+        }
+      ]
+    }
+  }
+}

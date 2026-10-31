@@ -13,7 +13,8 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "test:unit": "vitest run",
-    "test:e2e": "playwright test"
+    "test:e2e": "playwright test",
+    "gen:contract": "node scripts/gen-contract.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.10.2",
@@ -22,10 +23,14 @@
     "@sveltejs/kit": "^3.1.1",
     "@sveltejs/vite-plugin-svelte": "^7.3.1",
     "@types/node": "^26.6.6",
+    "ajv": "^8.20.0",
+    "ajv-formats": "^3.0.1",
     "cookie": "^2.0.1",
     "eslint": "^10.14.0",
     "eslint-plugin-svelte": "^3.23.1",
     "globals": "^16.5.0",
+    "json-schema-to-typescript": "^16.0.0",
+    "openapi-typescript": "^7.13.0",
     "prettier": "^3.9.10",
     "prettier-plugin-svelte": "^4.1.1",
     "svelte": "^5.57.3",

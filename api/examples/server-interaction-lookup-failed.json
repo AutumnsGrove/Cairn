@@ -1,0 +1,15 @@
+{
+  "seq": 53,
+  "type": "interaction_request",
+  "session_id": "s_8f2",
+  "ts": "2026-10-31T14:03:22Z",
+  "data": {
+    "interaction_id": "i_7",
+    "kind": "lookup_failed",
+    "payload": {
+      "service": "openlibrary",
+      "reason": "It did not answer in time.",
+      "can_ask_polaris": true
+    }
+  }
+}

@@ -1,0 +1,43 @@
+{
+  "seq": 48,
+  "type": "interaction_request",
+  "session_id": "s_8f2",
+  "ts": "2026-10-31T14:03:22Z",
+  "data": {
+    "interaction_id": "i_2",
+    "kind": "choose_candidate",
+    "payload": {
+      "candidates": [
+        {
+          "id": "cand_1",
+          "provider": "openlibrary",
+          "provider_id": "OL893415W",
+          "title": "Dune",
+          "year": 1965,
+          "creator": "Frank Herbert",
+          "medium": "book",
+          "thumb_url": "/covers/cand_1.jpg"
+        },
+        {
+          "id": "cand_2",
+          "provider": "openlibrary",
+          "provider_id": "OL893435W",
+          "title": "Dune Messiah",
+          "year": 1969,
+          "creator": "Frank Herbert",
+          "medium": "book"
+        },
+        {
+          "id": "cand_3",
+          "provider": "openlibrary",
+          "provider_id": "OL24214284W",
+          "title": "Dune: The Graphic Novel",
+          "year": 2020,
+          "creator": "Brian Herbert",
+          "medium": "book"
+        }
+      ],
+      "none_label": "None of these"
+    }
+  }
+}

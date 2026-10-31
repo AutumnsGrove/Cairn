@@ -1,0 +1,40 @@
+{
+  "seq": 50,
+  "type": "interaction_request",
+  "session_id": "s_8f2",
+  "ts": "2026-10-31T14:03:22Z",
+  "data": {
+    "interaction_id": "i_4",
+    "kind": "question_form",
+    "payload": {
+      "questions": [
+        {
+          "id": "ending",
+          "prompt": "How did the ending land?",
+          "type": "choice",
+          "options": [
+            "stuck the landing",
+            "faded",
+            "rushed"
+          ],
+          "hint": "stuck the landing"
+        },
+        {
+          "id": "length",
+          "prompt": "Too long, too short, or right?",
+          "type": "choice",
+          "options": [
+            "too long",
+            "right",
+            "too short"
+          ]
+        },
+        {
+          "id": "recommend",
+          "prompt": "One line for a friend?",
+          "type": "short_text"
+        }
+      ]
+    }
+  }
+}

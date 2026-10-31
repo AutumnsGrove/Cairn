@@ -1,0 +1,167 @@
+{
+  "$comment": "Every stable error code Cairn can answer with, its HTTP status, and the plain words the UI shows. Code decides the meaning; the copy is short, has no em dashes, and never blames the operator. Generated into Go and TypeScript by `make gen`.",
+  "codes": [
+    {
+      "code": "bad_host",
+      "status": 400,
+      "copy": "This address is not Cairn."
+    },
+    {
+      "code": "bad_origin",
+      "status": 403,
+      "copy": "That request did not come from Cairn."
+    },
+    {
+      "code": "not_found",
+      "status": 404,
+      "copy": "There is nothing here."
+    },
+    {
+      "code": "method_not_allowed",
+      "status": 405,
+      "copy": "That is not something this page can do."
+    },
+    {
+      "code": "payload_too_large",
+      "status": 413,
+      "copy": "That is too big to send."
+    },
+    {
+      "code": "unavailable",
+      "status": 503,
+      "copy": "Cairn cannot reach that right now."
+    },
+    {
+      "code": "internal",
+      "status": 500,
+      "copy": "Something went wrong. Try again."
+    },
+    {
+      "code": "message_too_long",
+      "status": 413,
+      "copy": "That message is too long. Split it into two."
+    },
+    {
+      "code": "images_too_many",
+      "status": 413,
+      "copy": "That is more images than one message can carry."
+    },
+    {
+      "code": "session_too_long",
+      "status": 409,
+      "copy": "This conversation is long enough. Save what you have and start a new entry."
+    },
+    {
+      "code": "stale_version",
+      "status": 409,
+      "copy": "The card changed while you were editing. Here it is again."
+    },
+    {
+      "code": "duplicate_message",
+      "status": 200,
+      "copy": "That message already went through."
+    },
+    {
+      "code": "queue_full",
+      "status": 429,
+      "copy": "One message at a time. This one will wait until the reply is done."
+    },
+    {
+      "code": "rate_limited",
+      "status": 429,
+      "copy": "Slow down a moment."
+    },
+    {
+      "code": "reply_in_progress",
+      "status": 409,
+      "copy": "Finish the reply first."
+    },
+    {
+      "code": "update_in_progress",
+      "status": 409,
+      "copy": "An update is already running."
+    },
+    {
+      "code": "export_in_progress",
+      "status": 409,
+      "copy": "An export is already being written."
+    },
+    {
+      "code": "rating_required",
+      "status": 422,
+      "copy": "Add a rating before saving."
+    },
+    {
+      "code": "body_required",
+      "status": 422,
+      "copy": "Add a few words of your own before saving."
+    },
+    {
+      "code": "body_too_long",
+      "status": 422,
+      "copy": "That is longer than a review can be."
+    },
+    {
+      "code": "body_not_your_words",
+      "status": 422,
+      "copy": "The body has to come from what you wrote."
+    },
+    {
+      "code": "body_origin_invalid",
+      "status": 422,
+      "copy": "The card does not say where the body came from."
+    },
+    {
+      "code": "verdict_too_long",
+      "status": 422,
+      "copy": "A verdict is one short line."
+    },
+    {
+      "code": "verdict_not_your_words",
+      "status": 422,
+      "copy": "The verdict has to come from what you wrote."
+    },
+    {
+      "code": "date_invalid",
+      "status": 422,
+      "copy": "That is not a date."
+    }
+  ],
+  "notices": [
+    {
+      "code": "preread_unavailable",
+      "level": "info",
+      "copy": "The pre-read was not available for this message. Everything else still works."
+    },
+    {
+      "code": "preread_slow",
+      "level": "info",
+      "copy": "The pre-read took too long, so this message was read without it."
+    },
+    {
+      "code": "fidelity_drops_opinion",
+      "level": "warn",
+      "copy": "Something you said may be missing. Check what was left out."
+    },
+    {
+      "code": "fidelity_adds_content",
+      "level": "warn",
+      "copy": "The body did not match your words exactly. It was corrected."
+    },
+    {
+      "code": "provider_down",
+      "level": "warn",
+      "copy": "One of the metadata services is down. You can still log this review."
+    },
+    {
+      "code": "mirror_failed",
+      "level": "warn",
+      "copy": "The backup copy did not go through. Your review is safe on this machine."
+    },
+    {
+      "code": "updater_quiet",
+      "level": "warn",
+      "copy": "The updater has gone quiet. Check the potato."
+    }
+  ]
+}

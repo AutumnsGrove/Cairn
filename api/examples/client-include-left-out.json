@@ -1,0 +1,8 @@
+{
+  "type": "include_left_out",
+  "client_msg_id": "c_01",
+  "data": {
+    "base_version": 4,
+    "segment_id": "seg_1"
+  }
+}
