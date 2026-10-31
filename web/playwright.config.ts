@@ -16,10 +16,10 @@ const BASE_URL = `http://localhost:${PORT}`;
 
 export default defineConfig({
   testDir: 'e2e',
-  // One baseline per screen and browser, but not per platform: the same self-hosted fonts render the same on
-  // macOS and Linux, and a platform suffix would leave CI with no baseline at all on its first run. WebKit and
-  // Chromium do differ, so the project name stays in the file name.
-  snapshotPathTemplate: '{testDir}/__screenshots__/{testFileName}/{arg}-{projectName}{ext}',
+  // One baseline per screen, browser and platform. The same fonts rasterise differently on macOS and on the
+  // Linux CI runner, and the potato is Linux, so CI's copy is the one that matters. A baseline is regenerated
+  // on purpose by the `baselines` workflow, never by running --update-snapshots on whatever machine is handy.
+  snapshotPathTemplate: '{testDir}/__screenshots__/{testFileName}/{arg}-{projectName}-{platform}{ext}',
   fullyParallel: true,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 1 : 0,

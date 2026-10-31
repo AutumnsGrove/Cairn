@@ -1,0 +1,60 @@
+name: baselines
+
+# Regenerates the Playwright screenshot baselines on the platform CI runs on, and nowhere else.
+#
+# A pixel baseline is a claim about how the page renders on the machine that compares against it. The Linux CI
+# runner is that machine, so the Linux baselines are made here, deliberately, by a person, and then reviewed
+# and committed like any other change to the spec. Never run --update-snapshots locally to make a red test go
+# green: that would accept whatever the developer's own machine happened to draw.
+#
+# Manual only. It has no secrets and touches no provider.
+
+on:
+  workflow_dispatch:
+    inputs:
+      note:
+        description: 'Why the baselines are being regenerated (goes in the run name)'
+        required: true
+        type: string
+
+permissions:
+  contents: read
+
+jobs:
+  baselines:
+    name: regenerate
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: go.mod
+          cache: true
+      - uses: pnpm/action-setup@b906affcce14559ad1aafd4ab0e942779e9f58b1 # v4
+        with:
+          package_json_file: web/package.json
+          version: 10.32.1
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
+        with:
+          node-version: 26
+          cache: pnpm
+          cache-dependency-path: web/pnpm-lock.yaml
+      - run: pnpm install --frozen-lockfile
+      - name: Build the frontend into the embed directory
+        working-directory: .
+        run: make web
+      - run: pnpm exec playwright install --with-deps chromium webkit
+      - name: Rewrite the baselines
+        run: pnpm exec playwright test --update-snapshots
+        env:
+          CI: '1'
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: baselines-linux
+          path: web/e2e/__screenshots__/
+          retention-days: 14
