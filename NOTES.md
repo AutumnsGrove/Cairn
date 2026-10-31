@@ -43,16 +43,49 @@ infrastructure.
 
 ### Uncertain, needs Autumn
 
-- The name (holding name `OmniReviewer`; rename before release).
-- Whether this ever publishes anything publicly, or stays a private journal forever.
-- Rating scale, and whether "favourite" is separate from a 5/5.
-- TV: season or series as the unit of review.
-- Whether Fable can export book reviews in a usable format (needs a look inside the app).
-- Which metadata providers are acceptable, given key handling and rate limits.
+Superseded by the 2026-10-31 session below. The remaining open items live in
+[§3 of PLAN.md](PLAN.md#3-open-questions).
 
-All six are written up with recommendations as [§3 in PLAN.md](../PLAN.md#3-open-questions).
+## 2026-10-31 — Planning Q&A, and the name
 
-### Deliberately not decided yet
+The planning session turned the sketch into a chat-first design. The decisions are in
+[§2 of PLAN.md](PLAN.md#2-decisions-already-made); this section keeps what was learned along the way.
 
-The one architectural choice left open: embed nova directly in this app, or ship as a nova extension
-first. Phase 0 is a spike whose only job is to answer that with evidence.
+### Renamed
+
+OmniReviewer is now **Cairn**. Checked: nothing called cairn on the AutumnsGrove account or in the local
+projects folder. Plenty of unrelated GitHub projects use the word (the closest to confusing a web search
+are two AI-agent tools, `oritera/Cairn` and `cairn-dev/cairn`), which only matters for searching, not for
+our own namespaces. The GHCR check (`ghcr.io/autumnsgrove/cairn`) failed on a shell quoting error and was
+**not** confirmed; re-run it before the first image is published.
+
+### Jev, as learned from `ivy/docs/JEV.md` (verified there by live calls, not re-verified here)
+
+- `POST {openrouter_base}/systemone`, model `jev-1.14`, the same OpenRouter key as chat.
+- A question is `{type: "choice", instructions, criteria: {option: "when this applies"}}`; the answer is a
+  probability per option plus a confidence. Questions in one call are evaluated independently and in
+  parallel. About 250 ms for 20 questions, about $0.042 per million input tokens, free output, 32k-token
+  context (overrun is a clean 400, not silent truncation).
+- "Cannot hallucinate" only means the answer is one of the given options. Calibration holds across many
+  predictions, not for any single one, so the output is a hint.
+- Model yes/no as a `choice` with `yes`/`no`/`none` options; `noul` and `score` calibration is not measured.
+- Polaris's Oracle (`Polaris/docs/oracle.md`) is the design to copy: one batched call, a quiet default on
+  every check, per-check thresholds, notes framed to the model as hints, odds shown to the user, and it
+  never blocks a turn (2.5 s timeout).
+
+### Polaris as the web tool
+
+- `gateway.AskRequest` has `source`, `anonymous` (ghost thread), `focus_mode`, `quick_mode`; `AskResponse`
+  returns `answer`, structured `citations`, `cost_usd`, `thread_id`. Production listens on
+  `127.0.0.1:8899`.
+- The Polaris sidebar only shows threads from its own source, so Cairn's lookups (tagged `source: cairn`)
+  stay out of sight and still leave a full trace.
+- **Not yet confirmed:** the exact ask endpoint path, and how a container on the same host reaches Polaris's
+  host-published port. Both are Phase 0 items.
+
+### Uncertain, still needs a look
+
+- Whether Fable can export book reviews in a usable format.
+- Whether the Jev tags that matter for a review (format, themes) are reliably separable at all; the
+  Phase 0 spike records real odds on sample messages before any threshold is set.
+- Nova is leaning embedded, but that is still to be shown by the spike rather than decided.
