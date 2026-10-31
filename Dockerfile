@@ -12,7 +12,7 @@ RUN pnpm install --frozen-lockfile
 COPY web/ ./
 RUN pnpm run build
 
-FROM --platform=$BUILDPLATFORM golang:1.26-trixie AS build
+FROM --platform=$BUILDPLATFORM golang:1.27-trixie AS build
 WORKDIR /src
 COPY go.mod ./
 COPY . .
