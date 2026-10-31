@@ -201,3 +201,18 @@ func TestResolveDateNilZone(t *testing.T) {
 		t.Fatalf("confidence = %q", got.Confidence)
 	}
 }
+
+// The timezone database is embedded in this package, so a zone name from the phone always resolves, even in the
+// distroless image where /usr/share/zoneinfo does not exist. This test fails if the import is ever dropped.
+func TestTimeZoneDatabaseIsEmbedded(t *testing.T) {
+	for _, name := range []string{"Europe/London", "America/New_York", "Pacific/Auckland", "Asia/Kolkata"} {
+		loc, err := time.LoadLocation(name)
+		if err != nil {
+			t.Fatalf("LoadLocation(%q): %v; the embedded timezone database is missing", name, err)
+		}
+		got := ResolveDate("last night", time.Date(2026, time.October, 30, 12, 0, 0, 0, loc), loc)
+		if got.Confidence != DateClear {
+			t.Errorf("%s: last night was not resolved", name)
+		}
+	}
+}

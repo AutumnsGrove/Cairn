@@ -5,6 +5,10 @@ import (
 	"strconv"
 	"strings"
 	"time"
+	// The timezone database is embedded, because the deployed image is distroless and has no /usr/share/zoneinfo,
+	// while the zone name comes from the phone on every message. Without this, "last night" would silently fall
+	// back to UTC on the potato and land on the wrong day.
+	_ "time/tzdata"
 )
 
 // Dates resolve against the phone, not the server: the client sends its local date and zone with every message,

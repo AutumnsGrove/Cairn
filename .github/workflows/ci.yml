@@ -88,7 +88,8 @@ jobs:
       - name: Critical packages must stay covered
         run: |
           set -euo pipefail
-          go test -count=1 -coverprofile=/tmp/cover.out ./... >/dev/null
+          # Output is not hidden: a failing test must be readable in the log, not just an exit code.
+          go test -count=1 -coverprofile=/tmp/cover.out ./...
           go tool cover -func=/tmp/cover.out | tail -1
           # The floor per package. domain is the heart: the span locator and the save guard live there, so it
           # carries the highest bar in the project (docs/slices/S03-domain-core.md).
