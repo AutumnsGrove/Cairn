@@ -160,3 +160,17 @@ disappears, because both processes share the host's loopback.
   so the value is the offset from the start of the contiguous run modulo ten, not the offset from the block.
 - **A homoglyph should match.** Storing the source's own word is what matters; refusing the match would make
   screenshot imports worse for no safety gain.
+
+## 2026-10-31 — S02, and a production bug CI found by accident
+
+- **The distroless image has no `/usr/share/zoneinfo`.** The date tests load `Europe/London`, which failed on the
+  CI runner and would have failed on the potato for every real message, because the zone name comes from the
+  phone. `internal/domain` now imports `time/tzdata` and a test fails if that import is dropped. This is the kind
+  of bug that only shows up in the environment that matters.
+- **`go test ./... >/dev/null` hides the reason a job failed.** A red job with no output cost a round trip to
+  diagnose; the coverage job now prints test output.
+- **Generated Go has to be formatted by the generator.** The lint job went red on generated const alignment, so
+  `tools/gen` runs `go/format` before writing. A generator that leaves the tree unformatted makes every run of
+  `make gen` a drift failure.
+- **`api/` is now the contract:** 19 server events, 9 client messages, 7 interaction kinds, 18 REST paths, 34
+  examples, 25 error codes and 7 notices with their copy. Both sides validate the same document.
