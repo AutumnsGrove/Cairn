@@ -85,16 +85,30 @@ That entry is then browsable, searchable and filterable across media in plain vi
 |---|---|
 | Name | **Cairn** (decided 2026-10-31). Local folder, GitHub repo, image and units all use `cairn` |
 | Interface | **Chat for input and edits, plain views for reading.** A draft shows as an editable entry card (tap a field to fix it), and typing a correction in the chat also works |
-| Conversation unit | **One short session per entry** (lives until saved or discarded; unfinished drafts are resumable) **plus a general chat** for questions about the library |
+| Conversation unit | **One short session per entry** (lives until saved or discarded; unfinished drafts are resumable) **plus a general chat** for questions about the library. The general chat may read and edit, with a confirm card for every edit. It can never delete |
 | Agent runtime | **Nova** (`github.com/AutumnsGrove/nova`), embedded as a library in the Go service — not a bespoke loop, not a LangChain-style dependency. Leaning embed over "ship as a nova extension"; Phase 0 confirms it |
-| Main model | A cheap, strong model through **OpenRouter** (the same key Polaris and Ivy use) |
+| Main model | **`deepseek/deepseek-v4.1-flash-1017`** through **OpenRouter** (the same key Polaris and Ivy use). A dated pin on purpose, so behaviour can't shift silently. $0.15 per million input tokens and $0.60 per million output, 1M context, tool calling. Phase 0 checks it against the fixture corpus rather than comparing models; nova's provider layer keeps a swap cheap |
 | Pre-read classifier | **Jev** (`jev-1.14` via OpenRouter `/systemone`), one batched call per message, in the style of Polaris's Oracle: a quiet default on every check, a per-check threshold, odds shown on the card, never blocks a turn (unconfigured, errors or slow means the turn runs without it). Probabilities are hints, never decisions |
 | Extraction | **Deterministic parse first** (rating, date, obvious format cues). Jev only for fuzzy fields (format, themes). If no rating is stated, the agent asks |
 | Medium ambiguity | When Jev's medium read is split (e.g. "Dune": book or film), **ask "book or film?" before any lookup** |
 | Media model | Media-agnostic from the start: a `work` has a `medium` (film, tv, book, game, album, podcast, theatre, other) plus medium-specific fields as data, not columns |
 | Metadata | **One real API per medium first** (TMDB for film and TV, Open Library for books; other media added as we reach them), **merged into one canonical work** with per-source snapshots kept. **Polaris is the fallback** for anything the APIs miss |
-| Web lookups | Through the colocated **Polaris**, which already wraps SearXNG with a Brave fallback. Two tools: `lookup_web` (structured args: title, medium, creator, field wanted — the default) and `ask_polaris_freeform` (a free prompt, the escape hatch). Calls carry `source: cairn` and live as normal Polaris threads, which its sidebar never shows. The thread id and citations are stored with the snapshot |
+| Web lookups | Through the colocated **Polaris**, which already wraps SearXNG with a Brave fallback. Two tools: `lookup_web` (structured args: title, medium, creator, field wanted — the default) and `ask_polaris_freeform` (a free prompt, the escape hatch; logged only, no confirm tap). Calls carry `source: cairn` and live as normal Polaris threads, which its sidebar never shows. The thread id and citations are stored with the snapshot |
 | Web trust | Web-derived fields are **proposed, never canonical**: shown on the card as unverified with their source URL, accepted with one tap |
+| Transport | **WebSocket both ways.** The server keeps a per-session event log with sequence numbers. A client that reconnects (a sleeping phone, a killed PWA) says the last number it saw and gets everything after it replayed |
+| Question sets | **Per-medium YAML templates**: a curated bank of questions per medium, each with a type. The model picks 3 to 6 that the message hasn't already answered and phrases them; it does not invent the questions. Answers stay comparable across entries |
+| Pre-read checks (v1) | `intent` (chitchat, log_review, find_entries, edit_entry, answer_pending), `medium`, `format`, `revisit`, and about eight `mentions_*` yes/no flags (sound, visuals, acting, story, pacing, ending, characters, world). Defined in a **hot-reloaded YAML registry**, baked into the image and bind-mounted over top as Polaris does for `prompts.yaml`. Thresholds are set from real odds in Phase 0 |
+| Revisits | Logging something already in the library asks: **new entry on the same work, or edit the old one**, showing the previous entry and rating. Several entries per work form a timeline |
+| Edits and history | Editing a saved entry is a draft revision with a confirm tap. Every confirmed edit stores the previous version in an **append-only revisions table, kept forever** |
+| Deleting | **Soft-delete only, and hard deletes are blocked by the database itself** (a `BEFORE DELETE` trigger aborts on entries, revisions, snapshots and answers). Deleting exists only on the plain entry view, never in chat. **There is no purge**: soft-delete is permanent, and backups hold every copy |
+| Drafts | Kept until saved or discarded; they never expire. A Drafts list, with a count on the home screen |
+| Covers | Downloaded once, stored under `data/covers/`, mirrored to R2. No hot-linked third-party images. TMDB's image terms get checked in Phase 0 before this is final |
+| Degraded mode | If a metadata service is down, the review can still be logged as a **manual, unverified work** and enriched later with a "fill in details" action. A review is never blocked by someone else's outage |
+| Tags | Suggested from the `mentions_*` flags and the provider's genres, shown on the card for me to accept or edit. Free-text tags allowed. Nothing is applied without being shown |
+| Home | The chat input at the bottom, with recent entries and the drafts count above it. Library, search and the general chat are one tap away |
+| Testing | A **fixture corpus** of sample messages with the expected parse, expected Jev outcome and expected tool sequence (the Oracle model: hand-written prompts with expected winners), run against **fake TMDB, Open Library, Jev and Polaris servers**. A separate live eval runs on demand |
+| Photos | Deferred to Phase 4. The `media` table stays in the schema so adding them is not a migration |
+| First media | **Books (Open Library) and films and TV (TMDB) together** in Phase 1, so the merge and disambiguation logic is proven against two real sources |
 | Ratings | **Quarter-star steps from 0.25 to 5.0**, stored as an **integer 1–20 (quarter-stars)** plus the scale name, so the scale can change later without a migration. **Favourite is a separate flag**, not the same as a top rating |
 | TV | A work is the **series** in v1. The schema lets an entry point at a season later, so there is no migration, but only the series flow is built |
 | Review body | My words, always. The agent may structure, ask, and punctuate; it must never write opinions I didn't express |
@@ -112,31 +126,34 @@ That entry is then browsable, searchable and filterable across media in plain vi
 
 ## 3. Open questions
 
-Answer these before the phase that needs them. Each has a recommendation; none of them blocks the rest
-of the plan.
+What is still open, each with the phase that needs it. None of these blocks the rest of the plan.
 
-1. **Fable migration.** Can Fable export book reviews (CSV/markdown/JSON)? If yes, an import command in
-   Phase 4; if no, copy-paste as manual entries. Needs checking in the app.
-2. **Photos.** Do reviews ever carry my own photos (a theatre ticket, a bookshelf, a cinema screen)?
-   If yes it's Phase 4 and storage/backup sizing changes. (Recommendation: defer, as planned.)
-3. **Providers beyond film, TV and books.** MusicBrainz needs a user agent and 1 req/s; IGDB needs
-   Twitch OAuth; podcasts and theatre have no obvious single source. Decide per medium as each is
+1. **Fable migration** (Phase 4). Can Fable export book reviews (CSV/markdown/JSON)? If yes, an import
+   command; if no, copy-paste as manual entries. Needs a look inside the app.
+2. **Providers beyond film, TV and books** (Phase 2). MusicBrainz needs a user agent and 1 req/s; IGDB
+   needs Twitch OAuth; podcasts and theatre have no obvious single source. Decide per medium as each is
    reached, and let Polaris cover the rest until then.
-4. **What the general chat may write.** Read-only ("what did I watch in March?"), or may it also edit
-   and delete entries? (Recommendation: read-only at first; edits go through an entry's own session so
-   the confirm-tap rule applies.)
-5. **Streaming transport** for the chat UI: SSE (as the original sketch had) or WebSocket. (Recommendation:
-   SSE for output, plain POSTs for input; fewer moving parts.)
-6. **Where the Jev question registry lives.** A YAML file hot-reloaded like Polaris's `prompts.yaml`
-   (recommended), or compiled in.
-7. **Should `ask_polaris_freeform` require a confirm tap, or be logged only?** The escape hatch is the one
-   path where review text could reach a web search. It is currently decided as fully free-form; this is
-   the cheap safeguard if that starts to feel risky.
-8. **GHCR name check.** `ghcr.io/autumnsgrove/cairn` is probably free but was not confirmed.
+3. **TMDB's image and attribution terms** (Phase 0). The cover-caching decision in [§2](#2-decisions-already-made)
+   is final only once this is read.
+4. **Polaris's ask endpoint and container networking** (Phase 0). The exact path, and how the Cairn
+   container reaches Polaris's host-published port.
 
-Resolved on 2026-10-31 and moved into [§2](#2-decisions-already-made): the name, public or private,
-the rating scale, the unit of TV review, whether the agent saves silently (it never does), voice input,
-spoilers, and the first provider set.
+Defaults assumed without asking, because they follow from decisions above. Say so if any is wrong:
+
+- **Dates.** The phone sends its local date and timezone with every message, so "finished last night"
+  resolves against where I am, not the server's clock.
+- **Tool output is data, never instructions.** Web text returned by Polaris is shown to the model as
+  quoted material, and no guardrail depends on the model resisting it. The deterministic checks in
+  [§5](#5-the-review-flow-and-its-tools) are what keep a bad result from becoming a saved fact.
+- **Spend is recorded, not yet shown.** Every Jev, model and Polaris cost is stored per call; a spend
+  view waits until it is wanted.
+
+Resolved and moved into [§2](#2-decisions-already-made): the name, public or private, the rating scale,
+the unit of TV review, whether the agent saves silently (it never does), voice input, spoilers, the
+first providers, the general chat's powers, transport, the Jev registry, the free-form Polaris guard,
+the GHCR name (not publicly taken; first publish confirms), edit history, deletion, draft expiry, question
+sets, the main model, testing, revisits, covers, degraded mode, tags, the home screen, photos, and the
+first media.
 
 ## 4. Architecture
 
@@ -150,7 +167,7 @@ spoilers, and the first provider set.
  THE POTATO (Docker)     ▼
  ┌────────────────────────────────────────────────────────────┐
  │ Go service (127.0.0.1:8893)                                │
- │   HTTP API + SSE      (my UI)                              │
+ │   HTTP API + WebSocket (my UI)                             │
  │   pre-read: Jev (one batched call per message)             │
  │   embedded nova agent loop  ──► OpenRouter                 │
  │     tools: media_lookup · lookup_web · ask_polaris_freeform│
@@ -217,17 +234,27 @@ strongly at embedding. Phase 0 confirms it with a spike, not an opinion.
 Nothing in steps 2–10 writes a saved entry. Step 11 is the only commit, and it is always mine to make.
 In-progress work lives in a draft that can be resumed after closing the app.
 
+Branches off the main flow:
+
+- **Revisit.** If the work is already in the library (the Jev `revisit` check, backed by an exact match
+  on the chosen work), the card shows the previous entry and rating and asks: new entry, or edit the
+  old one.
+- **Outage.** If a metadata service is down or finds nothing, the review is logged against a manual,
+  unverified work, and a "fill in details" action retries the lookup later.
+- **Edit.** Saying "change my Dune rating" in the general chat opens a draft revision of that entry with
+  the same card and confirm tap. The previous version goes into the revisions table.
+
 ### Tool contracts (shape, not final names)
 
 | Tool | In | Out |
 |---|---|---|
 | `media_lookup` | `query`, optional `medium`, `year`, `creator` | up to 5 candidates: `provider`, `provider_id`, `title`, `year`, `creator`, `medium`, `thumb` |
 | `lookup_web` | `title`, `medium`, optional `creator`, `field` | labelled fields each with a source URL, plus the Polaris thread id and citations. Calls Polaris with `source: cairn` |
-| `ask_polaris_freeform` | `prompt` | Polaris's answer and citations. The escape hatch; see [§3](#3-open-questions) q7 |
+| `ask_polaris_freeform` | `prompt` | Polaris's answer and citations. The escape hatch; logged only, no confirm tap |
 | `merge_candidates` | `provider`, `provider_id` | merged canonical draft + `sources[]` snapshots; flags conflicting fields and any web-derived (unverified) ones |
 | `ask_reviewer` | `medium`, `questions[]` (each with `id`, `prompt`, `type`, `options?`, `skipped_ok`) | `answers[]` — typed values, plus what was skipped |
 | `save_entry` | the full draft | committed entry id |
-| `search_library` | text, filters | my own past entries (so "have I reviewed this already?" and "what did I watch in March?" are answerable). Read-only in the general chat |
+| `search_library` | text, filters | my own past entries (so "have I reviewed this already?" and "what did I watch in March?" are answerable). Reads only; edits happen through a draft revision and the confirm card |
 
 Jev itself is not a model-callable tool. It is a pipeline step the service runs before each turn.
 
@@ -256,6 +283,7 @@ works (                      -- the thing itself, canonical and merged
   details_json,              -- medium-specific: runtime, pages, isbn, track count, platform…
   cover_path, cover_source,
   primary_provider, primary_id,
+  verified INTEGER,          -- 0 for a manual work logged during an outage
   created_at, updated_at
 )
 
@@ -280,6 +308,7 @@ entries (                    -- my review of a work; one work can have several o
   format TEXT,                         -- cinema | streaming | audiobook | hardback | …
   finished_on TEXT,                    -- local date
   status TEXT,                         -- draft | saved | published (published is Phase 5)
+  deleted_at TEXT,                     -- soft delete only; hard deletes are blocked by trigger
   created_at, updated_at
 )
 
@@ -294,6 +323,15 @@ sessions (                   -- the app's own conversations; nova's are not impo
   created_at, updated_at
 )
 
+session_events (            -- the per-session event log the WebSocket resumes from
+  id, session_id, seq,       -- seq is the number a reconnecting client reports
+  kind, payload_json, created_at
+)
+
+entry_revisions (            -- append-only: the previous version of an entry at each confirmed edit
+  id, entry_id, revision, snapshot_json, created_at
+)
+
 preread (                    -- every Jev call, so thresholds can be tuned from real use
   id, session_id, message_index, model,
   odds_json,                 -- every check's full probability vector
@@ -301,7 +339,7 @@ preread (                    -- every Jev call, so thresholds can be tuned from 
   cost_usd, latency_ms, created_at
 )
 
-tags (id, name) · entry_tags (entry_id, tag_id)
+tags (id, name) · entry_tags (entry_id, tag_id, source)   -- source: genre | mentioned | mine
 media (id, entry_id, path, kind)        -- optional photos, Phase 4+
 mirrors (id, ran_at, target, status, bytes)   -- R2 backup receipts
 ```
@@ -317,6 +355,9 @@ Rules:
 - **Timestamps are the phone's local date** for `finished_on` (a review is about the evening I finished
   it, not UTC).
 - **A draft is an entry with `status = draft`.** It never shows in the library views or the export.
+- **Nothing is hard-deleted.** `BEFORE DELETE` triggers abort on `entries`, `entry_revisions`,
+  `work_sources` and `answers`; deleting an entry sets `deleted_at`. There is no purge command, and R2
+  backups keep every copy. `entry_revisions` also rejects updates, so it is append-only.
 
 ## 7. Cross-referencing and merging
 
@@ -350,6 +391,7 @@ migration.
 | Port | `8893` — **verified free** on the potato 2026-10-30 (in use: 22 53 80 443 5335 8080 8081 8418 8766 8888 8890 8891 8892 8899 11434) |
 | Container | Compose project at `~/Cairn`, image pinned by digest in `.env`, published `127.0.0.1:8893` only, non-root, read-only rootfs |
 | Data | `~/Cairn/data/` — `cairn.db`, `covers/`, `exports/`, `backups/` |
+| Config | `jev.yaml` (pre-read checks, options, thresholds) and `questions/<medium>.yaml` (question banks), baked into the image and bind-mounted over top so host edits hot-reload, the way Polaris handles `prompts.yaml` |
 | Health | `GET /healthz` → `{"status":"ok","version":"r…"}` only (two fields, like Warbler's) |
 | Secrets | `OPENROUTER_API_KEY` (main model and Jev, one key) and metadata-provider keys in `~/Cairn/.env`; `rclone` config for R2 already exists on the box |
 | Polaris | Colocated at `127.0.0.1:8899`. Cairn calls its ask API (`gateway.AskRequest`/`AskResponse`: `source`, `citations`, `cost_usd`). How the Cairn container reaches the host-published Polaris port (host networking or `host.docker.internal`) is a Phase 0 item |
@@ -376,8 +418,12 @@ Each phase ends with "Done when". Stop and ask at every **[HUMAN]** item.
   `citations` shape, and that the Cairn container can reach it.
 - Answer the deferred architectural choice in [§4](#4-architecture) (embed vs extension) with what the
   spike showed.
-- Get a TMDB and an Open Library key working (rate limits, attribution requirements written down).
-- **[HUMAN]** autumn answers [§3](#3-open-questions) questions 4–7 as they become relevant.
+- Get a TMDB key and an Open Library client working (rate limits and attribution requirements written down).
+- Read TMDB's image and attribution terms and write the cover-caching decision down.
+- Write the first **fixture corpus** (about 30 sample messages with expected parse, expected Jev outcome
+  and expected tool sequence), then run the pre-read and the pinned model against it. Set the first Jev
+  thresholds from the real odds.
+- **[HUMAN]** autumn reviews the corpus and the thresholds.
 
 **Done when:** a free-form sentence in a terminal produces a real candidate list from real metadata,
 the Jev and Polaris calls both work from Go, and the embed-or-extension choice is written down.
@@ -385,21 +431,25 @@ the Jev and Polaris calls both work from Go, and the embed-or-extension choice i
 ### Phase 1: One entry, one medium, end to end
 
 - Go service + embedded SvelteKit shell; SQLite with the schema above; `/healthz`.
-- Sessions: a per-entry chat with resumable drafts.
+- Sessions: a per-entry chat over a WebSocket with a server-side event log and resume, resumable drafts,
+  and a Drafts list.
+- The revisit flow (new entry or edit the old one) and the manual-entry fallback for outages.
+- Revisions and soft-delete, with the database triggers that block hard deletes.
 - Pre-read → `media_lookup` → pick → `merge_candidates` → `ask_reviewer` → draft card → confirm →
   `save_entry`.
-- One medium wired properly (books *or* films — pick whichever has the better API day one).
+- Two sources wired properly: **books (Open Library) and films and TV (TMDB)**, so the merge and
+  disambiguation logic is exercised from day one.
 - Entry view: metadata block, my body, answers, rating (quarter-stars).
 
 **Done when:** a review typed as a sentence becomes a saved entry with correct metadata and 3+ answers,
-from the phone, over Tailscale, with no manual field entry.
+from the phone, over Tailscale, with no manual field entry, for both a book and a film.
 
 ### Phase 2: Every medium, one library
 
 - Medium table with per-medium providers and per-medium question sets.
 - `lookup_web` and the unverified-field flow, so anything an API misses can still be logged.
 - Library view: filter by medium, sort by date/rating, search my text (SQLite FTS5).
-- The general chat, read-only, backed by `search_library`.
+- The general chat, backed by `search_library`, with edits going through a confirm card.
 - Duplicate detection and the "this already exists" path.
 
 **Done when:** reviews of four different media coexist in one library and the filters work on a phone.
@@ -415,8 +465,8 @@ restore has actually been performed, not just designed.
 
 ### Phase 4: Comfort
 
-- Photos, edit history, season-level TV reviews, voice input, spoiler handling — whichever of these
-  turned out to matter.
+- Photos, season-level TV reviews, voice input, spoiler handling — whichever of these turned out to
+  matter.
 - Fable import, if Fable exports anything usable ([§3](#3-open-questions) q1).
 
 **Done when:** the thing I reach for is this app, not a notes file.
@@ -430,7 +480,7 @@ field, so this adds a build step and a way to mark an entry published, and nothi
 
 | Item | Estimate |
 |---|---|
-| Agent model calls per review | a handful of small calls; a review should cost **cents**, and the flow is designed to be 3–6 model turns, not 30 |
+| Agent model calls per review | a handful of small calls; a review should cost **cents**, and the flow is designed to be 3–6 model turns, not 30. At the pinned model's prices a 20k-token-in, 2k-token-out turn is roughly $0.004 |
 | Jev pre-read | about $0.042 per million input tokens and free output, so a batched call is a fraction of a cent. Logged in `preread.cost_usd` |
 | Polaris web lookups | Polaris reports `cost_usd` per ask; it is stored with the snapshot. Most reviews should never need one |
 | Metadata | TMDB and Open Library free (attribution required); MusicBrainz free with a rate limit |
@@ -457,6 +507,8 @@ not a cheaper model.
    (a rating, a body, a quarter-star value) is enforced by deterministic code.
 7. **Export must outlive the app.** If this code vanished tomorrow, the JSON should still be readable.
 8. **Tailnet-only.** No Funnel, no public port, no accounts.
+9. **Nothing is ever hard-deleted.** Deletes are soft, enforced by the database, and there is no purge.
+   Every confirmed edit keeps the previous version.
 
 ## 12. Working agreement
 
@@ -467,5 +519,6 @@ not a cheaper model.
   pure merge logic is tested hard because it is the part that can silently corrupt history.
 - No telemetry, no third-party scripts, fonts or icons loaded from outside.
 - Write for a reader new to the technical vocabulary; explain terms in plain language.
+- Every new pre-read check and every guardrail lands with fixture-corpus cases.
 - Findings and uncertainties go in `NOTES.md` as they are learned.
 - No emojis anywhere: UI, docs, commit messages.
