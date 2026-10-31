@@ -45,8 +45,8 @@ func New() (*Validator, error) {
 	compiler := jsonschema.NewCompiler()
 	// Formats are asserted: a date that is not a date is a contract failure, not a warning.
 	compiler.AssertFormat()
-	if err := compiler.AddResource(schemaURL, doc); err != nil {
-		return nil, fmt.Errorf("contract: %w", err)
+	if addErr := compiler.AddResource(schemaURL, doc); addErr != nil {
+		return nil, fmt.Errorf("contract: %w", addErr)
 	}
 	server, err := compiler.Compile(schemaURL + "#/$defs/serverEvent")
 	if err != nil {

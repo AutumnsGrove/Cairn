@@ -7,31 +7,31 @@ type ErrorCode string
 
 // Every error code Cairn can answer with.
 const (
-	CodeBadHost ErrorCode = "bad_host"
-	CodeBadOrigin ErrorCode = "bad_origin"
-	CodeBodyNotYourWords ErrorCode = "body_not_your_words"
-	CodeBodyOriginInvalid ErrorCode = "body_origin_invalid"
-	CodeBodyRequired ErrorCode = "body_required"
-	CodeBodyTooLong ErrorCode = "body_too_long"
-	CodeDateInvalid ErrorCode = "date_invalid"
-	CodeDuplicateMessage ErrorCode = "duplicate_message"
-	CodeExportInProgress ErrorCode = "export_in_progress"
-	CodeImagesTooMany ErrorCode = "images_too_many"
-	CodeInternal ErrorCode = "internal"
-	CodeMessageTooLong ErrorCode = "message_too_long"
-	CodeMethodNotAllowed ErrorCode = "method_not_allowed"
-	CodeNotFound ErrorCode = "not_found"
-	CodePayloadTooLarge ErrorCode = "payload_too_large"
-	CodeQueueFull ErrorCode = "queue_full"
-	CodeRateLimited ErrorCode = "rate_limited"
-	CodeRatingRequired ErrorCode = "rating_required"
-	CodeReplyInProgress ErrorCode = "reply_in_progress"
-	CodeSessionTooLong ErrorCode = "session_too_long"
-	CodeStaleVersion ErrorCode = "stale_version"
-	CodeUnavailable ErrorCode = "unavailable"
-	CodeUpdateInProgress ErrorCode = "update_in_progress"
+	CodeBadHost             ErrorCode = "bad_host"
+	CodeBadOrigin           ErrorCode = "bad_origin"
+	CodeBodyNotYourWords    ErrorCode = "body_not_your_words"
+	CodeBodyOriginInvalid   ErrorCode = "body_origin_invalid"
+	CodeBodyRequired        ErrorCode = "body_required"
+	CodeBodyTooLong         ErrorCode = "body_too_long"
+	CodeDateInvalid         ErrorCode = "date_invalid"
+	CodeDuplicateMessage    ErrorCode = "duplicate_message"
+	CodeExportInProgress    ErrorCode = "export_in_progress"
+	CodeImagesTooMany       ErrorCode = "images_too_many"
+	CodeInternal            ErrorCode = "internal"
+	CodeMessageTooLong      ErrorCode = "message_too_long"
+	CodeMethodNotAllowed    ErrorCode = "method_not_allowed"
+	CodeNotFound            ErrorCode = "not_found"
+	CodePayloadTooLarge     ErrorCode = "payload_too_large"
+	CodeQueueFull           ErrorCode = "queue_full"
+	CodeRateLimited         ErrorCode = "rate_limited"
+	CodeRatingRequired      ErrorCode = "rating_required"
+	CodeReplyInProgress     ErrorCode = "reply_in_progress"
+	CodeSessionTooLong      ErrorCode = "session_too_long"
+	CodeStaleVersion        ErrorCode = "stale_version"
+	CodeUnavailable         ErrorCode = "unavailable"
+	CodeUpdateInProgress    ErrorCode = "update_in_progress"
 	CodeVerdictNotYourWords ErrorCode = "verdict_not_your_words"
-	CodeVerdictTooLong ErrorCode = "verdict_too_long"
+	CodeVerdictTooLong      ErrorCode = "verdict_too_long"
 )
 
 // errorInfo is the status and the plain-worded copy for each code.
@@ -39,31 +39,31 @@ var errorInfo = map[ErrorCode]struct {
 	Status int
 	Copy   string
 }{
-	CodeBadHost: {Status: 400, Copy: "This address is not Cairn."},
-	CodeBadOrigin: {Status: 403, Copy: "That request did not come from Cairn."},
-	CodeBodyNotYourWords: {Status: 422, Copy: "The body has to come from what you wrote."},
-	CodeBodyOriginInvalid: {Status: 422, Copy: "The card does not say where the body came from."},
-	CodeBodyRequired: {Status: 422, Copy: "Add a few words of your own before saving."},
-	CodeBodyTooLong: {Status: 422, Copy: "That is longer than a review can be."},
-	CodeDateInvalid: {Status: 422, Copy: "That is not a date."},
-	CodeDuplicateMessage: {Status: 200, Copy: "That message already went through."},
-	CodeExportInProgress: {Status: 409, Copy: "An export is already being written."},
-	CodeImagesTooMany: {Status: 413, Copy: "That is more images than one message can carry."},
-	CodeInternal: {Status: 500, Copy: "Something went wrong. Try again."},
-	CodeMessageTooLong: {Status: 413, Copy: "That message is too long. Split it into two."},
-	CodeMethodNotAllowed: {Status: 405, Copy: "That is not something this page can do."},
-	CodeNotFound: {Status: 404, Copy: "There is nothing here."},
-	CodePayloadTooLarge: {Status: 413, Copy: "That is too big to send."},
-	CodeQueueFull: {Status: 429, Copy: "One message at a time. This one will wait until the reply is done."},
-	CodeRateLimited: {Status: 429, Copy: "Slow down a moment."},
-	CodeRatingRequired: {Status: 422, Copy: "Add a rating before saving."},
-	CodeReplyInProgress: {Status: 409, Copy: "Finish the reply first."},
-	CodeSessionTooLong: {Status: 409, Copy: "This conversation is long enough. Save what you have and start a new entry."},
-	CodeStaleVersion: {Status: 409, Copy: "The card changed while you were editing. Here it is again."},
-	CodeUnavailable: {Status: 503, Copy: "Cairn cannot reach that right now."},
-	CodeUpdateInProgress: {Status: 409, Copy: "An update is already running."},
+	CodeBadHost:             {Status: 400, Copy: "This address is not Cairn."},
+	CodeBadOrigin:           {Status: 403, Copy: "That request did not come from Cairn."},
+	CodeBodyNotYourWords:    {Status: 422, Copy: "The body has to come from what you wrote."},
+	CodeBodyOriginInvalid:   {Status: 422, Copy: "The card does not say where the body came from."},
+	CodeBodyRequired:        {Status: 422, Copy: "Add a few words of your own before saving."},
+	CodeBodyTooLong:         {Status: 422, Copy: "That is longer than a review can be."},
+	CodeDateInvalid:         {Status: 422, Copy: "That is not a date."},
+	CodeDuplicateMessage:    {Status: 200, Copy: "That message already went through."},
+	CodeExportInProgress:    {Status: 409, Copy: "An export is already being written."},
+	CodeImagesTooMany:       {Status: 413, Copy: "That is more images than one message can carry."},
+	CodeInternal:            {Status: 500, Copy: "Something went wrong. Try again."},
+	CodeMessageTooLong:      {Status: 413, Copy: "That message is too long. Split it into two."},
+	CodeMethodNotAllowed:    {Status: 405, Copy: "That is not something this page can do."},
+	CodeNotFound:            {Status: 404, Copy: "There is nothing here."},
+	CodePayloadTooLarge:     {Status: 413, Copy: "That is too big to send."},
+	CodeQueueFull:           {Status: 429, Copy: "One message at a time. This one will wait until the reply is done."},
+	CodeRateLimited:         {Status: 429, Copy: "Slow down a moment."},
+	CodeRatingRequired:      {Status: 422, Copy: "Add a rating before saving."},
+	CodeReplyInProgress:     {Status: 409, Copy: "Finish the reply first."},
+	CodeSessionTooLong:      {Status: 409, Copy: "This conversation is long enough. Save what you have and start a new entry."},
+	CodeStaleVersion:        {Status: 409, Copy: "The card changed while you were editing. Here it is again."},
+	CodeUnavailable:         {Status: 503, Copy: "Cairn cannot reach that right now."},
+	CodeUpdateInProgress:    {Status: 409, Copy: "An update is already running."},
 	CodeVerdictNotYourWords: {Status: 422, Copy: "The verdict has to come from what you wrote."},
-	CodeVerdictTooLong: {Status: 422, Copy: "A verdict is one short line."},
+	CodeVerdictTooLong:      {Status: 422, Copy: "A verdict is one short line."},
 }
 
 // NoticeCode is a stable notice code, for things that are not failures.
@@ -71,13 +71,13 @@ type NoticeCode string
 
 // Every notice code Cairn can send.
 const (
-	NoticeFidelityAddsContent NoticeCode = "fidelity_adds_content"
+	NoticeFidelityAddsContent  NoticeCode = "fidelity_adds_content"
 	NoticeFidelityDropsOpinion NoticeCode = "fidelity_drops_opinion"
-	NoticeMirrorFailed NoticeCode = "mirror_failed"
-	NoticePrereadSlow NoticeCode = "preread_slow"
-	NoticePrereadUnavailable NoticeCode = "preread_unavailable"
-	NoticeProviderDown NoticeCode = "provider_down"
-	NoticeUpdaterQuiet NoticeCode = "updater_quiet"
+	NoticeMirrorFailed         NoticeCode = "mirror_failed"
+	NoticePrereadSlow          NoticeCode = "preread_slow"
+	NoticePrereadUnavailable   NoticeCode = "preread_unavailable"
+	NoticeProviderDown         NoticeCode = "provider_down"
+	NoticeUpdaterQuiet         NoticeCode = "updater_quiet"
 )
 
 // noticeInfo is the level and copy for each notice.
@@ -85,11 +85,11 @@ var noticeInfo = map[NoticeCode]struct {
 	Level string
 	Copy  string
 }{
-	NoticeFidelityAddsContent: {Level: "warn", Copy: "The body did not match your words exactly. It was corrected."},
+	NoticeFidelityAddsContent:  {Level: "warn", Copy: "The body did not match your words exactly. It was corrected."},
 	NoticeFidelityDropsOpinion: {Level: "warn", Copy: "Something you said may be missing. Check what was left out."},
-	NoticeMirrorFailed: {Level: "warn", Copy: "The backup copy did not go through. Your review is safe on this machine."},
-	NoticePrereadSlow: {Level: "info", Copy: "The pre-read took too long, so this message was read without it."},
-	NoticePrereadUnavailable: {Level: "info", Copy: "The pre-read was not available for this message. Everything else still works."},
-	NoticeProviderDown: {Level: "warn", Copy: "One of the metadata services is down. You can still log this review."},
-	NoticeUpdaterQuiet: {Level: "warn", Copy: "The updater has gone quiet. Check the potato."},
+	NoticeMirrorFailed:         {Level: "warn", Copy: "The backup copy did not go through. Your review is safe on this machine."},
+	NoticePrereadSlow:          {Level: "info", Copy: "The pre-read took too long, so this message was read without it."},
+	NoticePrereadUnavailable:   {Level: "info", Copy: "The pre-read was not available for this message. Everything else still works."},
+	NoticeProviderDown:         {Level: "warn", Copy: "One of the metadata services is down. You can still log this review."},
+	NoticeUpdaterQuiet:         {Level: "warn", Copy: "The updater has gone quiet. Check the potato."},
 }

@@ -11,6 +11,7 @@ import (
 	"bytes"
 	"encoding/json"
 	"fmt"
+	"go/format"
 	"os"
 	"sort"
 )
@@ -51,7 +52,7 @@ func genEventsSchema(in, out string) error {
 	b.WriteString("const eventsSchema = `")
 	b.Write(pretty.Bytes())
 	b.WriteString("\n`\n")
-	return os.WriteFile(out, b.Bytes(), 0o644)
+	return writeGo(out, b.Bytes())
 }
 
 type errorRegistry struct {
@@ -113,7 +114,18 @@ func genErrorCodes(in, out string) error {
 		fmt.Fprintf(&b, "\tNotice%s: {Level: %q, Copy: %q},\n", exported(n.Code), n.Level, n.Copy)
 	}
 	b.WriteString("}\n")
-	return os.WriteFile(out, b.Bytes(), 0o644)
+	return writeGo(out, b.Bytes())
+}
+
+// writeGo formats generated Go with the standard formatter before writing it, so a generator change cannot leave
+// the tree unformatted and turn the lint job red for a cosmetic reason.
+func writeGo(out string, src []byte) error {
+	formatted, err := format.Source(src)
+	if err != nil {
+		return fmt.Errorf("%s: generated code does not parse: %w", out, err)
+	}
+	// Generated source is not a secret; 0644 is what a checked-in file should be.
+	return os.WriteFile(out, formatted, 0o644) //nolint:gosec // G306: generated source, not a secret
 }
 
 // exported turns a snake_case code into an exported Go identifier.
