@@ -96,8 +96,8 @@ That entry is then browsable, searchable and filterable across media in plain vi
 | Web lookups | Through the colocated **Polaris**, which already wraps SearXNG with a Brave fallback. Two tools: `lookup_web` (structured args: title, medium, creator, field wanted — the default) and `ask_polaris_freeform` (a free prompt, the escape hatch; logged only, no confirm tap). Calls carry `source: cairn` and live as normal Polaris threads, which its sidebar never shows. The thread id and citations are stored with the snapshot |
 | Web trust | Web-derived fields are **proposed, never canonical**: shown on the card as unverified with their source URL, accepted with one tap |
 | Transport | **WebSocket both ways.** The server keeps a per-session event log with sequence numbers. A client that reconnects (a sleeping phone, a killed PWA) says the last number it saw and gets everything after it replayed |
-| Question sets | **Per-medium YAML templates**: a curated bank of questions per medium, each with a type. The model picks 3 to 6 that the message hasn't already answered and phrases them; it does not invent the questions. Answers stay comparable across entries |
-| Pre-read checks (v1) | `intent` (chitchat, log_review, find_entries, edit_entry, answer_pending), `medium`, `format`, `revisit`, and about eight `mentions_*` yes/no flags (sound, visuals, acting, story, pacing, ending, characters, world). Defined in a **hot-reloaded YAML registry**, baked into the image and bind-mounted over top as Polaris does for `prompts.yaml`. Thresholds are set from real odds in Phase 0 |
+| Question sets | **Per-medium YAML templates**: a curated bank of questions per medium, each with a type. The model picks 3 to 6 that the message hasn't already answered and phrases them; it does not invent the questions. Answers stay comparable across entries. The questions appear **as one short form** (all 3 to 6 at once, skippable as a whole), and a suggested answer is a **tappable hint, never pre-selected**. First drafts for [books](docs/question-banks/books.yaml) and [films and TV](docs/question-banks/film-tv.yaml) |
+| Pre-read checks (v1) | `intent` (chitchat, log_review, find_entries, edit_entry, answer_pending), `medium`, `format`, `revisit`, `extract_fidelity` (faithful, drops_opinion, adds_content; runs on the body extract), and nine `mentions_*` yes/no flags (sound, visuals, acting, story, pacing, ending, characters, world, writing). Defined in a **hot-reloaded YAML registry**, baked into the image and bind-mounted over top as Polaris does for `prompts.yaml`. Thresholds are set from real odds in Phase 0 |
 | Revisits | Logging something already in the library asks: **new entry on the same work, or edit the old one**, showing the previous entry and rating. Several entries per work form a timeline |
 | Edits and history | Editing a saved entry is a draft revision with a confirm tap. Every confirmed edit stores the previous version in an **append-only revisions table, kept forever** |
 | Deleting | **Soft-delete only, and hard deletes are blocked by the database itself** (a `BEFORE DELETE` trigger aborts on entries, revisions, snapshots and answers). Deleting exists only on the plain entry view, never in chat. **There is no purge**: soft-delete is permanent, and backups hold every copy |
@@ -105,13 +105,14 @@ That entry is then browsable, searchable and filterable across media in plain vi
 | Covers | Downloaded once, stored under `data/covers/`, mirrored to R2. No hot-linked third-party images. TMDB's image terms get checked in Phase 0 before this is final |
 | Degraded mode | If a metadata service is down, the review can still be logged as a **manual, unverified work** and enriched later with a "fill in details" action. A review is never blocked by someone else's outage |
 | Tags | Suggested from the `mentions_*` flags and the provider's genres, shown on the card for me to accept or edit. Free-text tags allowed. Nothing is applied without being shown |
+| Entry card | One component for the draft and the saved entry. Rating is dragged across the stars and snaps to quarters, with +/- buttons and the number always visible. Unverified fields carry a dashed marker (tap for the source) and one Accept all button. A collapsed "why" sheet shows the Jev odds, the tools that ran and their sources. After confirm the session closes and the card becomes the saved entry with an Edit button. Spec: [`docs/ENTRY_CARD.md`](docs/ENTRY_CARD.md) |
 | Home | The chat input at the bottom, with recent entries and the drafts count above it. Library, search and the general chat are one tap away |
 | Testing | A **fixture corpus** of sample messages with the expected parse, expected Jev outcome and expected tool sequence (the Oracle model: hand-written prompts with expected winners), run against **fake TMDB, Open Library, Jev and Polaris servers**. A separate live eval runs on demand |
 | Photos | Deferred to Phase 4. The `media` table stays in the schema so adding them is not a migration |
 | First media | **Books (Open Library) and films and TV (TMDB) together** in Phase 1, so the merge and disambiguation logic is proven against two real sources |
 | Ratings | **Quarter-star steps from 0.25 to 5.0**, stored as an **integer 1–20 (quarter-stars)** plus the scale name, so the scale can change later without a migration. **Favourite is a separate flag**, not the same as a top rating |
 | TV | A work is the **series** in v1. The schema lets an entry point at a season later, so there is no migration, but only the series flow is built |
-| Review body | My words, always. The agent may structure, ask, and punctuate; it must never write opinions I didn't express |
+| Review body | My words, always, **extracted and never written**. The agent returns quoted spans; code locates them in my messages (snapping a slip to my exact wording, dropping what has no match) and the body is the original text at those positions. A Jev `extract_fidelity` check is a second, never-blocking gate that warns when an opinion looks dropped. What was not kept shows under "left out" with a tap to include it. Typing the body myself is always allowed. The verdict is a verbatim span or empty. Full spec in [`docs/ENTRY_CARD.md`](docs/ENTRY_CARD.md) |
 | Spoilers | **Not handled in v1.** No field, no Jev check. Revisit if it starts to matter |
 | Voice | **Deferred.** Typing only until the rest works |
 | Storage | SQLite on the potato (`modernc.org/sqlite`, pure Go — the same choice as Warbler), plus plain files for covers |
@@ -227,7 +228,7 @@ strongly at embedding. Phase 0 confirms it with a spike, not an opinion.
 | 7 | agent | `merge_candidates` — fetches full metadata for the chosen work, stores a per-source snapshot, returns the merged canonical draft with web-sourced fields marked unverified |
 | 8 | agent | `ask_reviewer` — 3–6 medium-appropriate questions, each with a type (`stars`, `choice`, `scale`, `short_text`, `skip`) and a suggested answer it thinks I implied |
 | 9 | me | Answers, skips some, edits |
-| 10 | agent | Composes the draft entry: my words first, answers woven in as their own fields, canonical metadata attached |
+| 10 | agent | Builds the draft entry: body and verdict as verbatim spans of my messages (code-verified, then Jev-checked), answers as their own fields, canonical metadata attached |
 | 11 | me | Reviews the entry card: tap-to-edit any field, or type a correction in the chat; one confirm tap |
 | 12 | app | `save_entry` → SQLite commit → export row queued → R2 mirror on the next run |
 
@@ -262,6 +263,8 @@ Guardrails enforced in code, not in the prompt:
 
 - `save_entry` refuses if `rating` or `body` is empty, or if either was never seen in my own input or
   answers. The agent cannot save an opinion I didn't give.
+- The body and verdict are checked for containment in my messages (or marked as typed by me) before a
+  draft is built; text that cannot be located is dropped, never kept.
 - Ratings are accepted only as a quarter-star value. A parsed value that isn't on a quarter snaps to the
   nearest one and the card shows what was stored; a vague phrase ("a four and a bit") is asked about,
   never guessed.
@@ -303,8 +306,10 @@ entries (                    -- my review of a work; one work can have several o
   rating_scale TEXT,                   -- "quarter_stars_20"
   favourite INTEGER,                   -- separate from rating, on purpose
   season INTEGER,                      -- NULL = the whole work; reserved for TV seasons
-  verdict TEXT,                        -- one line
+  verdict TEXT,                        -- one line, a verbatim span of my text or empty
   body TEXT,                           -- my words
+  body_origin TEXT,                    -- extracted | typed | mixed
+  body_spans_json TEXT,                -- where each kept span sits in the session's messages
   format TEXT,                         -- cinema | streaming | audiobook | hardback | …
   finished_on TEXT,                    -- local date
   status TEXT,                         -- draft | saved | published (published is Phase 5)
@@ -419,6 +424,7 @@ Each phase ends with "Done when". Stop and ask at every **[HUMAN]** item.
 - Answer the deferred architectural choice in [§4](#4-architecture) (embed vs extension) with what the
   spike showed.
 - Get a TMDB key and an Open Library client working (rate limits and attribution requirements written down).
+- **UI mockups of every screen** (home, session with its cards, the entry card in each state, drafts, library, entry page, general chat, trash), viewed in a browser, before any Phase 1 UI code.
 - Read TMDB's image and attribution terms and write the cover-caching decision down.
 - Write the first **fixture corpus** (about 30 sample messages with expected parse, expected Jev outcome
   and expected tool sequence), then run the pre-read and the pinned model against it. Set the first Jev
@@ -439,7 +445,7 @@ the Jev and Polaris calls both work from Go, and the embed-or-extension choice i
   `save_entry`.
 - Two sources wired properly: **books (Open Library) and films and TV (TMDB)**, so the merge and
   disambiguation logic is exercised from day one.
-- Entry view: metadata block, my body, answers, rating (quarter-stars).
+- The entry card ([`docs/ENTRY_CARD.md`](docs/ENTRY_CARD.md)): metadata block, my body, answers, rating (quarter-stars), unverified markers.
 
 **Done when:** a review typed as a sentence becomes a saved entry with correct metadata and 3+ answers,
 from the phone, over Tailscale, with no manual field entry, for both a book and a film.
@@ -493,8 +499,9 @@ not a cheaper model.
 
 ## 11. Rules that are not negotiable
 
-1. **My words are mine.** The agent structures, asks and formats; it never invents an opinion, a
-   rating, or a quote. Enforced in `save_entry`, not in a prompt.
+1. **My words are mine.** The agent structures, asks and chooses; it never invents an opinion, a
+   rating, or a quote. The body is made only of spans that code found in my messages, and `save_entry`
+   enforces it, not a prompt.
 2. **Nothing saves without my confirm tap.** Drafts are not entries.
 3. **Local-first.** SQLite before R2, always. A mirror failure is a warning, never a lost review.
 4. **Source snapshots are append-only.** A silent metadata rewrite of my history is a bug. Web-derived

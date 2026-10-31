@@ -1,0 +1,130 @@
+# DRAFT question bank: books. For Autumn to cut, reword and add to.
+#
+# How the agent uses a bank (rules live in code, not here):
+#   - It picks 3 to 6 questions per entry, highest `weight` first, and presents them as one short form.
+#   - A question is SKIPPED when its `topic` is a mentions_* flag that Jev says the message already
+#     covered, so it never asks what I already said.
+#   - `applies_when` limits a question (by medium, format or a genre hint from the metadata).
+#   - At most two `short_text` questions per form, to keep the taps low.
+#   - Every question can be skipped. Skipping everything still saves the entry.
+#   - Option `value`s are STABLE keys stored with the answer, so answers stay comparable across
+#     reviews ("which books did I find too slow?"). Labels can be reworded freely.
+#   - A suggested answer is shown as a tappable hint, never pre-selected.
+#
+# topic values: sound, visuals, acting, story, pacing, ending, characters, world, writing, or null.
+
+medium: book
+
+questions:
+  - id: book_pacing
+    topic: pacing
+    weight: 90
+    prompt: "How did the pacing feel?"
+    type: choice
+    options:
+      - { value: dragged, label: "It dragged" }
+      - { value: uneven, label: "Uneven" }
+      - { value: steady, label: "Steady" }
+      - { value: flew, label: "It flew by" }
+
+  - id: book_writing
+    topic: writing
+    weight: 85
+    prompt: "What did you think of the writing itself?"
+    type: choice
+    options:
+      - { value: hard_going, label: "Hard going" }
+      - { value: plain, label: "Plain" }
+      - { value: good, label: "Good" }
+      - { value: beautiful, label: "Beautiful" }
+
+  - id: book_characters
+    topic: characters
+    weight: 80
+    prompt: "Which character stayed with you?"
+    type: short_text
+    applies_when: { genre_hint: fiction }
+
+  - id: book_world
+    topic: world
+    weight: 70
+    prompt: "How was the world or setting?"
+    type: choice
+    applies_when: { genre_hint: fiction }
+    options:
+      - { value: forgettable, label: "Forgettable" }
+      - { value: solid, label: "Solid" }
+      - { value: vivid, label: "Vivid" }
+      - { value: immersive, label: "I lived in it" }
+
+  - id: book_ending
+    topic: ending
+    weight: 85
+    prompt: "How did the ending land?"
+    type: choice
+    options:
+      - { value: let_down, label: "Let me down" }
+      - { value: fine, label: "Fine" }
+      - { value: landed, label: "It landed" }
+      - { value: stayed, label: "It stuck with me" }
+
+  - id: book_length
+    topic: null
+    weight: 60
+    prompt: "Was it the right length?"
+    type: choice
+    options:
+      - { value: too_short, label: "Too short" }
+      - { value: right, label: "About right" }
+      - { value: too_long, label: "Too long" }
+
+  - id: book_learned
+    topic: story
+    weight: 75
+    prompt: "Did you come away knowing something new?"
+    type: choice
+    applies_when: { genre_hint: nonfiction }
+    options:
+      - { value: no, label: "Not really" }
+      - { value: some, label: "A bit" }
+      - { value: lot, label: "A lot" }
+      - { value: changed, label: "It changed how I think" }
+
+  - id: book_narration
+    topic: null
+    weight: 70
+    prompt: "How was the narration?"
+    type: choice
+    applies_when: { format: audiobook }
+    options:
+      - { value: poor, label: "Distracting" }
+      - { value: fine, label: "Fine" }
+      - { value: great, label: "Great" }
+      - { value: elevated, label: "Made the book better" }
+
+  - id: book_moment
+    topic: null
+    weight: 50
+    prompt: "A moment or line worth remembering?"
+    type: short_text
+
+  - id: book_recommend
+    topic: null
+    weight: 55
+    prompt: "Would you recommend it?"
+    type: choice
+    options:
+      - { value: no, label: "No" }
+      - { value: caveats, label: "With caveats" }
+      - { value: yes, label: "Yes" }
+      - { value: everyone, label: "To everyone" }
+
+  - id: book_reread
+    topic: null
+    weight: 45
+    prompt: "Would you read it again?"
+    type: choice
+    options:
+      - { value: no, label: "No" }
+      - { value: maybe, label: "Maybe" }
+      - { value: yes, label: "Yes" }
