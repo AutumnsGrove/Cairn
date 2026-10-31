@@ -109,13 +109,19 @@ wording:
       instructions: Does the message say anything about the writing itself - prose, dialogue, style or voice?
       options: { "no": Nothing about the writing., "yes": Says something about the writing. }
 
-# The first backend. Nothing else in the code or docs names it.
+# The first backend. Nothing else in the code or docs names it. These map straight onto nova's
+# decide.Roles (decide.Role{Model, Fallback, Timeout}); nova refuses -latest and ~ aliases unless told to.
 backend:
-  name: jev
-  model: jev-1.14               # pinned, like the main model
-  endpoint: openrouter:/systemone
-  timeout_ms: 2500              # slower than this and the turn runs without a pre-read
-  fallback: none                # a chat model with a JSON schema could be named here later
+  provider: openrouter          # nova/decide/openrouter, POST {base}/systemone
+  roles:
+    cairn_preread:
+      model: jev-1.14           # pinned, like the main model
+      timeout_ms: 2500          # slower than this and the turn runs without a pre-read
+      fallback: ""              # another model id could be named here later
+    cairn_fidelity:
+      model: jev-1.14
+      timeout_ms: 2500
+      fallback: ""
 
 # Starting values only. Phase 0 sets the real ones from recorded odds on the fixture corpus.
 policy:

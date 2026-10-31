@@ -59,6 +59,19 @@ are two AI-agent tools, `oritera/Cairn` and `cairn-dev/cairn`), which only matte
 our own namespaces. The GHCR check (`ghcr.io/autumnsgrove/cairn`) failed on a shell quoting error and was
 **not** confirmed; re-run it before the first image is published.
 
+### Nova already has the decisions contract
+
+`nova/decide` defines `Decider`, a typed `Request` (shared `State`, a map of named `Question`s), an OpenRouter
+wire client in `decide/openrouter`, and `Roles`, which maps an application role to `Role{Model, Fallback,
+Timeout}` and refuses `-latest` and `~` aliases by default. It sits inside the layers consumers may import,
+and tools call it through `tool.Context.Decide`. Cairn uses it rather than writing its own interface.
+
+### Polaris WebSocket conventions worth keeping
+
+Live-only events (`cost_update`, which overwrites rather than adds), optional events whose absence is
+normal, the persisted message id sent back at once so a turn can be retried or edited, and answering a
+pending question as simply the next ordinary message. Cairn's own vocabulary is in `docs/PROTOCOL.md`.
+
 ### Naming: "decisions"
 
 The class of fast typed models is called **decisions** in all Cairn code, config and docs (Polaris already
