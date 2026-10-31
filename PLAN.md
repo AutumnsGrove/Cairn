@@ -46,11 +46,11 @@ The agent then:
 3. **extracts what I already said** — rating, verdict, the specifics I praised or disliked, format
    (cinema / streaming / audiobook / hardback), date finished. Hard facts like the rating come from
    plain parsing of my words, not from a model's guess;
-4. **asks the rest as questions** — a short, medium-appropriate set ("how was the setting?", "which
-   character stayed with you?", "was it too long?") as tappable cards, with answers stored *as
+4. **asks the rest, lightly** — a Describe it step of tappable chips (characters, plot, setting, writing,
+   feel, content warnings) and at most three short questions, all skippable, with answers stored *as
    structured fields*, not just prose;
-5. **shows one draft entry card** — my review text woven with the answers, the canonical metadata, my
-   rating and tags. I can tap any field to fix it or type a correction in the chat. One confirm tap
+5. **shows one draft entry card** — my own words cut out of what I typed, the answers as their own
+   fields, the canonical metadata, my rating and tags. I can tap any field to fix it or type a correction in the chat. One confirm tap
    saves it, and the snapshot of what each source said is kept so later lookups can't silently rewrite
    history.
 
@@ -89,7 +89,7 @@ That entry is then browsable, searchable and filterable across media in plain vi
 | Agent runtime | **Nova** (`github.com/AutumnsGrove/nova`), embedded as a library in the Go service — not a bespoke loop, not a LangChain-style dependency. Leaning embed over "ship as a nova extension"; Phase 0 confirms it |
 | Main model | **`deepseek/deepseek-v4.1-flash-1017`** through **OpenRouter** (the same key Polaris and Ivy use). A dated pin on purpose, so behaviour can't shift silently. $0.15 per million input tokens and $0.60 per million output, 1M context, tool calling. Phase 0 checks it against the fixture corpus rather than comparing models; nova's provider layer keeps a swap cheap |
 | Decisions | **"Decisions" is the vendor-neutral name** for the class of fast, typed models that take conditions and options (or a yes/no check) and return a probability per option. All code, config and docs say `decisions`. The contract is **nova's own `decide` package** (`decide.Decider`, the typed `Request`, the OpenRouter client, and the `Roles` decorator that maps a role such as `cairn_preread` to a model, a timeout and a fallback), which tools reach through `tool.Context.Decide`, so another model is a config change. Nova refuses `-latest` and `~` aliases by default, which matches pinning the model. The first backend is **Jev** (`jev-1.14` via OpenRouter `/systemone`), named only in config. The **pre-read** is the step that uses it: one batched call per message, in the style of Polaris's Oracle, with a quiet default on every check, a per-check threshold, odds shown on the card, and never blocking a turn (unconfigured, errors or slower than 2.5 s means the turn runs without it). Probabilities are hints, never decisions. Checks are drafted in [`docs/decisions.draft.yaml`](docs/decisions.draft.yaml) |
-| Decision routing | Inside an entry session **the session sets the default** (an open question card means a reply is answering it; a draft means a message adds to it) and a decision overrides it only above **0.80**. From the home screen the `intent` decision routes: `log_review` starts an entry session, and `find_entries`, `edit_entry` and `chitchat` go to the general chat. The state sent with each call is **the latest message, any open question, and the work's title**, as separate sources. `format`, `revisit` and the `mentions_*` flags run only for `log_review`. A split medium read (runner-up at least 0.25 and the leader under 0.30 ahead) triggers the "book or film?" card |
+| Decision routing | Inside an entry session **the session sets the default** (an open question card means a reply is answering it; a draft means a message adds to it) and a decision overrides it only above **0.80**. From the home screen the `intent` decision routes: `log_review` and `import_review` start an entry session, and `find_entries`, `edit_entry` and `chitchat` go to the general chat. The state sent with each call is **the latest message, any open question, and the work's title**, as separate sources. `format`, `revisit` and the `mentions_*` flags run only for `log_review`. A split medium read (runner-up at least 0.25 and the leader under 0.30 ahead) triggers the "book or film?" card |
 | Extraction | **Deterministic parse first** (rating, date, obvious format cues). The decision model only for fuzzy fields (format, themes). If no rating is stated, the agent asks |
 | Medium ambiguity | When the decision model's medium read is split (e.g. "Dune": book or film), **ask "book or film?" before any lookup** |
 | Media model | Media-agnostic from the start: a `work` has a `medium` (film, tv, book, game, album, podcast, theatre, other) plus medium-specific fields as data, not columns |
@@ -108,7 +108,7 @@ That entry is then browsable, searchable and filterable across media in plain vi
 | Tags | Genres from the provider plus my own free-text tags, shown on the card to accept or edit. Nothing is applied without being shown. The descriptor chips from Describe it are separate: they are answers, stored by category, and are the structured way to filter ("everything I called morally grey") |
 | Entry card | One component for the draft and the saved entry. Rating is dragged across the stars and snaps to quarters, with +/- buttons and the number always visible. Unverified fields carry a dashed marker (tap for the source) and one Accept all button. A collapsed "why" sheet shows the decision odds, the tools that ran and their sources. After confirm the session closes and the card becomes the saved entry with an Edit button. Spec: [`docs/ENTRY_CARD.md`](docs/ENTRY_CARD.md) |
 | Visual design | **Dark only**, no light theme (the scene is an evening in a dim room). Warm-tinted neutrals with one **lichen** green accent (Restrained strategy, accent kept to a small share of any screen), so covers carry the colour. **Lexend** for the interface and the review text, **Fraunces** for work titles and screen headings, both self-hosted (OFL) with licences kept beside them. **Lucide** (ISC) for every icon, via `@lucide/svelte` in the app so only the icons used are bundled, never loaded from a CDN. Responsive motion, feedback and state change only, 150 to 250 ms eased out. No chat bubbles: the transcript is plain blocks and the agent speaks in cards. Context in [`PRODUCT.md`](PRODUCT.md) and a seed [`DESIGN.md`](DESIGN.md); live mockups in [`mockups/`](mockups/) |
-| Home | The chat input at the bottom, with recent entries and the drafts count above it. Library, search and the general chat are one tap away |
+| Home | The chat input at the bottom, with drafts that are waiting and recent entries above it. Library, Drafts and Settings are one tap away in the top bar. A question typed into the composer is routed to the general chat by the `intent` decision. To open that chat on purpose, the **Library screen has an Ask button**; its start screen shows example questions and the last few chats |
 | Testing | **Test first, always.** TDD with integration-weighted tests against "the world" (in-process fakes of TMDB, Open Library, the chat and decisions models, Polaris and R2, all with fault injection). **Every boundary is tested on three routes: happy, bad (invalid, hostile or huge input) and sad (the world misbehaves, with sticky outages).** Go native fuzzing on everything that parses untrusted input, property tests for the invariants, a **fixture corpus** of sample messages with the expected parse, decision outcome and tool sequence, and a Playwright state and screenshot baseline for every mockup frame. **Extensive CI from the first commit**: race detector, `staticcheck`, `golangci-lint`, `govulncheck`, CodeQL, gitleaks, dependency review, image scan, nightly fuzzing. Specs: [`docs/TESTING.md`](docs/TESTING.md) and [`docs/CI.md`](docs/CI.md) |
 | Photos | My own photos on a review (a ticket, a shelf) are deferred to Phase 5. The `media` table is used earlier, by screenshot import in Phase 3 |
 | Fable import | **Fable has no export.** The migration is a first-class image import in Phase 3: I attach screenshots in the chat and the agent transcribes them into drafts, asking only about gaps. **One session per title**, with any number of images for it. Originals are kept as the entry's source and mirrored to R2. The pinned model reads the images (its listing shows image input), tested on real screenshots in Phase 0, with its own role so another model can replace it |
@@ -154,8 +154,8 @@ Resolved and moved into [§2](#2-decisions-already-made): the name, public or pr
 the unit of TV review, whether the agent saves silently (it never does), voice input, spoilers, the
 first providers, the general chat's powers, transport, the decisions registry, the free-form Polaris guard,
 the GHCR name (not publicly taken; first publish confirms), edit history, deletion, draft expiry, question
-sets, the main model, testing, revisits, covers, degraded mode, tags, the home screen, photos, and the
-first media.
+sets, the main model, testing, revisits, covers, degraded mode, tags, the home screen, photos, the
+first media, the Describe it step with content warnings, and the settings and update flow.
 
 ## 4. Architecture
 
@@ -207,8 +207,9 @@ Five properties worth stating because they decide how the code is shaped:
 - The harness already has tools, providers, permissioning, sessions, compaction and a JSONL protocol
   (`projects/nova/docs/`). A new app shouldn't re-implement tool-calling.
 - Multi-step flows (look up → disambiguate → ask → save) are exactly what a loop with tools is for.
-- Nova's extension protocol gets the question-card UI shape for free (`ui_request`: `form`, `select`,
-  `input`, `confirm`), which means the same flow could later run in the TUI without a second design.
+- Nova's extension protocol has a similar idea (`ui_request`: `form`, `select`, `input`, `confirm`), but
+  Cairn's cards (tabs of chips, an entry card) are its own vocabulary in
+  [`docs/PROTOCOL.md`](docs/PROTOCOL.md), so nova's UI events are not reused.
 
 **Deferred architectural choice, now leaning one way:** embed nova directly (my own UI, my own state)
 vs ship Cairn as a nova *extension* first. A custom chat with entry cards and a general-chat mode points
@@ -224,7 +225,7 @@ strongly at embedding. Phase 0 confirms it with a spike, not an opinion.
 | 2 | app | **Pre-read:** one batched decisions call reads the message (intent, medium, format, themes). Skipped if empty; never blocks the turn |
 | 3 | app | **Deterministic parse:** rating, date and obvious cues pulled out of my words by plain rules. Nothing found means the field is left for the questions |
 | 4 | me | If the medium read was split, a quick "book or film?" card, answered before any lookup |
-| 5 | agent | `media_lookup` — search the right library by title (+ creator/year if I gave them) → 3–5 candidates with tiny payloads. `lookup_web` is used when the APIs return nothing |
+| 5 | agent | `media_lookup` — search the right library by title (+ creator/year if I gave them) → 3–5 candidates with tiny payloads. `lookup_web` runs on its own when the APIs return nothing, and is offered as **Ask Polaris** when an API errors or times out |
 | 6 | me | Taps the right one, or "none of these" |
 | 7 | agent | `merge_candidates` — fetches full metadata for the chosen work, stores a per-source snapshot, returns the merged canonical draft with web-sourced fields marked unverified |
 | 8 | agent | `ask_reviewer` — the **Describe it** step (category tabs of chips, hints dashed) plus up to 3 single questions, each with a type (`tags`, `choice`, `short_text`, `skip`) |
@@ -273,8 +274,8 @@ Guardrails enforced in code, not in the prompt:
   nearest one and the card shows what was stored; a vague phrase ("a four and a bit") is asked about,
   never guessed.
 - Web-derived fields cannot reach the canonical work without my accept tap.
-- `ask_reviewer` is capped (questions and total rounds) so a chatty model can't turn the flow into an
-  interrogation. If I skip everything, the entry still saves.
+- `ask_reviewer` is capped (one Describe step, at most three single questions, and a limit on rounds) so a
+  chatty model can't turn the flow into an interrogation. If I skip everything, the entry still saves.
 - Every tool call, decisions pre-read (with its odds and cost) and Polaris call is logged with its inputs, so
   "why does this entry say that" is answerable.
 
@@ -287,7 +288,7 @@ in JSON, validated per medium by a schema table in code.
 works (                      -- the thing itself, canonical and merged
   id, medium, title, original_title, year,
   creator_json,              -- [{role: director|author|artist|developer, name}] — role is data
-  details_json,              -- medium-specific: runtime, pages, isbn, track count, platform…
+  details_json,              -- medium-specific: runtime, pages, isbn, platform, alternate_titles, series…
   cover_path, cover_source,
   primary_provider, primary_id,
   verified INTEGER,          -- 0 for a manual work logged during an outage
@@ -328,6 +329,7 @@ answers (                    -- the blanks the agent asked me to fill; descripto
 
 sessions (                   -- the app's own conversations; nova's are not importable
   id, kind,                  -- entry | general
+  title,                     -- for a general chat, its first question, so past chats can be listed
   entry_id,                  -- NULL for general; set for an entry session (resumable draft)
   messages_json, state,      -- active | saved | discarded
   created_at, updated_at
@@ -349,7 +351,7 @@ decision_calls (            -- every decisions call, so thresholds can be tuned 
   cost_usd, latency_ms, created_at
 )
 
-tags (id, name) · entry_tags (entry_id, tag_id, source)   -- source: genre | mentioned | mine
+tags (id, name) · entry_tags (entry_id, tag_id, source)   -- source: genre | mine
 media (id, entry_id, session_id, path, kind,   -- kind: source_screenshot (Phase 3) | photo (Phase 5)
        transcript_json)                -- what the model read from the image, for source_screenshot
 mirrors (id, ran_at, target, status, bytes)   -- R2 backup receipts
@@ -416,7 +418,7 @@ migration.
 | Port | `8893` — **verified free** on the potato 2026-10-30 (in use: 22 53 80 443 5335 8080 8081 8418 8766 8888 8890 8891 8892 8899 11434) |
 | Container | Compose project at `~/Cairn`, image pinned by digest in `.env`, published `127.0.0.1:8893` only, non-root, read-only rootfs |
 | Data | `~/Cairn/data/` — `cairn.db`, `covers/`, `media/` (source screenshots, later photos), `exports/`, `backups/` |
-| Config | `decisions.yaml` (the checks: wording, options, thresholds, backend) and `questions/<medium>.yaml` (question banks), baked into the image and bind-mounted over top so host edits hot-reload, the way Polaris handles `prompts.yaml` |
+| Config | `decisions.yaml` (the checks: wording, options, thresholds, backend) and `questions/*.yaml` (the per-medium banks and the shared vocabularies), baked into the image and bind-mounted over top so host edits hot-reload, the way Polaris handles `prompts.yaml` |
 | Health | `GET /healthz` → `{"status":"ok","version":"r…"}` only (two fields, like Warbler's) |
 | Secrets | `OPENROUTER_API_KEY` (main model and the Jev decisions backend, one key) and metadata-provider keys in `~/Cairn/.env`; `rclone` config for R2 already exists on the box |
 | Polaris | Colocated at `127.0.0.1:8899`. Cairn calls its ask API (`gateway.AskRequest`/`AskResponse`: `source`, `citations`, `cost_usd`). How the Cairn container reaches the host-published Polaris port (host networking or `host.docker.internal`) is a Phase 0 item |
@@ -433,6 +435,19 @@ Brave as a fallback), and the R2 mirror. Nothing else leaves the box.
 
 Each phase ends with "Done when". Stop and ask at every **[HUMAN]** item.
 
+The phases are delivered as **vertical slices**, one plan file each, so another agent can pick one up cold.
+The order, the dependency graph and the status table are in [`docs/slices/README.md`](docs/slices/README.md),
+and the standing rules are in [`docs/BUILD.md`](docs/BUILD.md).
+
+| Phase | Slices |
+|---|---|
+| 0 Prove the loop | S00 walking skeleton, S01 spikes |
+| 1 One entry, two sources, end to end | S02 contract, S03 domain core, S04 data layer, S05 banks and decisions, S06 providers, S07 session engine, S08 agent pipeline, S09 server, S10 frontend foundation, S11 logging UI, S12 reading UI, S13 deploy and update, S14 backups |
+| 2 Every medium, one library | S15 web fallback, S16 search and chat, S17 more media |
+| 3 Import from screenshots | S18 |
+| 4 Trust it with the data | S19 |
+| 5, 6 Comfort, publication | S20 parked |
+
 ### Phase 0: Prove the loop (spike, throwaway code allowed)
 
 - Read `projects/nova/docs/INTEGRATION.md` and `examples/embed/`; write a small program that runs one
@@ -444,7 +459,7 @@ Each phase ends with "Done when". Stop and ask at every **[HUMAN]** item.
 - Answer the deferred architectural choice in [§4](#4-architecture) (embed vs extension) with what the
   spike showed.
 - Get a TMDB key and an Open Library client working (rate limits and attribution requirements written down).
-- **UI mockups of every screen** (home, session with its cards, the entry card in each state, drafts, library, entry page, general chat, trash), viewed in a browser, before any Phase 1 UI code.
+- **UI mockups of every screen: done** (40 frames across seven pages in [`mockups/`](mockups/)). Phase 0 only re-checks them on a real phone.
 - Pull a handful of real Open Library works and editions (a series volume, a translated book, an audiobook
   edition) and write down which fields are reliable: first publication year, series, ISBNs, covers.
 - Test the pinned model on about five real Fable screenshots (star icons, small type, a long review across two images) and record what it gets wrong.
@@ -457,21 +472,28 @@ Each phase ends with "Done when". Stop and ask at every **[HUMAN]** item.
 **Done when:** a free-form sentence in a terminal produces a real candidate list from real metadata,
 the decisions and Polaris calls both work from Go, and the embed-or-extension choice is written down.
 
-### Phase 1: One entry, one medium, end to end
+### Phase 1: One entry, two sources, end to end
 
 - Go service + embedded SvelteKit shell; SQLite with the schema above; `/healthz`.
 - Sessions: a per-entry chat over a WebSocket with a server-side event log and resume, resumable drafts,
   and a Drafts list.
-- The revisit flow (new entry or edit the old one) and the manual-entry fallback for outages.
+- The revisit flow (new entry or edit the old one) and the manual-entry fallback for outages (Try again and
+  Log without details; Ask Polaris arrives with `lookup_web` in Phase 2).
 - Revisions and soft-delete, with the database triggers that block hard deletes.
 - Pre-read → `media_lookup` → pick → `merge_candidates` → `ask_reviewer` → draft card → confirm →
   `save_entry`.
 - Two sources wired properly: **books (Open Library) and films and TV (TMDB)**, so the merge and
   disambiguation logic is exercised from day one.
 - The entry card ([`docs/ENTRY_CARD.md`](docs/ENTRY_CARD.md)): metadata block, my body, answers, rating (quarter-stars), unverified markers.
+- **Deployment from the first push:** the image published to GHCR by digest, the host watcher
+  (`cairn-update.path`), Settings with the **Updates** and **Services** screens
+  ([`docs/UPDATE.md`](docs/UPDATE.md)), and the Meridian tile and health check.
+- **Nightly SQLite snapshot and R2 mirror from the first deploy**, so the first real review is already backed up.
 
 **Done when:** a review typed as a sentence becomes a saved entry with correct metadata and 3+ answers,
-from the phone, over Tailscale, with no manual field entry, for both a book and a film.
+from the phone, over Tailscale, with no manual field entry, for both a book and a film; an update has been
+run from the Updates screen on the potato, including a deliberately failed one that rolled back; and a
+nightly backup has run and appeared in R2.
 
 ### Phase 2: Every medium, one library
 
@@ -503,7 +525,8 @@ Fable reviews have been imported and read back correctly.
 
 ### Phase 4: Trust it with the data
 
-- Nightly snapshot + `rclone` mirror to R2, with receipts in the app; restore exercised for real.
+- The backups that have run since Phase 1 gain receipts in the app (the Backups and export screen), and a
+  **restore is exercised for real**.
 - JSON export (single file + per-entry) and an import that round-trips.
 - `cairn verify`: files present, covers accounted for, database integrity, archive readable.
 
@@ -556,13 +579,14 @@ not a cheaper model.
 8. **Tailnet-only.** No Funnel, no public port, no accounts.
 9. **Nothing is ever hard-deleted.** Deletes are soft, enforced by the database, and there is no purge.
    Every confirmed edit keeps the previous version.
-10. **Only my own origin may talk to the service.** There is no login, and browsers do not apply the
-    same-origin rule to WebSockets, so the `Origin` header is checked on the socket upgrade and on every
-    state-changing request.
+10. **Only my own origin and host may talk to the service.** There is no login, and browsers do not apply
+    the same-origin rule to WebSockets, so the `Origin` header is checked on the socket upgrade and on every
+    state-changing request, and the `Host` header is checked against an allow-list on every request. Both,
+    because a DNS-rebinding attack makes `Origin` and `Host` the attacker's own name.
 
 ## 12. Working agreement
 
-- One phase at a time; read the matching section first; commit and push per phase.
+- **One slice at a time.** Read [`docs/BUILD.md`](docs/BUILD.md) and the slice plan first; commit small; push per slice.
 - **Stop and ask at every [HUMAN] item.** Don't invent answers to my questions.
 - Keep scope tight: no new dependency, provider or service without asking.
 - Small readable functions, a functional core (merge, extract, compose) with thin imperative edges;

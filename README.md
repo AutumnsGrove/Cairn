@@ -53,6 +53,10 @@ built. `PLAN.md` is the source of truth; `README.md` is the pitch.
 - [`PLAN.md`](PLAN.md) — what gets built, in what order, and every decision made so far
 - `PLAN.md` §3 — the **open questions** still to answer, which is the whole point of writing this down
   before any code
+- [`mockups/index.html`](mockups/index.html) — every screen and state, clickable, in a browser
+- [`PRODUCT.md`](PRODUCT.md) and [`DESIGN.md`](DESIGN.md) — who it is for and how it looks
+- [`docs/`](docs/) — the entry card, the session protocol, updating, testing and CI, the question banks
+- [`docs/BUILD.md`](docs/BUILD.md) and [`docs/slices/`](docs/slices/README.md) — how it gets built, in slices another agent can pick up
 
 ## Non-negotiables, early
 

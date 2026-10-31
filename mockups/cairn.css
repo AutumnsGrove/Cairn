@@ -437,3 +437,5 @@ mark.m { background: var(--accent-soft); color: var(--text); border-radius: 3px;
 .dl { font-size: .8125rem; color: var(--text-2); }
 .cw { margin: 1.1rem 0 0; font-size: .8125rem; color: var(--text-3); line-height: 1.5; }
 .cw b { font-weight: 500; color: var(--text-2); }
+
+.ent .tt.plain { font: 400 1rem/1.4 "Lexend", system-ui, sans-serif; }

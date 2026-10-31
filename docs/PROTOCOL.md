@@ -21,6 +21,8 @@ Principles, in the order they matter:
 - **One socket per open session.** Library, drafts count, search and entry pages are plain REST that
   refresh when the app regains focus. A new session is created with `POST /api/sessions`
   (`{kind: "entry" | "general"}`) before connecting.
+- **Host and Origin checks.** `Host` is checked against an allow-list on every request (the tailnet name and
+  loopback), which defeats DNS rebinding, where `Origin` and `Host` are both the attacker's name.
 - **Origin check on the upgrade, and on every state-changing request.** Browsers do not apply the
   same-origin rule to WebSockets, and this app has no login, so a hostile page opened on a phone that is
   on the tailnet could otherwise reach it. The service accepts only its own origin
@@ -148,7 +150,8 @@ package and emits `preread` itself.
 
 Plain requests, all behind the same origin check. Detailed shapes belong with the code, not here.
 
-- `POST /api/sessions`, `GET /api/sessions/{id}`, `GET /api/sessions?state=active` (the Drafts list)
+- `POST /api/sessions`, `GET /api/sessions/{id}`, `GET /api/sessions?state=active` (the Drafts list),
+  `GET /api/sessions?kind=general` (past library chats, newest first)
 - `GET /api/entries`, `GET /api/entries/{id}`, `GET /api/entries/{id}/revisions`,
   `POST /api/entries/{id}/delete` (soft; plain entry view only)
 - `GET /api/works/{id}`, `GET /api/search?q=`

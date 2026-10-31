@@ -88,7 +88,7 @@ seeds.
 | Decisions and question-bank YAML loaders | A bad registry must fail loudly at load, never at use |
 | TMDB and Open Library response decoders | Untrusted JSON from the network |
 | Import and export reader | A corrupt or malicious archive |
-| Origin check | Odd `Origin` headers, null origins, trailing dots and ports |
+| Host and Origin checks | Odd `Host` and `Origin` headers, null origins, trailing dots, ports, and a rebinding name |
 
 ## 5. Safety assertions
 
@@ -103,7 +103,7 @@ Each rule in `PLAN.md` section 11 is a test that fails if the rule is broken.
 | Review text goes only where named | The world's request log shows review text only in the chat and decisions calls, never in a metadata or Polaris request (structured mode) |
 | Classifier output never decides | With the decisions fake returning confident wrong answers, a rating or body is still enforced by deterministic code |
 | Nothing is hard-deleted | `DELETE` on the protected tables fails at the database |
-| Only my own origin | A hostile `Origin` on the socket upgrade and on every state-changing request is refused |
+| Only my own origin and host | A hostile `Origin` on the socket upgrade and on every state-changing request is refused, and a `Host` off the allow-list is refused on every request |
 | Pre-read never blocks | A hung or failing decisions call lets the turn complete with a notice |
 
 ### 5b. Properties
