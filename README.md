@@ -35,7 +35,7 @@ built. `PLAN.md` is the source of truth; `README.md` is the pitch.
    │  chat: "finished X, loved it, 5/5, the sound design though…"
    ▼
  Go service on the potato
-   │  1. Jev reads the message first (intent, medium, format, themes)
+   │  1. Fast decision model (Jev) reads the message first (intent, medium, format, themes)
    │  2. Nova agent loop (embedded) ──► OpenRouter
    │       tools: media_lookup · lookup_web · merge_candidates · ask_reviewer · save_entry
    │                 │                │

@@ -59,6 +59,12 @@ are two AI-agent tools, `oritera/Cairn` and `cairn-dev/cairn`), which only matte
 our own namespaces. The GHCR check (`ghcr.io/autumnsgrove/cairn`) failed on a shell quoting error and was
 **not** confirmed; re-run it before the first image is published.
 
+### Naming: "decisions"
+
+The class of fast typed models is called **decisions** in all Cairn code, config and docs (Polaris already
+has a `decisions/` package, and Ivy planned a `decide()` interface). Jev is the first backend and is named
+only in the `backend:` block of the decisions config, so another model can replace it.
+
 ### Jev, as learned from `ivy/docs/JEV.md` (verified there by live calls, not re-verified here)
 
 - `POST {openrouter_base}/systemone`, model `jev-1.14`, the same OpenRouter key as chat.

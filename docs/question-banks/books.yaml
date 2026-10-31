@@ -2,7 +2,7 @@
 #
 # How the agent uses a bank (rules live in code, not here):
 #   - It picks 3 to 6 questions per entry, highest `weight` first, and presents them as one short form.
-#   - A question is SKIPPED when its `topic` is a mentions_* flag that Jev says the message already
+#   - A question is SKIPPED when its `topic` is a mentions_* flag that the decisions layer says the message already
 #     covered, so it never asks what I already said.
 #   - `applies_when` limits a question (by medium, format or a genre hint from the metadata).
 #   - At most two `short_text` questions per form, to keep the taps low.

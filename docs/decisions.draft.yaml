@@ -1,0 +1,146 @@
+# DRAFT decisions (the pre-read) for Cairn. For Autumn to cut, reword and tune.
+#
+# Two blocks, split the way Polaris splits prompts.yaml (wording) from config.yaml (policy):
+#   wording: what the decision model is asked. Rarely changes.
+#   policy:  thresholds, which checks run when, what suppresses what. Tuned from real odds in Phase 0.
+#
+# Mechanics (verified for the Jev backend in ivy/docs/JEV.md):
+#   - Each check is a `choice` decision question: `instructions` plus `criteria`, whose KEYS are the options.
+#   - Every enabled check goes out in ONE call; they are evaluated independently against the same state.
+#   - The first option listed is the QUIET default: nothing acts unless a non-quiet option clears its
+#     threshold, so a wrong guess costs nothing.
+#   - Probabilities are hints. Anything that must be true is enforced by deterministic code.
+#
+# State sent with each call, as separate {source, text} entries so they stay distinct:
+#   message          the latest thing I typed
+#   pending_question the question card the app just asked, if one is open (so replies are readable)
+#   work             the title of the work this session is about, if one has been chosen
+#   For extract_fidelity only: original (my messages) and extract (the proposed body).
+
+wording:
+  question_preamble: >-
+    You are reading a message someone sent to a private journal app where they record reviews of
+    things they have finished: films, TV, books, games, albums, podcasts, theatre. Answer about the
+    latest message. Any pending question or work title is only context for reading it.
+
+  checks:
+    intent:
+      instructions: >-
+        What is the person doing with this message? Pick "chitchat" unless one of the other options
+        clearly fits.
+      options:
+        chitchat: A greeting, thanks, a test message, or something unrelated to recording or finding reviews.
+        log_review: Tells the app about something they finished, with an opinion, a rating, or both, so it can be recorded.
+        find_entries: Asks about reviews they have already recorded - what they watched or read, a count, a list, a comparison, or whether they have reviewed something.
+        edit_entry: Asks to change, correct or add to a review that is already saved.
+        answer_pending: Replies to the question the app just asked, rather than starting something new.
+
+    medium:
+      instructions: >-
+        What kind of thing are they talking about? Pick "unknown" unless the message makes one kind
+        reasonably clear.
+      options:
+        unknown: No clear kind, or the title could equally be several kinds.
+        film: A movie.
+        tv: A TV series, miniseries, or season of one.
+        book: A novel, nonfiction book, graphic novel, or audiobook of a book.
+        game: A video game or board game.
+        album: A music album, EP, or single.
+        podcast: A podcast show or episode.
+        theatre: A play, musical, opera, or live stage performance.
+        other: A finished thing that is none of the above (an exhibition, a course, a comic series).
+
+    format:
+      instructions: >-
+        How did they experience it? Pick "not_stated" unless the message says or clearly implies it.
+      options:
+        not_stated: The message does not say how they watched, read or heard it.
+        cinema: Seen in a cinema.
+        streaming: Watched or listened on a streaming service or at home on demand.
+        audiobook: Listened to as an audiobook.
+        print: Read as a physical book.
+        ebook: Read on an e-reader or phone.
+        physical_media: Played from a disc, cartridge, vinyl or other physical copy.
+        live: Attended in person as a live performance.
+
+    revisit:
+      instructions: >-
+        Is this something they had already finished before and are experiencing again?
+      options:
+        "no": A first time, or the message does not say otherwise.
+        "yes": A rewatch, reread, replay or re-listen of something they had finished before.
+
+    extract_fidelity:
+      instructions: >-
+        The "original" is what the person wrote. The "extract" is the part of it proposed as their
+        review. Compare them. Pick "faithful" unless one of the others clearly applies.
+      options:
+        faithful: The extract keeps what the person said about the thing, and nothing important about their opinion is missing from it.
+        drops_opinion: The original contains an opinion, a rating or a specific point about the thing that the extract leaves out.
+        adds_content: The extract contains something that is not in the original.
+
+    # One yes/no per topic. They serve two jobs: skip a bank question the person already covered, and
+    # suggest tags. The topic names match `topic:` in the question banks.
+    mentions_sound:
+      instructions: Does the message say anything about the sound, music, score, voice acting or audio quality?
+      options: { "no": Nothing about sound., "yes": Says something about the sound or music. }
+    mentions_visuals:
+      instructions: Does the message say anything about how it looks - cinematography, art direction, design, animation or illustrations?
+      options: { "no": Nothing about how it looks., "yes": Says something about the visuals. }
+    mentions_acting:
+      instructions: Does the message say anything about performances or specific actors?
+      options: { "no": Nothing about performances., "yes": Says something about the acting. }
+    mentions_story:
+      instructions: Does the message say anything about the plot, the story, the ideas or the subject matter?
+      options: { "no": Nothing about the story or ideas., "yes": Says something about the story or ideas. }
+    mentions_pacing:
+      instructions: Does the message say anything about the pace or length - too slow, too fast, dragged, flew by, too long?
+      options: { "no": Nothing about pace or length., "yes": Says something about pace or length. }
+    mentions_ending:
+      instructions: Does the message say anything about how it ended?
+      options: { "no": Nothing about the ending., "yes": Says something about the ending. }
+    mentions_characters:
+      instructions: Does the message say anything about specific characters or people in it?
+      options: { "no": Nothing about characters., "yes": Says something about the characters. }
+    mentions_world:
+      instructions: Does the message say anything about the setting, the world it builds, or its atmosphere?
+      options: { "no": Nothing about the setting or world., "yes": Says something about the setting or world. }
+    mentions_writing:
+      instructions: Does the message say anything about the writing itself - prose, dialogue, style or voice?
+      options: { "no": Nothing about the writing., "yes": Says something about the writing. }
+
+# The first backend. Nothing else in the code or docs names it.
+backend:
+  name: jev
+  model: jev-1.14               # pinned, like the main model
+  endpoint: openrouter:/systemone
+  timeout_ms: 2500              # slower than this and the turn runs without a pre-read
+  fallback: none                # a chat model with a JSON schema could be named here later
+
+# Starting values only. Phase 0 sets the real ones from recorded odds on the fixture corpus.
+policy:
+  checks:
+    intent:
+      threshold: 0.65
+      option_thresholds: { edit_entry: 0.80, answer_pending: 0.75 }
+    medium:
+      threshold: 0.70
+      # Split read: ask "book or film?" first. Triggers when the runner-up is not negligible and the
+      # leader is not clearly ahead, e.g. book 0.55 / film 0.40.
+      ambiguity: { runner_up_min: 0.25, max_gap: 0.30 }
+    format:
+      threshold: 0.75
+      only_when_intent: [log_review]
+    revisit:
+      threshold: 0.80
+      only_when_intent: [log_review]
+    extract_fidelity:
+      # Never blocks. Asked in a second call, after code has built the extract from my own spans.
+      phase: post_extract
+      option_thresholds: { drops_opinion: 0.60 }
+      # adds_content should be impossible once code has verified containment. If it ever fires, it is
+      # logged as a bug and not shown as a normal warning.
+      log_as_bug: [adds_content]
+    mentions_defaults:
+      threshold: 0.75
+      only_when_intent: [log_review]

@@ -36,7 +36,7 @@ I type a paragraph the way I'd say it out loud:
 
 The agent then:
 
-1. **reads the message first** — one cheap, fast classification call (Jev) says what I'm doing (log a
+1. **reads the message first** — one cheap, fast decision call says what I'm doing (log a
    review, look something up, fix an entry), which medium it probably is, and what format and themes I
    mentioned;
 2. **identifies the work** — pulls candidate matches from the right external library (TMDB for a film,
@@ -88,9 +88,10 @@ That entry is then browsable, searchable and filterable across media in plain vi
 | Conversation unit | **One short session per entry** (lives until saved or discarded; unfinished drafts are resumable) **plus a general chat** for questions about the library. The general chat may read and edit, with a confirm card for every edit. It can never delete |
 | Agent runtime | **Nova** (`github.com/AutumnsGrove/nova`), embedded as a library in the Go service — not a bespoke loop, not a LangChain-style dependency. Leaning embed over "ship as a nova extension"; Phase 0 confirms it |
 | Main model | **`deepseek/deepseek-v4.1-flash-1017`** through **OpenRouter** (the same key Polaris and Ivy use). A dated pin on purpose, so behaviour can't shift silently. $0.15 per million input tokens and $0.60 per million output, 1M context, tool calling. Phase 0 checks it against the fixture corpus rather than comparing models; nova's provider layer keeps a swap cheap |
-| Pre-read classifier | **Jev** (`jev-1.14` via OpenRouter `/systemone`), one batched call per message, in the style of Polaris's Oracle: a quiet default on every check, a per-check threshold, odds shown on the card, never blocks a turn (unconfigured, errors or slow means the turn runs without it). Probabilities are hints, never decisions |
-| Extraction | **Deterministic parse first** (rating, date, obvious format cues). Jev only for fuzzy fields (format, themes). If no rating is stated, the agent asks |
-| Medium ambiguity | When Jev's medium read is split (e.g. "Dune": book or film), **ask "book or film?" before any lookup** |
+| Decisions | **"Decisions" is the vendor-neutral name** for the class of fast, typed models that take conditions and options (or a yes/no check) and return a probability per option. All code, config and docs say `decisions`; a `Decider` interface sits in front, so another model can replace the first backend, and a chat model with a JSON schema can stand in as a fallback. The first backend is **Jev** (`jev-1.14` via OpenRouter `/systemone`), named only in config. The **pre-read** is the step that uses it: one batched call per message, in the style of Polaris's Oracle, with a quiet default on every check, a per-check threshold, odds shown on the card, and never blocking a turn (unconfigured, errors or slower than 2.5 s means the turn runs without it). Probabilities are hints, never decisions. Checks are drafted in [`docs/decisions.draft.yaml`](docs/decisions.draft.yaml) |
+| Decision routing | Inside an entry session **the session sets the default** (an open question card means a reply is answering it; a draft means a message adds to it) and a decision overrides it only above **0.80**. From the home screen the `intent` decision routes: `log_review` starts an entry session, and `find_entries`, `edit_entry` and `chitchat` go to the general chat. The state sent with each call is **the latest message, any open question, and the work's title**, as separate sources. `format`, `revisit` and the `mentions_*` flags run only for `log_review`. A split medium read (runner-up at least 0.25 and the leader under 0.30 ahead) triggers the "book or film?" card |
+| Extraction | **Deterministic parse first** (rating, date, obvious format cues). The decision model only for fuzzy fields (format, themes). If no rating is stated, the agent asks |
+| Medium ambiguity | When the decision model's medium read is split (e.g. "Dune": book or film), **ask "book or film?" before any lookup** |
 | Media model | Media-agnostic from the start: a `work` has a `medium` (film, tv, book, game, album, podcast, theatre, other) plus medium-specific fields as data, not columns |
 | Metadata | **One real API per medium first** (TMDB for film and TV, Open Library for books; other media added as we reach them), **merged into one canonical work** with per-source snapshots kept. **Polaris is the fallback** for anything the APIs miss |
 | Web lookups | Through the colocated **Polaris**, which already wraps SearXNG with a Brave fallback. Two tools: `lookup_web` (structured args: title, medium, creator, field wanted — the default) and `ask_polaris_freeform` (a free prompt, the escape hatch; logged only, no confirm tap). Calls carry `source: cairn` and live as normal Polaris threads, which its sidebar never shows. The thread id and citations are stored with the snapshot |
@@ -105,15 +106,15 @@ That entry is then browsable, searchable and filterable across media in plain vi
 | Covers | Downloaded once, stored under `data/covers/`, mirrored to R2. No hot-linked third-party images. TMDB's image terms get checked in Phase 0 before this is final |
 | Degraded mode | If a metadata service is down, the review can still be logged as a **manual, unverified work** and enriched later with a "fill in details" action. A review is never blocked by someone else's outage |
 | Tags | Suggested from the `mentions_*` flags and the provider's genres, shown on the card for me to accept or edit. Free-text tags allowed. Nothing is applied without being shown |
-| Entry card | One component for the draft and the saved entry. Rating is dragged across the stars and snaps to quarters, with +/- buttons and the number always visible. Unverified fields carry a dashed marker (tap for the source) and one Accept all button. A collapsed "why" sheet shows the Jev odds, the tools that ran and their sources. After confirm the session closes and the card becomes the saved entry with an Edit button. Spec: [`docs/ENTRY_CARD.md`](docs/ENTRY_CARD.md) |
+| Entry card | One component for the draft and the saved entry. Rating is dragged across the stars and snaps to quarters, with +/- buttons and the number always visible. Unverified fields carry a dashed marker (tap for the source) and one Accept all button. A collapsed "why" sheet shows the decision odds, the tools that ran and their sources. After confirm the session closes and the card becomes the saved entry with an Edit button. Spec: [`docs/ENTRY_CARD.md`](docs/ENTRY_CARD.md) |
 | Home | The chat input at the bottom, with recent entries and the drafts count above it. Library, search and the general chat are one tap away |
-| Testing | A **fixture corpus** of sample messages with the expected parse, expected Jev outcome and expected tool sequence (the Oracle model: hand-written prompts with expected winners), run against **fake TMDB, Open Library, Jev and Polaris servers**. A separate live eval runs on demand |
+| Testing | A **fixture corpus** of sample messages with the expected parse, expected decision outcome and expected tool sequence (the Oracle model: hand-written prompts with expected winners), run against **fake TMDB, Open Library, Jev and Polaris servers**. A separate live eval runs on demand |
 | Photos | Deferred to Phase 4. The `media` table stays in the schema so adding them is not a migration |
 | First media | **Books (Open Library) and films and TV (TMDB) together** in Phase 1, so the merge and disambiguation logic is proven against two real sources |
 | Ratings | **Quarter-star steps from 0.25 to 5.0**, stored as an **integer 1–20 (quarter-stars)** plus the scale name, so the scale can change later without a migration. **Favourite is a separate flag**, not the same as a top rating |
 | TV | A work is the **series** in v1. The schema lets an entry point at a season later, so there is no migration, but only the series flow is built |
-| Review body | My words, always, **extracted and never written**. The agent returns quoted spans; code locates them in my messages (snapping a slip to my exact wording, dropping what has no match) and the body is the original text at those positions. A Jev `extract_fidelity` check is a second, never-blocking gate that warns when an opinion looks dropped. What was not kept shows under "left out" with a tap to include it. Typing the body myself is always allowed. The verdict is a verbatim span or empty. Full spec in [`docs/ENTRY_CARD.md`](docs/ENTRY_CARD.md) |
-| Spoilers | **Not handled in v1.** No field, no Jev check. Revisit if it starts to matter |
+| Review body | My words, always, **extracted and never written**. The agent returns quoted spans; code locates them in my messages (snapping a slip to my exact wording, dropping what has no match) and the body is the original text at those positions. A decisions `extract_fidelity` check is a second, never-blocking gate that warns when an opinion looks dropped. What was not kept shows under "left out" with a tap to include it. Typing the body myself is always allowed. The verdict is a verbatim span or empty. Full spec in [`docs/ENTRY_CARD.md`](docs/ENTRY_CARD.md) |
+| Spoilers | **Not handled in v1.** No field, no decision check. Revisit if it starts to matter |
 | Voice | **Deferred.** Typing only until the rest works |
 | Storage | SQLite on the potato (`modernc.org/sqlite`, pure Go — the same choice as Warbler), plus plain files for covers |
 | Backups | Nightly mirror to Cloudflare R2 using the **existing `rclone` remote** already configured for Vaultwarden (`r2:`), plus a JSON export |
@@ -146,12 +147,12 @@ Defaults assumed without asking, because they follow from decisions above. Say s
 - **Tool output is data, never instructions.** Web text returned by Polaris is shown to the model as
   quoted material, and no guardrail depends on the model resisting it. The deterministic checks in
   [§5](#5-the-review-flow-and-its-tools) are what keep a bad result from becoming a saved fact.
-- **Spend is recorded, not yet shown.** Every Jev, model and Polaris cost is stored per call; a spend
+- **Spend is recorded, not yet shown.** Every decision, model and Polaris cost is stored per call; a spend
   view waits until it is wanted.
 
 Resolved and moved into [§2](#2-decisions-already-made): the name, public or private, the rating scale,
 the unit of TV review, whether the agent saves silently (it never does), voice input, spoilers, the
-first providers, the general chat's powers, transport, the Jev registry, the free-form Polaris guard,
+first providers, the general chat's powers, transport, the decisions registry, the free-form Polaris guard,
 the GHCR name (not publicly taken; first publish confirms), edit history, deletion, draft expiry, question
 sets, the main model, testing, revisits, covers, degraded mode, tags, the home screen, photos, and the
 first media.
@@ -169,7 +170,7 @@ first media.
  ┌────────────────────────────────────────────────────────────┐
  │ Go service (127.0.0.1:8893)                                │
  │   HTTP API + WebSocket (my UI)                             │
- │   pre-read: Jev (one batched call per message)             │
+ │   pre-read: decisions (one batched call per message)      │
  │   embedded nova agent loop  ──► OpenRouter                 │
  │     tools: media_lookup · lookup_web · ask_polaris_freeform│
  │            · merge_candidates · ask_reviewer · save_entry  │
@@ -191,10 +192,10 @@ Five properties worth stating because they decide how the code is shaped:
 - **Nova owns the loop, not the conversation.** Consumers must not import nova's `session` package, so
   this app stores its own sessions, messages and resumable drafts. That is a real piece of work the
   original sketch did not have.
-- **The pre-read is a hint, not a gate.** Jev runs before the model turn, its odds are shown on the
+- **The pre-read is a hint, not a gate.** The decisions call runs before the model turn, its odds are shown on the
   card, and each check only acts when its non-quiet option clears a threshold. The model sees the result
   framed as an automatic pre-read, not an instruction, so a wrong guess gets ignored instead of obeyed.
-  Anything that must be true (a rating, a body) is enforced by deterministic code, never by Jev.
+  Anything that must be true (a rating, a body) is enforced by deterministic code, never by a decision model.
 - **The question cards are a tool call.** `ask_reviewer` is a model-callable tool whose result is
   "here are the questions to ask, here's their shape". The Go service turns that into UI; the answers
   come back as the tool result. No prompt is trusted to produce JSON that the UI then guesses at.
@@ -220,7 +221,7 @@ strongly at embedding. Phase 0 confirms it with a spike, not an opinion.
 | Step | Who | What happens |
 |---|---|---|
 | 1 | me | Free-form message in a chat, typed, from the phone |
-| 2 | app | **Pre-read:** one batched Jev call reads the message (intent, medium, format, themes). Skipped if empty; never blocks the turn |
+| 2 | app | **Pre-read:** one batched decisions call reads the message (intent, medium, format, themes). Skipped if empty; never blocks the turn |
 | 3 | app | **Deterministic parse:** rating, date and obvious cues pulled out of my words by plain rules. Nothing found means the field is left for the questions |
 | 4 | me | If the medium read was split, a quick "book or film?" card, answered before any lookup |
 | 5 | agent | `media_lookup` — search the right library by title (+ creator/year if I gave them) → 3–5 candidates with tiny payloads. `lookup_web` is used when the APIs return nothing |
@@ -228,7 +229,7 @@ strongly at embedding. Phase 0 confirms it with a spike, not an opinion.
 | 7 | agent | `merge_candidates` — fetches full metadata for the chosen work, stores a per-source snapshot, returns the merged canonical draft with web-sourced fields marked unverified |
 | 8 | agent | `ask_reviewer` — 3–6 medium-appropriate questions, each with a type (`stars`, `choice`, `scale`, `short_text`, `skip`) and a suggested answer it thinks I implied |
 | 9 | me | Answers, skips some, edits |
-| 10 | agent | Builds the draft entry: body and verdict as verbatim spans of my messages (code-verified, then Jev-checked), answers as their own fields, canonical metadata attached |
+| 10 | agent | Builds the draft entry: body and verdict as verbatim spans of my messages (code-verified, then decision-checked), answers as their own fields, canonical metadata attached |
 | 11 | me | Reviews the entry card: tap-to-edit any field, or type a correction in the chat; one confirm tap |
 | 12 | app | `save_entry` → SQLite commit → export row queued → R2 mirror on the next run |
 
@@ -237,7 +238,7 @@ In-progress work lives in a draft that can be resumed after closing the app.
 
 Branches off the main flow:
 
-- **Revisit.** If the work is already in the library (the Jev `revisit` check, backed by an exact match
+- **Revisit.** If the work is already in the library (the `revisit` decision, backed by an exact match
   on the chosen work), the card shows the previous entry and rating and asks: new entry, or edit the
   old one.
 - **Outage.** If a metadata service is down or finds nothing, the review is logged against a manual,
@@ -257,7 +258,7 @@ Branches off the main flow:
 | `save_entry` | the full draft | committed entry id |
 | `search_library` | text, filters | my own past entries (so "have I reviewed this already?" and "what did I watch in March?" are answerable). Reads only; edits happen through a draft revision and the confirm card |
 
-Jev itself is not a model-callable tool. It is a pipeline step the service runs before each turn.
+The decisions layer is not a model-callable tool. It is a pipeline step the service runs before each turn.
 
 Guardrails enforced in code, not in the prompt:
 
@@ -271,7 +272,7 @@ Guardrails enforced in code, not in the prompt:
 - Web-derived fields cannot reach the canonical work without my accept tap.
 - `ask_reviewer` is capped (questions and total rounds) so a chatty model can't turn the flow into an
   interrogation. If I skip everything, the entry still saves.
-- Every tool call, Jev pre-read (with its odds and cost) and Polaris call is logged with its inputs, so
+- Every tool call, decisions pre-read (with its odds and cost) and Polaris call is logged with its inputs, so
   "why does this entry say that" is answerable.
 
 ## 6. Data model
@@ -337,8 +338,8 @@ entry_revisions (            -- append-only: the previous version of an entry at
   id, entry_id, revision, snapshot_json, created_at
 )
 
-preread (                    -- every Jev call, so thresholds can be tuned from real use
-  id, session_id, message_index, model,
+decision_calls (            -- every decisions call, so thresholds can be tuned from real use
+  id, session_id, message_index, backend, model,
   odds_json,                 -- every check's full probability vector
   fired_json,                -- which checks cleared their threshold
   cost_usd, latency_ms, created_at
@@ -396,16 +397,16 @@ migration.
 | Port | `8893` — **verified free** on the potato 2026-10-30 (in use: 22 53 80 443 5335 8080 8081 8418 8766 8888 8890 8891 8892 8899 11434) |
 | Container | Compose project at `~/Cairn`, image pinned by digest in `.env`, published `127.0.0.1:8893` only, non-root, read-only rootfs |
 | Data | `~/Cairn/data/` — `cairn.db`, `covers/`, `exports/`, `backups/` |
-| Config | `jev.yaml` (pre-read checks, options, thresholds) and `questions/<medium>.yaml` (question banks), baked into the image and bind-mounted over top so host edits hot-reload, the way Polaris handles `prompts.yaml` |
+| Config | `decisions.yaml` (the checks: wording, options, thresholds, backend) and `questions/<medium>.yaml` (question banks), baked into the image and bind-mounted over top so host edits hot-reload, the way Polaris handles `prompts.yaml` |
 | Health | `GET /healthz` → `{"status":"ok","version":"r…"}` only (two fields, like Warbler's) |
-| Secrets | `OPENROUTER_API_KEY` (main model and Jev, one key) and metadata-provider keys in `~/Cairn/.env`; `rclone` config for R2 already exists on the box |
+| Secrets | `OPENROUTER_API_KEY` (main model and the Jev decisions backend, one key) and metadata-provider keys in `~/Cairn/.env`; `rclone` config for R2 already exists on the box |
 | Polaris | Colocated at `127.0.0.1:8899`. Cairn calls its ask API (`gateway.AskRequest`/`AskResponse`: `source`, `citations`, `cost_usd`). How the Cairn container reaches the host-published Polaris port (host networking or `host.docker.internal`) is a Phase 0 item |
 | Updates | Host watcher + `cairn-update.path`, digest pinned, health check, rollback |
 | Backups | Nightly at 03:30: SQLite snapshot → `data/backups/` (rotating) → `rclone sync` to `r2:cairn-backups/`; JSON export on demand |
 | Meridian | Tile `everyday`/`backbone` with a health probe on `http://localhost:8893/healthz`; vital: **reviews this month** (a count that means something) |
 | Health check | Adds `check_http "Cairn" "http://localhost:8893/healthz"` to `maintenance-setup/service-healthcheck.sh` in the same change that deploys it |
 
-The outside traffic this app causes is: the model calls (OpenRouter, including Jev), metadata lookups to
+The outside traffic this app causes is: the model calls (OpenRouter, including the decisions backend), metadata lookups to
 the provider APIs (titles and ids only), web lookups through Polaris (which searches via SearXNG, with
 Brave as a fallback), and the R2 mirror. Nothing else leaves the box.
 
@@ -417,7 +418,7 @@ Each phase ends with "Done when". Stop and ask at every **[HUMAN]** item.
 
 - Read `projects/nova/docs/INTEGRATION.md` and `examples/embed/`; write a small program that runs one
   nova conversation with **one** tool (`media_lookup` against TMDB or Open Library).
-- Make one real **Jev** call from Go against `/systemone` with a few review-shaped questions (intent,
+- Make one real **decisions** call (the Jev backend, `/systemone`) from Go with a few review-shaped questions (intent,
   medium) and record the odds on a handful of sample messages, including a split one like "Dune".
 - Make one real **Polaris** call with `source: cairn`; confirm the exact endpoint path, the response, the
   `citations` shape, and that the Cairn container can reach it.
@@ -426,13 +427,13 @@ Each phase ends with "Done when". Stop and ask at every **[HUMAN]** item.
 - Get a TMDB key and an Open Library client working (rate limits and attribution requirements written down).
 - **UI mockups of every screen** (home, session with its cards, the entry card in each state, drafts, library, entry page, general chat, trash), viewed in a browser, before any Phase 1 UI code.
 - Read TMDB's image and attribution terms and write the cover-caching decision down.
-- Write the first **fixture corpus** (about 30 sample messages with expected parse, expected Jev outcome
-  and expected tool sequence), then run the pre-read and the pinned model against it. Set the first Jev
+- Write the first **fixture corpus** (about 30 sample messages with expected parse, expected decision outcome
+  and expected tool sequence), then run the pre-read and the pinned model against it. Set the first decision
   thresholds from the real odds.
 - **[HUMAN]** autumn reviews the corpus and the thresholds.
 
 **Done when:** a free-form sentence in a terminal produces a real candidate list from real metadata,
-the Jev and Polaris calls both work from Go, and the embed-or-extension choice is written down.
+the decisions and Polaris calls both work from Go, and the embed-or-extension choice is written down.
 
 ### Phase 1: One entry, one medium, end to end
 
@@ -487,7 +488,7 @@ field, so this adds a build step and a way to mark an entry published, and nothi
 | Item | Estimate |
 |---|---|
 | Agent model calls per review | a handful of small calls; a review should cost **cents**, and the flow is designed to be 3–6 model turns, not 30. At the pinned model's prices a 20k-token-in, 2k-token-out turn is roughly $0.004 |
-| Jev pre-read | about $0.042 per million input tokens and free output, so a batched call is a fraction of a cent. Logged in `preread.cost_usd` |
+| Decisions pre-read | on the Jev backend about $0.042 per million input tokens and free output, so a batched call is a fraction of a cent. Logged in `decision_calls.cost_usd` |
 | Polaris web lookups | Polaris reports `cost_usd` per ask; it is stored with the snapshot. Most reviews should never need one |
 | Metadata | TMDB and Open Library free (attribution required); MusicBrainz free with a rate limit |
 | Storage on the potato | a review is kilobytes; covers are the growth (~100 KB each), so a thousand entries is ~100 MB |
@@ -506,11 +507,11 @@ not a cheaper model.
 3. **Local-first.** SQLite before R2, always. A mirror failure is a warning, never a lost review.
 4. **Source snapshots are append-only.** A silent metadata rewrite of my history is a bug. Web-derived
    facts are proposed and marked unverified until I accept them.
-5. **Review text goes only where the plan names.** The LLM (OpenRouter, including Jev) sees my text; that
+5. **Review text goes only where the plan names.** The LLM (OpenRouter, including the decisions backend) sees my text; that
    is the cost of the feature. Metadata APIs and Polaris get titles, creators and ids, via structured
    arguments by default. The one path where free text could reach a web search is
    `ask_polaris_freeform`, which is the deliberate escape hatch and is always logged.
-6. **Classifier output never decides.** Jev's probabilities steer and suggest. Anything that must be true
+6. **Classifier output never decides.** A decision model's probabilities steer and suggest. Anything that must be true
    (a rating, a body, a quarter-star value) is enforced by deterministic code.
 7. **Export must outlive the app.** If this code vanished tomorrow, the JSON should still be readable.
 8. **Tailnet-only.** No Funnel, no public port, no accounts.

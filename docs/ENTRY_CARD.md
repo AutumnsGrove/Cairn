@@ -11,7 +11,7 @@ off it. Decisions are from the 2026-10-31 planning session; the rules they serve
 |---|---|---|
 | Work | Cover, title, year, creators, medium | `verified` (an API), `unverified` (web or manual), `accepted` (a web field I tapped) |
 | Rating | Quarter-star rating and the favourite flag | `set`, or `empty` (shown as needed) |
-| Facts | Format, date finished | `parsed`, `suggested` (from Jev), `empty` |
+| Facts | Format, date finished | `parsed`, `suggested` (from the decisions layer), `empty` |
 | My words | Verdict (one line) and body | `extracted`, `typed`, `mixed`; see section 3 |
 | Left out | The parts of my messages not kept | collapsed; each segment has a tap to include it |
 | Answers | The question cards I answered | `answered`, `skipped` (greyed) |
@@ -48,7 +48,7 @@ words to keep.
    The verdict goes through the same containment check, or stays empty.
 4. **Left out is everything else** in my messages. The usual content is the framing ("hey so i finished
    watching..."), and it is left out by default. Each segment can be included with one tap.
-5. **The fidelity gate.** A Jev `extract_fidelity` check is asked with my original text and the extract as
+5. **The fidelity gate.** A decisions `extract_fidelity` check is asked with my original text and the extract as
    two separate `{source, text}` entries. Options: `faithful` (the quiet default), `drops_opinion`,
    `adds_content`. It never blocks:
    - `drops_opinion` over its threshold: the card shows a warning and highlights the left-out text that
