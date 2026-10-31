@@ -10,6 +10,11 @@ user types what she thought, an agent finds the work, extracts her own words, as
 confirms one entry card. It is a Go service with an embedded SvelteKit frontend, run on a Le Potato board over
 Tailscale, and it is a sibling of Polaris, Ivy, Warbler and Meridian in `~/Documents/Projects/`.
 
+**Cairn listens on port 8893**, loopback only (`127.0.0.1:8893`) — `tailscale serve` is the only way in,
+and the public-to-her address is `https://lepotato.taild95077.ts.net:8893`. The port is reserved and was
+verified free on 2026-10-30; 8892 belongs to Warbler and 8894 to Coffer. Any probe, health check or
+Meridian tile uses `http://localhost:8893/healthz`.
+
 ## Status
 
 **Planning only. Nothing is built.** The repo holds the plan, the specs, the clickable mockups and the build

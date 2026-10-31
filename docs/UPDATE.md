@@ -13,7 +13,7 @@ work, and a failed update rolls back on its own. The state machine below is mode
 2. **The watcher updates.** It resolves the latest published image digest from GHCR (waiting out an
    in-progress CI build first), fast-forwards the host checkout so `docker-compose.yml` and the
    bind-mounted config land with the image, pins the new digest in `.env`, recreates the container, and
-   checks `GET /healthz`.
+   checks `GET http://localhost:8893/healthz` (port 8893, loopback only — see `PLAN.md` section 8).
 3. **A failed health check rolls back** to the previous digest and records a result of `failed`.
 4. **The watcher keeps a heartbeat**, so the app can tell "no updater installed" from "the updater has gone
    quiet".

@@ -70,6 +70,9 @@ All of `PLAN.md` section 2 is settled. The ones builders most often want to reop
 - **Soft delete only.** The general chat can edit with a confirm card and can never delete.
 - **WebSocket with a server-side event log, full draft snapshots with a version, one `interaction` mechanism.**
 - **Updates:** host-side watcher, pinned digest, health check, rollback. The container never touches Docker.
+- **Port 8893**, loopback only on the potato, `tailscale serve` is the way in; the health check, the
+  watcher and Meridian's tile all use `http://localhost:8893/healthz`. Reserved and verified free
+  2026-10-30 (8892 is Warbler, 8894 is Coffer). Nothing else may claim it.
 - **Backups and the update flow ship in Phase 1.**
 
 ## 3. Traps found by earlier work

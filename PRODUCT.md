@@ -21,6 +21,9 @@ entry card, fix anything by tapping it, and confirm. Success looks like a review
 to actually get written, that is unmistakably in the user's own words, and that is still readable
 and exportable in ten years. The software should disappear behind the review.
 
+It runs on her own hardware — a Le Potato on her tailnet — at port **8893**, and nothing it holds leaves
+that machine except an encrypted backup.
+
 ## Brand Personality
 
 Quiet, warm, considered. Named for the stack of stones left on a trail to say someone passed this way:

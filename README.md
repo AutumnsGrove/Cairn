@@ -16,6 +16,10 @@ years.
 **Status: planning only.** No code yet. This repo exists so the shape is written down before it is
 built. `PLAN.md` is the source of truth; `README.md` is the pitch.
 
+**Port: 8893.** Reserved on the potato, verified free 2026-10-30. The container publishes to
+`127.0.0.1:8893` only; `tailscale serve` is the way in, so the URL it will answer on is
+`https://lepotato.taild95077.ts.net:8893`. Neighbours: 8892 is Warbler and 8894 is Coffer.
+
 ## Why
 
 - **One habit, one place.** Today: one app for books, another mental bucket for films, a third for
@@ -45,7 +49,7 @@ built. `PLAN.md` is the source of truth; `README.md` is the pitch.
    │                                ▼
    │                      SQLite (works + reviews + answers)
    │                      └──► nightly rclone mirror → R2
-   └── HTTPS via tailscale serve, tile in Meridian
+   └── HTTPS via tailscale serve :8893, tile in Meridian
 ```
 
 ## Read this first

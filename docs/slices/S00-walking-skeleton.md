@@ -27,7 +27,7 @@ An empty Go module. The repo has docs and mockups only, and `LICENSE` (MIT).
 1. **S00.1 Repo and tooling.** `go.mod` (module path to confirm), `Makefile` (`check`, `test`, `fuzz-smoke`,
    `web`, `gen`), `.golangci.yml`, `.editorconfig`, `STACK.md` seeded, `SECURITY.md`, `CODEOWNERS`, a
    `CLAUDE.md` for agents, an **architecture test** that fails on any import that breaks the dependency rule.
-2. **S00.2 Server skeleton.** `cmd/cairn serve`, `GET /healthz` returning exactly `{"status":"ok","version":"r…"}`,
+2. **S00.2 Server skeleton.** `cmd/cairn serve` on **127.0.0.1:8893** (reserved for Cairn; loopback only), `GET /healthz` returning exactly `{"status":"ok","version":"r…"}`,
    structured logging, graceful shutdown, security headers, the **Host and Origin middleware** with its table
    of hostile cases, the error envelope for unknown paths and wrong methods.
 3. **S00.3 Web shell.** A SvelteKit app that renders a placeholder page in the real fonts and tokens, built in a
