@@ -526,7 +526,8 @@ func sessionFromRow(row db.Session) domain.Session {
 	return domain.Session{
 		ID: row.ID, Kind: domain.SessionKind(row.Kind), Title: row.Title,
 		EntryID: derefString(row.EntryID), State: domain.SessionState(row.State),
-		Messages: json.RawMessage(row.MessagesJson),
+		DraftVersion: int(row.DraftVersion),
+		Messages:     json.RawMessage(row.MessagesJson),
 	}
 }
 

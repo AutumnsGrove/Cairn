@@ -265,3 +265,28 @@ and logo are shipped as constants/assets here and placed in the UI by S11 and S1
 
 **Live checks left for the operator:** a real TMDB key, and real data for a book, a translated book, a film, a
 miniseries and a remake, as the slice's Done-when says.
+
+## 2026-11-01, S07 in progress, the session engine's spine
+
+**Built.** Migration 0003 (a `draft_version` on sessions, `interactions`, `client_messages`, and two triggers that
+refuse to reopen or delete a question), the queries and store transactions over it, and `internal/session`: the
+lifecycle, `hello` with replay and a `full_state` fallback across a compacted gap, ask/answer/withdraw with the
+first answer winning, the idempotency ledger, the per-turn delta compaction, and the waiting-reason rules.
+
+**What is true now.** A question and the event that announces it are written in one transaction, so a restart
+cannot lose one; an answered question cannot be reopened or deleted even by raw SQL; a stale draft version changes
+nothing; two appends at once get distinct, gapless sequence numbers (`-race`); a client resuming into a compacted
+gap is told to rebuild from the snapshot instead of replaying a hole.
+
+**Blocked, and it is a schema finding worth reading.** `entries.rating_q` is `NOT NULL CHECK (rating_q BETWEEN 1
+AND 20)`, so an **unrated draft cannot be stored**, and the Drafts list exists to show exactly that state
+("Needs a rating" in `mockups/03-home-and-library.html`). Two tests are skipped until it is fixed, and they are
+the tests that will prove the fix. The options are a table rebuild of `entries` to allow `0..20` (SQLite's
+documented rebuild needs `PRAGMA foreign_keys=OFF` around the transaction, which the migration runner does not
+offer yet) or a nullable rating column added beside the old one. Both are migration-runner or schema changes, not
+engine code, so they are recorded here rather than forced in at the end of a long turn.
+
+**Still to do in S07.** The draft operations (edit, accept fields, include left out, confirm, discard, stop) with
+the version check; the confirm's single transaction (version, entry, revision, session link, state, events,
+ledger); revisit and edit-existing; the session and message limits; and the wire shapes S09 will serve.
+

@@ -15,9 +15,13 @@ type Querier interface {
 	// The sequence number is chosen in the same statement, so two appenders cannot pick the same one. The unique
 	// index on (session_id, seq) is the backstop: if two ever did, one of them fails rather than being replayed twice.
 	AppendSessionEvent(ctx context.Context, arg AppendSessionEventParams) error
+	// --- the session engine (S07) ---------------------------------------------------------------------------
+	// The optimistic-concurrency check is the WHERE clause, so a stale edit changes nothing instead of racing a read.
+	BumpDraftVersion(ctx context.Context, arg BumpDraftVersionParams) (sql.Result, error)
 	CreateAnswer(ctx context.Context, arg CreateAnswerParams) error
 	CreateDecisionCall(ctx context.Context, arg CreateDecisionCallParams) error
 	CreateEntry(ctx context.Context, arg CreateEntryParams) error
+	CreateInteraction(ctx context.Context, arg CreateInteractionParams) error
 	CreateMedia(ctx context.Context, arg CreateMediaParams) error
 	// Written in the same transaction as the confirm that creates it.
 	CreateRevision(ctx context.Context, arg CreateRevisionParams) error
@@ -28,19 +32,23 @@ type Querier interface {
 	CreateWorkSource(ctx context.Context, arg CreateWorkSourceParams) error
 	DeleteCompactedEvents(ctx context.Context, arg DeleteCompactedEventsParams) error
 	FindWorksByTitle(ctx context.Context, arg FindWorksByTitleParams) ([]Work, error)
+	GetClientMessage(ctx context.Context, arg GetClientMessageParams) (ClientMessage, error)
 	GetEntry(ctx context.Context, id string) (Entry, error)
+	GetInteraction(ctx context.Context, id string) (Interaction, error)
 	GetSession(ctx context.Context, id string) (Session, error)
 	GetTagByName(ctx context.Context, name string) (Tag, error)
 	GetWork(ctx context.Context, id string) (Work, error)
 	HeadSequence(ctx context.Context, sessionID string) (interface{}, error)
 	LatestRevisionNumber(ctx context.Context, entryID string) (interface{}, error)
 	LinkEntryTag(ctx context.Context, arg LinkEntryTagParams) error
+	LinkSessionEntry(ctx context.Context, arg LinkSessionEntryParams) error
 	ListActiveSessions(ctx context.Context, limit int64) ([]Session, error)
 	ListAnswers(ctx context.Context, entryID string) ([]Answer, error)
 	ListDrafts(ctx context.Context, limit int64) ([]Entry, error)
 	ListEntriesOnWork(ctx context.Context, workID string) ([]Entry, error)
 	ListEntryTags(ctx context.Context, entryID string) ([]ListEntryTagsRow, error)
 	ListGeneralSessions(ctx context.Context, limit int64) ([]Session, error)
+	ListInteractions(ctx context.Context, sessionID string) ([]Interaction, error)
 	// The library: saved, not deleted, newest finished first. Cursor pagination on (finished_on, id), never an offset.
 	// The four placeholders are: the cursor's finished_on (NULL on the first page), its id, and the limit. They are
 	// positional because a repeated named argument makes sqlc emit fewer struct fields than the driver has "?".
@@ -48,15 +56,21 @@ type Querier interface {
 	ListLibrary(ctx context.Context, arg ListLibraryParams) ([]Entry, error)
 	ListMediaForEntry(ctx context.Context, entryID *string) ([]Medium, error)
 	ListMirrors(ctx context.Context, limit int64) ([]Mirror, error)
+	ListOpenInteractions(ctx context.Context, sessionID string) ([]Interaction, error)
 	ListRevisions(ctx context.Context, entryID string) ([]EntryRevision, error)
 	ListSessionEventsSince(ctx context.Context, arg ListSessionEventsSinceParams) ([]SessionEvent, error)
 	ListWorkSources(ctx context.Context, workID string) ([]WorkSource, error)
 	RecordMirror(ctx context.Context, arg RecordMirrorParams) error
+	RememberClientMessage(ctx context.Context, arg RememberClientMessageParams) error
+	// Resolving is the one update an interaction allows, and only while it is open. The trigger is the backstop.
+	ResolveInteraction(ctx context.Context, arg ResolveInteractionParams) (sql.Result, error)
 	RestoreEntry(ctx context.Context, arg RestoreEntryParams) error
 	// The confirm tap. Only a draft becomes saved, and only through this statement.
 	SaveEntry(ctx context.Context, arg SaveEntryParams) error
 	SetSessionState(ctx context.Context, arg SetSessionStateParams) error
 	SoftDeleteEntry(ctx context.Context, arg SoftDeleteEntryParams) error
+	// A draft's fields. The status guard is the WHERE clause, so a saved entry can never be rewritten this way.
+	UpdateDraft(ctx context.Context, arg UpdateDraftParams) (sql.Result, error)
 	UpdateSessionMessages(ctx context.Context, arg UpdateSessionMessagesParams) error
 	UpdateWork(ctx context.Context, arg UpdateWorkParams) error
 	UpsertTag(ctx context.Context, arg UpsertTagParams) error

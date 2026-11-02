@@ -4,6 +4,10 @@
 
 package db
 
+import (
+	"database/sql"
+)
+
 type Answer struct {
 	ID         string `json:"id"`
 	EntryID    string `json:"entry_id"`
@@ -14,6 +18,15 @@ type Answer struct {
 	AnswerJson string `json:"answer_json"`
 	Skipped    int64  `json:"skipped"`
 	CreatedAt  string `json:"created_at"`
+}
+
+type ClientMessage struct {
+	SessionID   string `json:"session_id"`
+	ClientMsgID string `json:"client_msg_id"`
+	Seq         int64  `json:"seq"`
+	Status      string `json:"status"`
+	Reason      string `json:"reason"`
+	CreatedAt   string `json:"created_at"`
 }
 
 type DecisionCall struct {
@@ -63,6 +76,18 @@ type EntryTag struct {
 	Source  string `json:"source"`
 }
 
+type Interaction struct {
+	ID             string         `json:"id"`
+	SessionID      string         `json:"session_id"`
+	Kind           string         `json:"kind"`
+	PayloadJson    string         `json:"payload_json"`
+	OpenedSeq      int64          `json:"opened_seq"`
+	OpenedAt       string         `json:"opened_at"`
+	ResolvedSeq    sql.NullInt64  `json:"resolved_seq"`
+	ResolvedBy     sql.NullString `json:"resolved_by"`
+	ResolutionJson sql.NullString `json:"resolution_json"`
+}
+
 type Medium struct {
 	ID             string  `json:"id"`
 	EntryID        *string `json:"entry_id"`
@@ -91,6 +116,7 @@ type Session struct {
 	State        string  `json:"state"`
 	CreatedAt    string  `json:"created_at"`
 	UpdatedAt    string  `json:"updated_at"`
+	DraftVersion int64   `json:"draft_version"`
 }
 
 type SessionEvent struct {

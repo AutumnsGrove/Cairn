@@ -53,6 +53,25 @@ func (q *Queries) AppendSessionEvent(ctx context.Context, arg AppendSessionEvent
 	return err
 }
 
+const bumpDraftVersion = `-- name: BumpDraftVersion :execresult
+
+UPDATE sessions
+SET draft_version = draft_version + 1, updated_at = ?
+WHERE id = ? AND draft_version = ? AND state = 'active'
+`
+
+type BumpDraftVersionParams struct {
+	UpdatedAt    string `json:"updated_at"`
+	ID           string `json:"id"`
+	DraftVersion int64  `json:"draft_version"`
+}
+
+// --- the session engine (S07) ---------------------------------------------------------------------------
+// The optimistic-concurrency check is the WHERE clause, so a stale edit changes nothing instead of racing a read.
+func (q *Queries) BumpDraftVersion(ctx context.Context, arg BumpDraftVersionParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, bumpDraftVersion, arg.UpdatedAt, arg.ID, arg.DraftVersion)
+}
+
 const createAnswer = `-- name: CreateAnswer :exec
 INSERT INTO answers (id, entry_id, question_id, category, prompt, answer_type, answer_json, skipped, created_at)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
@@ -163,6 +182,32 @@ func (q *Queries) CreateEntry(ctx context.Context, arg CreateEntryParams) error 
 		arg.Status,
 		arg.CreatedAt,
 		arg.UpdatedAt,
+	)
+	return err
+}
+
+const createInteraction = `-- name: CreateInteraction :exec
+INSERT INTO interactions (id, session_id, kind, payload_json, opened_seq, opened_at)
+VALUES (?, ?, ?, ?, ?, ?)
+`
+
+type CreateInteractionParams struct {
+	ID          string `json:"id"`
+	SessionID   string `json:"session_id"`
+	Kind        string `json:"kind"`
+	PayloadJson string `json:"payload_json"`
+	OpenedSeq   int64  `json:"opened_seq"`
+	OpenedAt    string `json:"opened_at"`
+}
+
+func (q *Queries) CreateInteraction(ctx context.Context, arg CreateInteractionParams) error {
+	_, err := q.db.ExecContext(ctx, createInteraction,
+		arg.ID,
+		arg.SessionID,
+		arg.Kind,
+		arg.PayloadJson,
+		arg.OpenedSeq,
+		arg.OpenedAt,
 	)
 	return err
 }
@@ -389,6 +434,29 @@ func (q *Queries) FindWorksByTitle(ctx context.Context, arg FindWorksByTitlePara
 	return items, nil
 }
 
+const getClientMessage = `-- name: GetClientMessage :one
+SELECT session_id, client_msg_id, seq, status, reason, created_at FROM client_messages WHERE session_id = ? AND client_msg_id = ?
+`
+
+type GetClientMessageParams struct {
+	SessionID   string `json:"session_id"`
+	ClientMsgID string `json:"client_msg_id"`
+}
+
+func (q *Queries) GetClientMessage(ctx context.Context, arg GetClientMessageParams) (ClientMessage, error) {
+	row := q.db.QueryRowContext(ctx, getClientMessage, arg.SessionID, arg.ClientMsgID)
+	var i ClientMessage
+	err := row.Scan(
+		&i.SessionID,
+		&i.ClientMsgID,
+		&i.Seq,
+		&i.Status,
+		&i.Reason,
+		&i.CreatedAt,
+	)
+	return i, err
+}
+
 const getEntry = `-- name: GetEntry :one
 SELECT id, work_id, rating_q, rating_scale, favourite, season, verdict, body, body_origin, imported_from, body_spans_json, format, finished_on, status, deleted_at, created_at, updated_at FROM entries WHERE id = ?
 `
@@ -418,8 +486,29 @@ func (q *Queries) GetEntry(ctx context.Context, id string) (Entry, error) {
 	return i, err
 }
 
+const getInteraction = `-- name: GetInteraction :one
+SELECT id, session_id, kind, payload_json, opened_seq, opened_at, resolved_seq, resolved_by, resolution_json FROM interactions WHERE id = ?
+`
+
+func (q *Queries) GetInteraction(ctx context.Context, id string) (Interaction, error) {
+	row := q.db.QueryRowContext(ctx, getInteraction, id)
+	var i Interaction
+	err := row.Scan(
+		&i.ID,
+		&i.SessionID,
+		&i.Kind,
+		&i.PayloadJson,
+		&i.OpenedSeq,
+		&i.OpenedAt,
+		&i.ResolvedSeq,
+		&i.ResolvedBy,
+		&i.ResolutionJson,
+	)
+	return i, err
+}
+
 const getSession = `-- name: GetSession :one
-SELECT id, kind, title, entry_id, messages_json, state, created_at, updated_at FROM sessions WHERE id = ?
+SELECT id, kind, title, entry_id, messages_json, state, created_at, updated_at, draft_version FROM sessions WHERE id = ?
 `
 
 func (q *Queries) GetSession(ctx context.Context, id string) (Session, error) {
@@ -434,6 +523,7 @@ func (q *Queries) GetSession(ctx context.Context, id string) (Session, error) {
 		&i.State,
 		&i.CreatedAt,
 		&i.UpdatedAt,
+		&i.DraftVersion,
 	)
 	return i, err
 }
@@ -512,8 +602,23 @@ func (q *Queries) LinkEntryTag(ctx context.Context, arg LinkEntryTagParams) erro
 	return err
 }
 
+const linkSessionEntry = `-- name: LinkSessionEntry :exec
+UPDATE sessions SET entry_id = ?, updated_at = ? WHERE id = ?
+`
+
+type LinkSessionEntryParams struct {
+	EntryID   *string `json:"entry_id"`
+	UpdatedAt string  `json:"updated_at"`
+	ID        string  `json:"id"`
+}
+
+func (q *Queries) LinkSessionEntry(ctx context.Context, arg LinkSessionEntryParams) error {
+	_, err := q.db.ExecContext(ctx, linkSessionEntry, arg.EntryID, arg.UpdatedAt, arg.ID)
+	return err
+}
+
 const listActiveSessions = `-- name: ListActiveSessions :many
-SELECT id, kind, title, entry_id, messages_json, state, created_at, updated_at FROM sessions WHERE state = 'active' ORDER BY updated_at DESC, id DESC LIMIT ?
+SELECT id, kind, title, entry_id, messages_json, state, created_at, updated_at, draft_version FROM sessions WHERE state = 'active' ORDER BY updated_at DESC, id DESC LIMIT ?
 `
 
 func (q *Queries) ListActiveSessions(ctx context.Context, limit int64) ([]Session, error) {
@@ -534,6 +639,7 @@ func (q *Queries) ListActiveSessions(ctx context.Context, limit int64) ([]Sessio
 			&i.State,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DraftVersion,
 		); err != nil {
 			return nil, err
 		}
@@ -710,7 +816,7 @@ func (q *Queries) ListEntryTags(ctx context.Context, entryID string) ([]ListEntr
 }
 
 const listGeneralSessions = `-- name: ListGeneralSessions :many
-SELECT id, kind, title, entry_id, messages_json, state, created_at, updated_at FROM sessions WHERE kind = 'general' ORDER BY updated_at DESC, id DESC LIMIT ?
+SELECT id, kind, title, entry_id, messages_json, state, created_at, updated_at, draft_version FROM sessions WHERE kind = 'general' ORDER BY updated_at DESC, id DESC LIMIT ?
 `
 
 func (q *Queries) ListGeneralSessions(ctx context.Context, limit int64) ([]Session, error) {
@@ -731,6 +837,44 @@ func (q *Queries) ListGeneralSessions(ctx context.Context, limit int64) ([]Sessi
 			&i.State,
 			&i.CreatedAt,
 			&i.UpdatedAt,
+			&i.DraftVersion,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listInteractions = `-- name: ListInteractions :many
+SELECT id, session_id, kind, payload_json, opened_seq, opened_at, resolved_seq, resolved_by, resolution_json FROM interactions WHERE session_id = ? ORDER BY opened_seq, id
+`
+
+func (q *Queries) ListInteractions(ctx context.Context, sessionID string) ([]Interaction, error) {
+	rows, err := q.db.QueryContext(ctx, listInteractions, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Interaction{}
+	for rows.Next() {
+		var i Interaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.SessionID,
+			&i.Kind,
+			&i.PayloadJson,
+			&i.OpenedSeq,
+			&i.OpenedAt,
+			&i.ResolvedSeq,
+			&i.ResolvedBy,
+			&i.ResolutionJson,
 		); err != nil {
 			return nil, err
 		}
@@ -865,6 +1009,43 @@ func (q *Queries) ListMirrors(ctx context.Context, limit int64) ([]Mirror, error
 			&i.Status,
 			&i.Bytes,
 			&i.Detail,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listOpenInteractions = `-- name: ListOpenInteractions :many
+SELECT id, session_id, kind, payload_json, opened_seq, opened_at, resolved_seq, resolved_by, resolution_json FROM interactions WHERE session_id = ? AND resolved_seq IS NULL ORDER BY opened_seq, id
+`
+
+func (q *Queries) ListOpenInteractions(ctx context.Context, sessionID string) ([]Interaction, error) {
+	rows, err := q.db.QueryContext(ctx, listOpenInteractions, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Interaction{}
+	for rows.Next() {
+		var i Interaction
+		if err := rows.Scan(
+			&i.ID,
+			&i.SessionID,
+			&i.Kind,
+			&i.PayloadJson,
+			&i.OpenedSeq,
+			&i.OpenedAt,
+			&i.ResolvedSeq,
+			&i.ResolvedBy,
+			&i.ResolutionJson,
 		); err != nil {
 			return nil, err
 		}
@@ -1014,6 +1195,57 @@ func (q *Queries) RecordMirror(ctx context.Context, arg RecordMirrorParams) erro
 	return err
 }
 
+const rememberClientMessage = `-- name: RememberClientMessage :exec
+INSERT INTO client_messages (session_id, client_msg_id, seq, status, reason, created_at)
+VALUES (?, ?, ?, ?, ?, ?)
+`
+
+type RememberClientMessageParams struct {
+	SessionID   string `json:"session_id"`
+	ClientMsgID string `json:"client_msg_id"`
+	Seq         int64  `json:"seq"`
+	Status      string `json:"status"`
+	Reason      string `json:"reason"`
+	CreatedAt   string `json:"created_at"`
+}
+
+func (q *Queries) RememberClientMessage(ctx context.Context, arg RememberClientMessageParams) error {
+	_, err := q.db.ExecContext(ctx, rememberClientMessage,
+		arg.SessionID,
+		arg.ClientMsgID,
+		arg.Seq,
+		arg.Status,
+		arg.Reason,
+		arg.CreatedAt,
+	)
+	return err
+}
+
+const resolveInteraction = `-- name: ResolveInteraction :execresult
+UPDATE interactions
+SET resolved_seq = ?, resolved_by = ?, resolution_json = ?
+WHERE id = ? AND session_id = ? AND resolved_seq IS NULL
+`
+
+type ResolveInteractionParams struct {
+	ResolvedSeq    sql.NullInt64  `json:"resolved_seq"`
+	ResolvedBy     sql.NullString `json:"resolved_by"`
+	ResolutionJson sql.NullString `json:"resolution_json"`
+	ID             string         `json:"id"`
+	SessionID      string         `json:"session_id"`
+}
+
+// Resolving is the one update an interaction allows, and only while it is open. The trigger is the backstop.
+func (q *Queries) ResolveInteraction(ctx context.Context, arg ResolveInteractionParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, resolveInteraction,
+		arg.ResolvedSeq,
+		arg.ResolvedBy,
+		arg.ResolutionJson,
+		arg.ID,
+		arg.SessionID,
+	)
+}
+
 const restoreEntry = `-- name: RestoreEntry :exec
 UPDATE entries SET deleted_at = NULL, updated_at = ? WHERE id = ?
 `
@@ -1093,6 +1325,46 @@ type SoftDeleteEntryParams struct {
 func (q *Queries) SoftDeleteEntry(ctx context.Context, arg SoftDeleteEntryParams) error {
 	_, err := q.db.ExecContext(ctx, softDeleteEntry, arg.DeletedAt, arg.UpdatedAt, arg.ID)
 	return err
+}
+
+const updateDraft = `-- name: UpdateDraft :execresult
+UPDATE entries
+SET rating_q = ?, rating_scale = ?, favourite = ?, season = ?, verdict = ?, body = ?, body_origin = ?,
+    body_spans_json = ?, format = ?, finished_on = ?, updated_at = ?
+WHERE id = ? AND status = 'draft'
+`
+
+type UpdateDraftParams struct {
+	RatingQ       int64   `json:"rating_q"`
+	RatingScale   string  `json:"rating_scale"`
+	Favourite     int64   `json:"favourite"`
+	Season        *int64  `json:"season"`
+	Verdict       string  `json:"verdict"`
+	Body          string  `json:"body"`
+	BodyOrigin    string  `json:"body_origin"`
+	BodySpansJson string  `json:"body_spans_json"`
+	Format        string  `json:"format"`
+	FinishedOn    *string `json:"finished_on"`
+	UpdatedAt     string  `json:"updated_at"`
+	ID            string  `json:"id"`
+}
+
+// A draft's fields. The status guard is the WHERE clause, so a saved entry can never be rewritten this way.
+func (q *Queries) UpdateDraft(ctx context.Context, arg UpdateDraftParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, updateDraft,
+		arg.RatingQ,
+		arg.RatingScale,
+		arg.Favourite,
+		arg.Season,
+		arg.Verdict,
+		arg.Body,
+		arg.BodyOrigin,
+		arg.BodySpansJson,
+		arg.Format,
+		arg.FinishedOn,
+		arg.UpdatedAt,
+		arg.ID,
+	)
 }
 
 const updateSessionMessages = `-- name: UpdateSessionMessages :exec

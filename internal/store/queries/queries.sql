@@ -150,3 +150,47 @@ INSERT INTO mirrors (id, ran_at, target, status, bytes, detail) VALUES (?, ?, ?,
 
 -- name: ListMirrors :many
 SELECT * FROM mirrors ORDER BY ran_at DESC LIMIT ?;
+
+-- --- the session engine (S07) ---------------------------------------------------------------------------
+
+-- name: BumpDraftVersion :execresult
+-- The optimistic-concurrency check is the WHERE clause, so a stale edit changes nothing instead of racing a read.
+UPDATE sessions
+SET draft_version = draft_version + 1, updated_at = ?
+WHERE id = ? AND draft_version = ? AND state = 'active';
+
+-- name: CreateInteraction :exec
+INSERT INTO interactions (id, session_id, kind, payload_json, opened_seq, opened_at)
+VALUES (?, ?, ?, ?, ?, ?);
+
+-- name: GetInteraction :one
+SELECT * FROM interactions WHERE id = ?;
+
+-- name: ListOpenInteractions :many
+SELECT * FROM interactions WHERE session_id = ? AND resolved_seq IS NULL ORDER BY opened_seq, id;
+
+-- name: ListInteractions :many
+SELECT * FROM interactions WHERE session_id = ? ORDER BY opened_seq, id;
+
+-- name: ResolveInteraction :execresult
+-- Resolving is the one update an interaction allows, and only while it is open. The trigger is the backstop.
+UPDATE interactions
+SET resolved_seq = ?, resolved_by = ?, resolution_json = ?
+WHERE id = ? AND session_id = ? AND resolved_seq IS NULL;
+
+-- name: RememberClientMessage :exec
+INSERT INTO client_messages (session_id, client_msg_id, seq, status, reason, created_at)
+VALUES (?, ?, ?, ?, ?, ?);
+
+-- name: GetClientMessage :one
+SELECT * FROM client_messages WHERE session_id = ? AND client_msg_id = ?;
+
+-- name: LinkSessionEntry :exec
+UPDATE sessions SET entry_id = ?, updated_at = ? WHERE id = ?;
+
+-- name: UpdateDraft :execresult
+-- A draft's fields. The status guard is the WHERE clause, so a saved entry can never be rewritten this way.
+UPDATE entries
+SET rating_q = ?, rating_scale = ?, favourite = ?, season = ?, verdict = ?, body = ?, body_origin = ?,
+    body_spans_json = ?, format = ?, finished_on = ?, updated_at = ?
+WHERE id = ? AND status = 'draft';

@@ -22,6 +22,8 @@ var protectedTriggers = []string{
 	"answers_no_delete",
 	"session_events_no_update",
 	"entries_status_forward_only",
+	"interactions_no_delete",
+	"interactions_no_reopen",
 }
 
 // Health is the doctor's answer. A store that is not healthy should not be used to save a review.
@@ -110,6 +112,8 @@ func (s *Store) VerifyTriggers(ctx context.Context) error {
 		{"session_events_no_update", "UPDATE session_events SET kind = 'tampered'", "append-only log"},
 		{"entries_status_forward_only", "UPDATE entries SET status = 'draft'", "never becomes a draft"},
 		{"work_sources_only_accept", "UPDATE work_sources SET trust = 'verified'", "only be accepted"},
+		{"interactions_no_delete", "DELETE FROM interactions", "never deleted"},
+		{"interactions_no_reopen", "UPDATE interactions SET resolved_seq = 2", "already resolved"},
 	}
 
 	err := s.write(ctx, func(tx *sql.Tx) error {
@@ -156,6 +160,9 @@ func insertProbeRows(ctx context.Context, tx *sql.Tx) error {
 		{`INSERT INTO sessions (id, kind, created_at, updated_at) VALUES ('probe-session', 'entry', ?, ?)`, []any{at, at}},
 		{`INSERT INTO session_events (id, session_id, seq, kind, created_at)
 		  VALUES ('probe-event', 'probe-session', 1, 'hello', ?)`, []any{at}},
+		{`INSERT INTO interactions (id, session_id, kind, payload_json, opened_seq, opened_at, resolved_seq,
+		                            resolved_by, resolution_json)
+		  VALUES ('probe-interaction', 'probe-session', 'describe', '{}', 2, ?, 3, 'user', '{}')`, []any{at}},
 	}
 	for _, step := range steps {
 		if _, err := tx.ExecContext(ctx, step.query, step.args...); err != nil {

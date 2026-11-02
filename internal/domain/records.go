@@ -68,14 +68,54 @@ const (
 // Session is the app's own conversation. Nova's sessions are not importable, so this is ours to store and resume
 // (PLAN.md 2).
 type Session struct {
-	ID        string          `json:"id"`
-	Kind      SessionKind     `json:"kind"`
-	Title     string          `json:"title,omitempty"`
-	EntryID   string          `json:"entry_id,omitempty"`
-	State     SessionState    `json:"state"`
-	Messages  json.RawMessage `json:"messages,omitempty"`
-	CreatedAt time.Time       `json:"created_at"`
-	UpdatedAt time.Time       `json:"updated_at"`
+	ID      string          `json:"id"`
+	Kind    SessionKind     `json:"kind"`
+	Title   string          `json:"title,omitempty"`
+	EntryID string          `json:"entry_id,omitempty"`
+	State   SessionState    `json:"state"`
+	// DraftVersion increments on every change to the card, in the transaction that makes the change. A client
+	// edit that names an older version is rejected without changing anything (docs/PROTOCOL.md 6).
+	DraftVersion int             `json:"draft_version"`
+	Messages     json.RawMessage `json:"messages,omitempty"`
+	CreatedAt    time.Time       `json:"created_at"`
+	UpdatedAt    time.Time       `json:"updated_at"`
+}
+
+// ResolvedBy says who answered an interaction.
+type ResolvedBy string
+
+const (
+	// ResolvedByUser is her tap.
+	ResolvedByUser ResolvedBy = "user"
+	// ResolvedByServer is the service withdrawing a question that no longer applies.
+	ResolvedByServer ResolvedBy = "server"
+)
+
+// Interaction is one question the service asked. It is written when opened, resolved once, and never deleted: the
+// record of what was asked is part of the review's history.
+type Interaction struct {
+	ID          string          `json:"id"`
+	SessionID   string          `json:"session_id"`
+	Kind        string          `json:"kind"`
+	Payload     json.RawMessage `json:"payload"`
+	OpenedSeq   int             `json:"opened_seq"`
+	OpenedAt    time.Time       `json:"opened_at"`
+	ResolvedSeq *int            `json:"resolved_seq,omitempty"`
+	ResolvedBy  ResolvedBy      `json:"resolved_by,omitempty"`
+	Resolution  json.RawMessage `json:"resolution,omitempty"`
+}
+
+// Open reports whether the interaction is still waiting.
+func (i Interaction) Open() bool { return i.ResolvedSeq == nil }
+
+// ClientMessage is one row of the idempotency ledger: the first outcome of one client_msg_id.
+type ClientMessage struct {
+	SessionID   string    `json:"session_id"`
+	ClientMsgID string    `json:"client_msg_id"`
+	Seq         int       `json:"seq"`
+	Status      string    `json:"status"`
+	Reason      string    `json:"reason,omitempty"`
+	CreatedAt   time.Time `json:"created_at"`
 }
 
 // SessionEvent is one entry in the per-session log a reconnecting client resumes from.
