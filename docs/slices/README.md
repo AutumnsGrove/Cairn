@@ -62,7 +62,7 @@ S09 needs S02, S07 and S08. S13 needs a working app (S09 and S12).
 | S04 | [Data layer](S04-data-layer.md) | 1 | done |
 | S05 | [Banks and decisions](S05-banks-and-decisions.md) | 1 | done |
 | S06 | [Providers](S06-providers.md) | 1 | done |
-| S07 | [Session engine](S07-session-engine.md) | 1 | in progress: lifecycle, interactions, log, idempotency, edit and confirm built; accept/include, revisit and the queue next |
+| S07 | [Session engine](S07-session-engine.md) | 1 | done |
 | S08 | [Agent pipeline](S08-agent-pipeline.md) | 1 | planned |
 | S09 | [Server and protocol](S09-server.md) | 1 | planned |
 | S10 | [Frontend foundation](S10-frontend-foundation.md) | 1 | planned |

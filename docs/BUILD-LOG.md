@@ -349,3 +349,23 @@ the body reads the way she wrote it however they were added, and the body is rec
 an extract is a set of her passages, not a string that grows. A typed body has nothing left out of it and says so;
 a stale version changes nothing.
 
+
+## 2026-11-01, S07 done, the session engine
+
+**Built.** Revisit and revision (`OfferRevisit`, `StartRevision`, confirm with `revises`), the four-round cap
+(`AskRound`, `Rounds`), the one-deep queue, and the restart route.
+
+**What is true now.** A session killed mid-turn comes back with its draft, its open question and its head sequence,
+resumes from any cut with no gap, and the new process can still answer the question. Editing a saved entry writes
+one revision of the saved row, moves the edits onto it, and retires the working copy by soft delete, so the library
+never grows a second review of the same work. Four rounds of questions is the cap; the fifth is refused with a
+typed error rather than a silent nothing.
+
+**Learned.** A revision needs a working copy, because the database will not let a saved row become a draft again
+(the trigger says so, and it is right). Copying the row, editing the copy and moving the result back is the shape
+that keeps one entry, one revision and no duplicates, and soft-deleting the copy keeps the audit trail of what was
+edited.
+
+**Wired by S09.** The queue and the event payloads are the engine's; encoding them into the contract's wire shapes,
+and treating a `revises` id as trusted only after checking it names the same work, is the server's job.
+

@@ -93,6 +93,9 @@ type Confirm struct {
 	BaseVersion int
 	Entry       domain.Entry
 	ClientMsgID string
+	// Revises names the saved entry a revision draft is editing. The working copy is written onto it, and the copy
+	// itself is soft-deleted, so the library never gains a duplicate of a work she already reviewed.
+	Revises string
 }
 
 // ConfirmDraft saves the entry. The domain guard has already run; this layer makes the save atomic.
@@ -111,14 +114,18 @@ func (s *Store) ConfirmDraft(ctx context.Context, c Confirm) (domain.Entry, int,
 		entry = c.Entry
 		entry.Status = domain.StatusSaved
 
+		target := entry.ID
+		if c.Revises != "" {
+			target = c.Revises
+		}
 		// An edit of a saved entry writes the version it replaced first, in this transaction, exactly as SaveEntry
 		// does. A first confirm has nothing to revise.
-		previous, err := q.GetEntry(ctx, entry.ID)
+		previous, err := q.GetEntry(ctx, target)
 		if err != nil && !errors.Is(err, sql.ErrNoRows) {
 			return fmt.Errorf("store: read entry before confirming: %w", err)
 		}
 		if err == nil && domain.Status(previous.Status) == domain.StatusSaved {
-			number, revErr := q.LatestRevisionNumber(ctx, entry.ID)
+			number, revErr := q.LatestRevisionNumber(ctx, target)
 			if revErr != nil {
 				return fmt.Errorf("store: latest revision: %w", revErr)
 			}
@@ -127,7 +134,7 @@ func (s *Store) ConfirmDraft(ctx context.Context, c Confirm) (domain.Entry, int,
 				return fmt.Errorf("store: encode revision: %w", snapErr)
 			}
 			if createErr := q.CreateRevision(ctx, db.CreateRevisionParams{
-				ID: s.NewID(), EntryID: entry.ID, Revision: asInt(number) + 1,
+				ID: s.NewID(), EntryID: target, Revision: asInt(number) + 1,
 				SnapshotJson: string(snapshot), CreatedAt: now.Format(timeLayout),
 			}); createErr != nil {
 				return fmt.Errorf("store: write revision: %w", createErr)
@@ -142,9 +149,20 @@ func (s *Store) ConfirmDraft(ctx context.Context, c Confirm) (domain.Entry, int,
 			RatingQ: int64(entry.Rating), Favourite: boolToInt(entry.Favourite), Verdict: entry.Verdict,
 			Body: entry.Body, BodyOrigin: string(entry.BodyOrigin), BodySpansJson: string(spans),
 			Format: entry.Format, FinishedOn: nullableString(entry.FinishedOn), UpdatedAt: now.Format(timeLayout),
-			ID: entry.ID,
+			ID: target,
 		}); err != nil {
 			return fmt.Errorf("store: save entry: %w", err)
+		}
+		if target != entry.ID {
+			// The working copy has served its purpose. It is soft-deleted, never removed: the row is the record of
+			// what was edited before it became the revision.
+			if err := q.SoftDeleteEntry(ctx, db.SoftDeleteEntryParams{
+				DeletedAt: nullableString(now.Format(timeLayout)),
+				UpdatedAt: now.Format(timeLayout), ID: entry.ID,
+			}); err != nil {
+				return fmt.Errorf("store: retire the working copy: %w", err)
+			}
+			entry.ID = target
 		}
 		if err := q.LinkSessionEntry(ctx, db.LinkSessionEntryParams{
 			EntryID: nullableString(entry.ID), UpdatedAt: now.Format(timeLayout), ID: c.SessionID,

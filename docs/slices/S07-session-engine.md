@@ -58,10 +58,28 @@ confirmed over. Run under `-race` with a leak check.
 
 None.
 
+## Decisions (recorded 2026-11-01)
+
+1. **Six waiting reasons**: `pick_work`, `needs_rating`, `needs_body`, `accept_fields`, `needs_date`, `ready`, in
+   that order of precedence. Only a rating and a body block a save; the rest are what the card asks for next.
+2. **Interactions and the client-message ledger are tables** (migration 0003), not log-derived state, so a question
+   and a retried tap survive a restart by construction. Two triggers refuse to reopen or delete a question.
+3. **The draft version is a column on `sessions`**, moved only by the statement that makes the change, so a stale
+   edit changes nothing.
+4. **An unrated draft is storable**: `rating_q` allows 0 and 0004 rebuilds the table to say so. The save guard still
+   refuses to confirm one.
+5. **A revision is a working copy.** `StartRevision` creates a draft row copying the saved entry; on confirm with
+   `revises`, the saved entry gets the revision and the new fields, and the working copy is soft-deleted. The
+   library never gains a second review of a work she already reviewed, and the copy's row stays as the record of
+   what was edited.
+6. **The queue is in memory and one deep.** It is about a turn running in this process; a restart ends the turn,
+   and the message it was carrying was stored before it was queued.
+7. **Compaction drops a turn's `text_delta` events** and nothing else; a resume across the gap gets
+   `full_state: true`.
+
 ## Open questions
 
-- The Drafts list's waiting-reason vocabulary (proposed from the mockups: needs a rating, web fields to accept,
-  waiting for you to pick, ready to save).
+None.
 
 ## Done when
 

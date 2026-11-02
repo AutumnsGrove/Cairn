@@ -14,6 +14,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/AutumnsGrove/cairn/internal/domain"
@@ -521,6 +522,8 @@ type ConfirmRequest struct {
 	BaseVersion int
 	ClientMsgID string
 	SourceText  string
+	// Revises is the saved entry a revision draft is editing, from the revisit choice she answered.
+	Revises string
 }
 
 // Confirm is the commit. It runs the domain's save guard and then saves the entry, its revision, the session link,
@@ -536,6 +539,7 @@ func (e *Engine) Confirm(ctx context.Context, sessionID string, in ConfirmReques
 	}
 	entry, version, events, err := e.store.ConfirmDraft(ctx, store.Confirm{
 		SessionID: sessionID, BaseVersion: in.BaseVersion, Entry: draft.Entry, ClientMsgID: in.ClientMsgID,
+		Revises: in.Revises,
 	})
 	if errors.Is(err, store.ErrStaleVersion) {
 		return domain.Entry{}, 0, nil, &Refusal{Code: CodeStaleVersion, Message: "The card changed on another screen; it has been refreshed."}
@@ -707,4 +711,131 @@ func (e *Engine) IncludeLeftOut(ctx context.Context, sessionID string, baseVersi
 		return Draft{}, err
 	}
 	return e.Draft(ctx, sessionID)
+}
+
+// --- revisit, revision and the turn queue ----------------------------------------------------------------
+
+// Revisit is the summary of an existing entry, which is what the revisit choice shows.
+type Revisit struct {
+	EntryID  string          `json:"entry_id"`
+	WorkID   string          `json:"work_id"`
+	Title    string          `json:"title"`
+	Rating   int             `json:"rating_q"`
+	Body     string          `json:"body,omitempty"`
+	Finished string          `json:"finished_on,omitempty"`
+	Answer   json.RawMessage `json:"-"`
+}
+
+// OfferRevisit asks whether a new entry or an edit of the one already saved is wanted. She answers
+// "new_entry" or "edit_existing" through the ordinary interaction route.
+func (e *Engine) OfferRevisit(ctx context.Context, sessionID string, previous domain.Entry, workTitle string) (domain.Interaction, error) {
+	return e.Ask(ctx, sessionID, "revisit_choice", Revisit{
+		EntryID: previous.ID, WorkID: previous.WorkID, Title: workTitle,
+		Rating: previous.Rating, Body: previous.Body, Finished: previous.FinishedOn,
+	})
+}
+
+// StartRevision opens a working copy of a saved entry so it can be edited with the same draft operations as any
+// other card. The copy is a draft of its own; on confirm its fields move onto the saved entry and the copy is
+// retired, which is how "edit a saved entry" keeps one entry rather than making a second.
+func (e *Engine) StartRevision(ctx context.Context, sessionID string, saved domain.Entry) (Draft, error) {
+	sess, err := e.store.Session(ctx, sessionID)
+	if err != nil {
+		return Draft{}, err
+	}
+	if sess.State != domain.SessionActive {
+		return Draft{}, ErrClosed
+	}
+	if sess.EntryID != "" {
+		return Draft{}, &Refusal{Code: CodeInvalidValue, Message: "This session already has a card."}
+	}
+	copy := saved
+	copy.ID = e.newID()
+	copy.Status = domain.StatusDraft
+	copy.Deleted = false
+	if err := e.store.CreateDraft(ctx, copy); err != nil {
+		return Draft{}, err
+	}
+	if err := e.store.LinkDraft(ctx, sessionID, copy.ID); err != nil {
+		return Draft{}, err
+	}
+	if _, err := e.Append(ctx, sessionID, store.EventDraftSnapshot, map[string]any{"version": 0, "draft": copy}); err != nil {
+		return Draft{}, err
+	}
+	return e.Draft(ctx, sessionID)
+}
+
+// Rounds returns how many question rounds a session has already asked, so the agent can stop at the cap.
+func (e *Engine) Rounds(ctx context.Context, sessionID string) (int, error) {
+	events, err := e.store.EventsSince(ctx, sessionID, 0)
+	if err != nil {
+		return 0, err
+	}
+	rounds := 0
+	for _, event := range events {
+		if event.Kind == store.EventInteractionRequest {
+			rounds++
+		}
+	}
+	return rounds, nil
+}
+
+// MaxQuestionRounds is the cap from docs/STANDARDS.md 4a: after this the agent stops asking and builds the draft.
+const MaxQuestionRounds = 4
+
+// ErrTooManyRounds means the session has asked its four rounds of questions.
+var ErrTooManyRounds = errors.New("session: this session has asked all its questions")
+
+// AskRound opens a question only while the session is under the round cap. Every question counts, whatever its kind,
+// so the cap cannot be dodged by asking nine small ones.
+func (e *Engine) AskRound(ctx context.Context, sessionID, kind string, payload any) (domain.Interaction, error) {
+	rounds, err := e.Rounds(ctx, sessionID)
+	if err != nil {
+		return domain.Interaction{}, err
+	}
+	if rounds >= MaxQuestionRounds {
+		return domain.Interaction{}, ErrTooManyRounds
+	}
+	return e.Ask(ctx, sessionID, kind, payload)
+}
+
+// Queue is the one-deep queue between a message that arrives mid-turn and the turn in flight. It is in memory
+// because it is about a turn that is running in this process: a restart ends the turn, and the message it was
+// carrying was already stored before it was queued.
+type Queue struct {
+	mu      sync.Mutex
+	pending map[string]bool
+}
+
+// NewQueue builds an empty queue.
+func NewQueue() *Queue { return &Queue{pending: make(map[string]bool)} }
+
+// ErrBusy means one message is already queued behind the turn.
+var ErrBusy = errors.New("session: one message is already waiting")
+
+// Enqueue takes one message for a session that is mid-turn, or refuses a second with ErrBusy.
+func (q *Queue) Enqueue(sessionID string) error {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	if q.pending[sessionID] {
+		return ErrBusy
+	}
+	q.pending[sessionID] = true
+	return nil
+}
+
+// Take removes the queued message when the turn ends, returning whether there was one.
+func (q *Queue) Take(sessionID string) bool {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	had := q.pending[sessionID]
+	delete(q.pending, sessionID)
+	return had
+}
+
+// Queued reports whether a message is waiting behind the turn.
+func (q *Queue) Queued(sessionID string) bool {
+	q.mu.Lock()
+	defer q.mu.Unlock()
+	return q.pending[sessionID]
 }
