@@ -365,3 +365,82 @@ func TestAcceptFieldsRefusesTheSecondTap(t *testing.T) {
 		t.Errorf("empty accept = %v, want invalid_value", err)
 	}
 }
+
+// --- putting a left-out passage back ---------------------------------------------------------------------
+
+// extractedDraft writes an extracted draft through the store, which is the state the card offers left-out passages
+// from. It returns the session and the two passages her message contains.
+func extractedDraft(t *testing.T) (*Engine, domain.Session, string, domain.Span, domain.Span) {
+	t.Helper()
+	e, db, sess := draftSession(t)
+	ctx := context.Background()
+	source := "I loved the lantern keeper. It stayed with me for days."
+	first := "It stayed with me for days"
+	second := "I loved the lantern keeper"
+	spans := []domain.Span{{
+		Start: strings.Index(source, first), End: strings.Index(source, first) + len(first), Text: first,
+	}}
+	if _, _, _, err := e.store.UpdateDraft(ctx, store.UpdateDraft{
+		SessionID: sess.ID, BaseVersion: 0, EntryID: "e-" + sess.ID,
+		Mutate: func(entry *domain.Entry) {
+			entry.Rating = 15
+			entry.BodyOrigin = domain.BodyExtracted
+			entry.BodySpans = spans
+			entry.Body = domain.Compose(source, spans)
+		},
+	}); err != nil {
+		t.Fatalf("UpdateDraft: %v", err)
+	}
+	leftOut := domain.Span{
+		Start: strings.Index(source, second), End: strings.Index(source, second) + len(second), Text: second,
+	}
+	if _, err := db.Session(ctx, sess.ID); err != nil {
+		t.Fatalf("Session: %v", err)
+	}
+	return e, sess, source, spans[0], leftOut
+}
+
+func TestIncludeLeftOutPutsHerPassageBack(t *testing.T) {
+	e, sess, source, _, leftOut := extractedDraft(t)
+	draft, err := e.IncludeLeftOut(context.Background(), sess.ID, 1, source, leftOut, "m-include")
+	if err != nil {
+		t.Fatalf("IncludeLeftOut: %v", err)
+	}
+	if len(draft.Entry.BodySpans) != 2 {
+		t.Fatalf("spans = %+v", draft.Entry.BodySpans)
+	}
+	// In source order, so the body reads the way she wrote it even though the second passage was added first.
+	if draft.Entry.BodySpans[0].Start != leftOut.Start {
+		t.Errorf("spans = %+v, want the earlier passage first", draft.Entry.BodySpans)
+	}
+	if draft.Entry.Body != domain.Compose(source, draft.Entry.BodySpans) {
+		t.Errorf("body = %q, want the composed spans", draft.Entry.Body)
+	}
+	if draft.Version != 2 {
+		t.Errorf("version = %d, want 2", draft.Version)
+	}
+}
+
+func TestIncludeLeftOutRefusesWhatIsNotHers(t *testing.T) {
+	e, sess, source, _, _ := extractedDraft(t)
+	ctx := context.Background()
+
+	// A passage that is not in her message is refused, and the card is untouched.
+	foreign := domain.Span{Start: 0, End: 10, Text: "something else"}
+	var refusal *Refusal
+	if _, err := e.IncludeLeftOut(ctx, sess.ID, 1, source, foreign, "m1"); !errors.As(err, &refusal) || refusal.Code != CodeInvalidValue {
+		t.Fatalf("foreign passage = %v, want invalid_value", err)
+	}
+	// A typed body has nothing left out of it.
+	e2, _, sess2 := draftSession(t)
+	if _, err := e2.EditDraft(ctx, sess2.ID, Edit{BaseVersion: 0, Set: patch(map[string]any{"body": "my own words"})}); err != nil {
+		t.Fatalf("EditDraft: %v", err)
+	}
+	if _, err := e2.IncludeLeftOut(ctx, sess2.ID, 1, source, foreign, "m2"); !errors.As(err, &refusal) || refusal.Code != CodeNotExtracted {
+		t.Errorf("typed body = %v, want not_extracted", err)
+	}
+	// A stale version changes nothing.
+	if _, err := e.IncludeLeftOut(ctx, sess.ID, 0, source, foreign, "m3"); !errors.As(err, &refusal) {
+		t.Errorf("stale include = %v, want a refusal", err)
+	}
+}

@@ -12,6 +12,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"sort"
 	"strings"
 	"time"
 
@@ -660,4 +661,50 @@ func sourceBelongsTo(sources []domain.Source, id string) (domain.Source, bool) {
 		}
 	}
 	return domain.Source{}, false
+}
+
+// CodeNotExtracted means a left-out segment was offered for a body she typed, where there is no extract to add to.
+const CodeNotExtracted = "not_extracted"
+
+// IncludeLeftOut puts one of the segments the extract left out back into her body.
+//
+// The segment is one of her own passages, so it is proved against her messages exactly as the rest of the body is:
+// a span that is not in sourceText is refused, never trusted. sourceText is the concatenation of her messages in
+// this session, which the agent already holds (docs/PROTOCOL.md 5, "include_left_out").
+func (e *Engine) IncludeLeftOut(ctx context.Context, sessionID string, baseVersion int, sourceText string,
+	span domain.Span, clientMsgID string,
+) (Draft, error) {
+	draft, err := e.Draft(ctx, sessionID)
+	if err != nil {
+		return Draft{}, err
+	}
+	if draft.Entry.BodyOrigin == domain.BodyTyped {
+		return Draft{}, &Refusal{Code: CodeNotExtracted, Message: "That body was typed, so there is nothing left out of it."}
+	}
+	if !domain.SpansContained(sourceText, []domain.Span{span}) {
+		return Draft{}, &Refusal{Code: CodeInvalidValue, Message: "That passage is not in what you wrote."}
+	}
+	spans := append(append([]domain.Span(nil), draft.Entry.BodySpans...), span)
+	// Spans are stored in source order, so the body reads the way she wrote it however they were added.
+	sort.SliceStable(spans, func(i, j int) bool { return spans[i].Start < spans[j].Start })
+	body := domain.Compose(sourceText, spans)
+	if len(body) > domain.MaxBodyLength {
+		return Draft{}, &domain.GuardError{Code: domain.CodeBodyTooLong, Message: "That is longer than a review can be."}
+	}
+
+	_, _, _, err = e.store.UpdateDraft(ctx, store.UpdateDraft{
+		SessionID: sessionID, BaseVersion: baseVersion, EntryID: draft.Entry.ID, ClientMsgID: clientMsgID,
+		Mutate: func(entry *domain.Entry) {
+			entry.BodySpans = spans
+			entry.Body = body
+			entry.BodyOrigin = domain.BodyExtracted
+		},
+	})
+	if errors.Is(err, store.ErrStaleVersion) {
+		return Draft{}, &Refusal{Code: CodeStaleVersion, Message: "The card changed on another screen; it has been refreshed."}
+	}
+	if err != nil {
+		return Draft{}, err
+	}
+	return e.Draft(ctx, sessionID)
 }

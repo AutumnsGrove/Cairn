@@ -340,3 +340,12 @@ snapshot event and the ledger row are written, all in one transaction. The clien
 database's own trigger refuses a second accept, and that refusal is surfaced as `already_accepted` rather than a
 tap that appears to work twice.
 
+
+## 2026-11-01, S07, putting a left-out passage back
+
+`Engine.IncludeLeftOut` adds one of her own passages back into an extracted body. The span is proved against her
+messages with the domain's containment check before anything is written, the spans are stored in source order so
+the body reads the way she wrote it however they were added, and the body is recomposed rather than appended to:
+an extract is a set of her passages, not a string that grows. A typed body has nothing left out of it and says so;
+a stale version changes nothing.
+
