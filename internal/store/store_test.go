@@ -385,8 +385,12 @@ func TestSchemaRefusesAnInvalidRating(t *testing.T) {
 	if err := raw(t, s, `UPDATE entries SET rating_q = 21 WHERE id = 'e1'`); err == nil {
 		t.Fatal("a rating of 21 quarters was stored")
 	}
-	if err := raw(t, s, `UPDATE entries SET rating_q = 0 WHERE id = 'e1'`); err == nil {
-		t.Fatal("a rating of 0 quarters was stored")
+	if err := raw(t, s, `UPDATE entries SET rating_q = -1 WHERE id = 'e1'`); err == nil {
+		t.Fatal("a rating of -1 quarters was stored")
+	}
+	// 0 is the "not rated yet" value a draft needs, and only a draft: a saved entry always has 1 to 20.
+	if err := raw(t, s, `UPDATE entries SET rating_q = 0 WHERE id = 'e1'`); err != nil {
+		t.Fatalf("an unrated draft was refused: %v", err)
 	}
 }
 

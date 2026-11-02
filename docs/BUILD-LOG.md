@@ -290,3 +290,22 @@ engine code, so they are recorded here rather than forced in at the end of a lon
 the version check; the confirm's single transaction (version, entry, revision, session link, state, events,
 ledger); revisit and edit-existing; the session and message limits; and the wire shapes S09 will serve.
 
+
+## 2026-11-01, S07, unrated drafts and the rebuild it needed
+
+**The finding, fixed.** `entries.rating_q` was `NOT NULL CHECK (BETWEEN 1 AND 20)`, so a draft with no rating could
+not be stored, though the Drafts list exists to say "Needs a rating". 0 now means "not rated yet" and every real
+rating is still 1..20. SQLite cannot widen a CHECK in place, so migration 0004 rebuilds the table the documented
+way: columns, three indexes and both triggers reproduced exactly, the copy in one transaction, and a commit only
+after `PRAGMA foreign_key_check` and `PRAGMA integrity_check` come back clean.
+
+**The runner learned one directive.** A migration may begin `-- pragma: foreign_keys=off`; the runner turns
+enforcement off on a pinned connection, runs the file in one transaction with the checks above, and turns it back on
+whatever happens, including a cancelled context. An unknown directive is a load error rather than a comment, because
+a migration that silently did not get the mode it asked for is worse than one that will not run.
+
+**Tests.** The marker parser, enforcement being on after a rebuild, a second rebuild over live rows keeping them and
+their rules, a rebuild that leaves a dangling reference being rolled back with the version unmoved, and the save
+guard still refusing to confirm an unrated draft. The two skipped session tests are live again, so the Drafts list
+now has its happy, bad and sad routes.
+

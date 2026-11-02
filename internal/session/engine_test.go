@@ -322,11 +322,6 @@ func draftFor(t *testing.T, e *Engine, db *store.Store, workID string) domain.Se
 }
 
 func TestDraftsWaitingReasons(t *testing.T) {
-	// BLOCKED: entries.rating_q is CHECK (BETWEEN 1 AND 20) NOT NULL, so an unrated draft cannot be stored, and
-	// the drafts list exists to show exactly that state. The schema has to change (widen the check to 0..20 via a
-	// table rebuild, which needs the migration runner to run one file with foreign keys off). Recorded in
-	// docs/BUILD-LOG.md, "S07 in progress"; this test is the one that proves the fix when it lands.
-	t.Skip("entries.rating_q forbids an unrated draft: see docs/BUILD-LOG.md, S07 in progress")
 	e, db := newEngine(t)
 	ctx := context.Background()
 
@@ -387,7 +382,6 @@ func TestWaitingReasonOrder(t *testing.T) {
 }
 
 func TestGreetIncludesTheDraftAndOpenQuestions(t *testing.T) {
-	t.Skip("needs a draft with no rating: see TestDraftsWaitingReasons")
 	e, db := newEngine(t)
 	ctx := context.Background()
 	if err := db.SaveWork(ctx, domain.Work{ID: "w1", Medium: "book", Title: "A Book", Verified: true}); err != nil {
