@@ -68,11 +68,11 @@ const (
 // Session is the app's own conversation. Nova's sessions are not importable, so this is ours to store and resume
 // (PLAN.md 2).
 type Session struct {
-	ID      string          `json:"id"`
-	Kind    SessionKind     `json:"kind"`
-	Title   string          `json:"title,omitempty"`
-	EntryID string          `json:"entry_id,omitempty"`
-	State   SessionState    `json:"state"`
+	ID      string       `json:"id"`
+	Kind    SessionKind  `json:"kind"`
+	Title   string       `json:"title,omitempty"`
+	EntryID string       `json:"entry_id,omitempty"`
+	State   SessionState `json:"state"`
 	// DraftVersion increments on every change to the card, in the transaction that makes the change. A client
 	// edit that names an older version is rejected without changing anything (docs/PROTOCOL.md 6).
 	DraftVersion int             `json:"draft_version"`
