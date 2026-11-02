@@ -357,3 +357,22 @@ func chipValue(c Category, label string) (string, bool) {
 	}
 	return "", false
 }
+
+// An unquoted yes is a chip label here, not a boolean: the loader's parser is YAML 1.2, where yes stays a string.
+// The seed corpus and the fuzz target would not catch a swap to a 1.1 parser, so this test does.
+func TestUnquotedYesInABankStaysALabel(t *testing.T) {
+	set, err := LoadFiles(map[string][]byte{
+		"books.yaml": []byte("medium: book\ncategories:\n  - name: feel\n    label: Feel\n    positive:\n      - yes\n      - no\n"),
+	})
+	if err != nil {
+		t.Fatalf("LoadFiles: %v", err)
+	}
+	book, _ := set.Bank("book")
+	feel, _ := book.Category("feel")
+	if len(feel.Chips) != 2 {
+		t.Fatalf("chips = %+v", feel.Chips)
+	}
+	if feel.Chips[0].Value != "yes" || feel.Chips[1].Value != "no" {
+		t.Errorf("chips = %+v, want the labels yes and no", feel.Chips)
+	}
+}

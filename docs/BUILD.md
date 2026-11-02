@@ -78,7 +78,8 @@ All of `PLAN.md` section 2 is settled. The ones builders most often want to reop
 ## 3. Traps found by earlier work
 
 - **`yes` and `no` are booleans in YAML 1.1.** Quote them as map keys. A 1.1 parser silently turns the quiet
-  option of a yes/no check into `false`.
+  option of a yes/no check into `false`. Verified at S05: `gopkg.in/yaml.v3` is YAML 1.2, so they stay strings
+  and the quotes are belt and braces. Both loaders have a test that would fail on a swap to a 1.1 parser.
 - **Fill and stroke on an SVG `<use>` sprite are overridden by the icon's own rule,** not inherited. Expose
   them as CSS variables with defaults.
 - **A rule on an element beats inheritance.** This bit three times in the mockups. Re-render after every CSS

@@ -325,3 +325,24 @@ func TestTopicForCheck(t *testing.T) {
 		}
 	}
 }
+
+// The draft quoted every `yes` and `no` because a YAML 1.1 parser reads them as booleans. The loader's parser is
+// YAML 1.2, where they stay strings, so the quoting is belt and braces rather than required. This test pins that
+// down: if the parser is ever swapped for a 1.1 one, an unquoted key must fail here rather than quietly become
+// `true` in a form she answers.
+func TestUnquotedYesStaysAString(t *testing.T) {
+	wording := replaceOnce(baseWording, `      "no": Nothing about sound.
+      "yes": Something about the sound.`, `      no: Nothing about sound.
+      yes: Something about the sound.`)
+	r, err := LoadFiles([]byte(wording), []byte(basePolicy))
+	if err != nil {
+		t.Fatalf("LoadFiles: %v", err)
+	}
+	sound := r.Checks["mentions_sound"]
+	if _, ok := sound.Options["yes"]; !ok {
+		t.Fatalf("options = %v, want a yes option", sound.Options)
+	}
+	if _, ok := sound.Options["true"]; ok {
+		t.Error("an unquoted yes became a boolean, which is the YAML 1.1 trap")
+	}
+}
