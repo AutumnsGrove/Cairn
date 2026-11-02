@@ -218,3 +218,68 @@ func bumpDraftVersion(ctx context.Context, q *db.Queries, sessionID string, base
 	}
 	return base + 1, nil
 }
+
+// AcceptSources accepts web-derived fields into the canonical work, under the card's version and in one
+// transaction with the snapshot and the ledger. The database's own trigger only lets an unverified source become
+// accepted once, so a second tap on the same field is refused by the schema, not by this code.
+type AcceptSources struct {
+	SessionID   string
+	BaseVersion int
+	EntryID     string
+	WorkID      string
+	// Fields are the provider and id pairs the client named, which is all it ever saw.
+	Fields      []domain.Source
+	ClientMsgID string
+}
+
+// AcceptDraftSources applies one acceptance tap.
+func (s *Store) AcceptDraftSources(ctx context.Context, a AcceptSources) (domain.Entry, int, domain.SessionEvent, error) {
+	now := s.Now().UTC()
+	var entry domain.Entry
+	var version int
+	var event domain.SessionEvent
+
+	err := s.InTx(ctx, func(q *db.Queries) error {
+		next, err := bumpDraftVersion(ctx, q, a.SessionID, a.BaseVersion, now)
+		if err != nil {
+			return err
+		}
+		version = next
+
+		accepted := now.Format(timeLayout)
+		for _, field := range a.Fields {
+			res, err := q.AcceptWorkSourceByProvider(ctx, db.AcceptWorkSourceByProviderParams{
+				AcceptedAt: &accepted, WorkID: a.WorkID, Provider: field.Provider, ProviderID: field.ProviderID,
+			})
+			if err != nil {
+				return fmt.Errorf("store: accept %s %s: %w", field.Provider, field.ProviderID, err)
+			}
+			if n, _ := res.RowsAffected(); n != 1 {
+				// The trigger is the guard, so a second accept of the same field is a refusal rather than a
+				// silent success: a tap that did nothing must not look like a tap that worked.
+				return ErrNotAcceptable
+			}
+		}
+
+		row, err := q.GetEntry(ctx, a.EntryID)
+		if errors.Is(err, sql.ErrNoRows) {
+			return ErrNotFound
+		}
+		if err != nil {
+			return fmt.Errorf("store: read draft: %w", err)
+		}
+		entry = entryFromRow(row)
+
+		payload, err := json.Marshal(map[string]any{"version": version, "draft": entry})
+		if err != nil {
+			return fmt.Errorf("store: encode snapshot: %w", err)
+		}
+		appended, err := s.appendEvent(ctx, q, a.SessionID, EventDraftSnapshot, payload)
+		if err != nil {
+			return err
+		}
+		event = appended
+		return s.rememberClient(ctx, q, a.SessionID, a.ClientMsgID, appended.Seq, acceptedStatus, "")
+	})
+	return entry, version, event, err
+}

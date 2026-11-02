@@ -330,3 +330,13 @@ the one-deep message queue and the question-round cap, and an engine test that a
 draft, the open question and the log intact (the store's restart tests cover the pieces; the assembled route is
 S09's).
 
+
+## 2026-11-01, S07, accepting a web field
+
+`Engine.AcceptFields` and `store.AcceptDraftSources` land the one tap that turns a proposed fact into a canonical
+one (docs/BUILD.md invariant 7): the version moves, the source's trust moves from unverified to accepted, the
+snapshot event and the ledger row are written, all in one transaction. The client names a field by what it saw,
+`provider|id`; the store names the row by the same pair, so a client never has to know a database id. The
+database's own trigger refuses a second accept, and that refusal is surfaced as `already_accepted` rather than a
+tap that appears to work twice.
+

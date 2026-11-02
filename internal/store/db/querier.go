@@ -12,6 +12,9 @@ import (
 type Querier interface {
 	// The one legitimate update to a snapshot: an unverified web field, accepted once. The trigger enforces the rest.
 	AcceptWorkSource(ctx context.Context, arg AcceptWorkSourceParams) (sql.Result, error)
+	// The client names a field by what it is (provider and that provider's id), not by a row id it never saw. The
+	// unverified guard is the WHERE clause, so a second tap changes nothing and reports nothing.
+	AcceptWorkSourceByProvider(ctx context.Context, arg AcceptWorkSourceByProviderParams) (sql.Result, error)
 	// The sequence number is chosen in the same statement, so two appenders cannot pick the same one. The unique
 	// index on (session_id, seq) is the backstop: if two ever did, one of them fails rather than being replayed twice.
 	AppendSessionEvent(ctx context.Context, arg AppendSessionEventParams) error

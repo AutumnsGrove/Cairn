@@ -24,6 +24,30 @@ func (q *Queries) AcceptWorkSource(ctx context.Context, arg AcceptWorkSourcePara
 	return q.db.ExecContext(ctx, acceptWorkSource, arg.AcceptedAt, arg.ID)
 }
 
+const acceptWorkSourceByProvider = `-- name: AcceptWorkSourceByProvider :execresult
+UPDATE work_sources
+SET trust = 'accepted', accepted_at = ?
+WHERE work_id = ? AND provider = ? AND provider_id = ? AND trust = 'unverified'
+`
+
+type AcceptWorkSourceByProviderParams struct {
+	AcceptedAt *string `json:"accepted_at"`
+	WorkID     string  `json:"work_id"`
+	Provider   string  `json:"provider"`
+	ProviderID string  `json:"provider_id"`
+}
+
+// The client names a field by what it is (provider and that provider's id), not by a row id it never saw. The
+// unverified guard is the WHERE clause, so a second tap changes nothing and reports nothing.
+func (q *Queries) AcceptWorkSourceByProvider(ctx context.Context, arg AcceptWorkSourceByProviderParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, acceptWorkSourceByProvider,
+		arg.AcceptedAt,
+		arg.WorkID,
+		arg.Provider,
+		arg.ProviderID,
+	)
+}
+
 const appendSessionEvent = `-- name: AppendSessionEvent :exec
 INSERT INTO session_events (id, session_id, seq, kind, payload_json, created_at)
 SELECT ?, ?, COALESCE((SELECT MAX(seq) FROM session_events WHERE session_events.session_id = ?), 0) + 1,

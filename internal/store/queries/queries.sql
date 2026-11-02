@@ -194,3 +194,10 @@ UPDATE entries
 SET rating_q = ?, rating_scale = ?, favourite = ?, season = ?, verdict = ?, body = ?, body_origin = ?,
     body_spans_json = ?, format = ?, finished_on = ?, updated_at = ?
 WHERE id = ? AND status = 'draft';
+
+-- name: AcceptWorkSourceByProvider :execresult
+-- The client names a field by what it is (provider and that provider's id), not by a row id it never saw. The
+-- unverified guard is the WHERE clause, so a second tap changes nothing and reports nothing.
+UPDATE work_sources
+SET trust = 'accepted', accepted_at = ?
+WHERE work_id = ? AND provider = ? AND provider_id = ? AND trust = 'unverified';

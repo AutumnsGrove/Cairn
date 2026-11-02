@@ -283,3 +283,85 @@ func TestMessageLimits(t *testing.T) {
 		t.Errorf("retry = %v, want the ledger to refuse it", err)
 	}
 }
+
+// --- accepting a web field ------------------------------------------------------------------------------
+
+// webField attaches one unverified source to the draft's work and returns its id, the shape a web lookup leaves.
+func webField(t *testing.T, db *store.Store, workID string) string {
+	t.Helper()
+	id, err := db.AddSource(context.Background(), workID, domain.Source{
+		Provider: "web", ProviderID: "w-1", Trust: domain.TrustUnverified,
+		Title: "The Lantern Keeper", Year: 1999,
+	})
+	if err != nil {
+		t.Fatalf("AddSource: %v", err)
+	}
+	return id
+}
+
+func TestAcceptFieldsMakesAWebFactCanonical(t *testing.T) {
+	e, db, sess := draftSession(t)
+	ctx := context.Background()
+	field := webField(t, db, "w1")
+
+	draft, err := e.AcceptFields(ctx, sess.ID, 0, []string{"web|w-1"}, "m-accept")
+	if err != nil {
+		t.Fatalf("AcceptFields: %v", err)
+	}
+	if draft.Version != 1 {
+		t.Errorf("version = %d, want 1", draft.Version)
+	}
+	sources, err := db.Sources(ctx, "w1")
+	if err != nil {
+		t.Fatalf("Sources: %v", err)
+	}
+	accepted := false
+	for _, source := range sources {
+		if source.Provider == "web" && source.Trust == domain.TrustAccepted {
+			accepted = true
+		}
+	}
+	if !accepted {
+		t.Errorf("sources = %+v, want the web field accepted", sources)
+	}
+	if field == "" {
+		t.Error("the fixture did not store a source")
+	}
+
+	// The snapshot event is there, and so is the ledger row.
+	events, err := db.EventsSince(ctx, sess.ID, 0)
+	if err != nil {
+		t.Fatalf("EventsSince: %v", err)
+	}
+	if len(events) != 1 || events[0].Kind != store.EventDraftSnapshot {
+		t.Fatalf("events = %+v", events)
+	}
+	if msg, seen, err := e.Seen(ctx, sess.ID, "m-accept"); err != nil || !seen || msg.Seq != events[0].Seq {
+		t.Errorf("ledger = %+v, seen=%v, err=%v", msg, seen, err)
+	}
+}
+
+func TestAcceptFieldsRefusesTheSecondTap(t *testing.T) {
+	e, db, sess := draftSession(t)
+	ctx := context.Background()
+	webField(t, db, "w1")
+	if _, err := e.AcceptFields(ctx, sess.ID, 0, []string{"web|w-1"}, "m1"); err != nil {
+		t.Fatalf("first accept: %v", err)
+	}
+	_, err := e.AcceptFields(ctx, sess.ID, 1, []string{"web|w-1"}, "m2")
+	var refusal *Refusal
+	if !errors.As(err, &refusal) || refusal.Code != CodeAlreadyAccepted {
+		t.Fatalf("second accept = %v, want already_accepted", err)
+	}
+
+	// A stale version and a field that is not on this work are refused before anything is touched.
+	if _, err := e.AcceptFields(ctx, sess.ID, 0, []string{"web|w-1"}, "m3"); !errors.As(err, &refusal) || refusal.Code != CodeStaleVersion {
+		t.Errorf("stale accept = %v, want stale_version", err)
+	}
+	if _, err := e.AcceptFields(ctx, sess.ID, 1, []string{"tmdb|movie:101"}, "m4"); !errors.As(err, &refusal) || refusal.Code != CodeInvalidValue {
+		t.Errorf("foreign field = %v, want invalid_value", err)
+	}
+	if _, err := e.AcceptFields(ctx, sess.ID, 1, nil, "m5"); !errors.As(err, &refusal) || refusal.Code != CodeInvalidValue {
+		t.Errorf("empty accept = %v, want invalid_value", err)
+	}
+}

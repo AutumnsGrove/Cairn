@@ -397,6 +397,8 @@ const (
 	CodeNotADraft    = "not_a_draft"
 	CodeMessageLong  = "message_too_long"
 	CodeSessionFull  = "session_full"
+	// CodeAlreadyAccepted means the tap was already taken: the database refuses a second accept.
+	CodeAlreadyAccepted = "already_accepted"
 )
 
 // MaxMessageLength is the user message limit from docs/STANDARDS.md 4a.
@@ -598,4 +600,64 @@ func (e *Engine) AppendUserMessage(ctx context.Context, sessionID, text, clientM
 		return domain.SessionEvent{}, ledgerErr
 	}
 	return event, nil
+}
+
+// AcceptFields accepts the web-derived fields on the draft's work, which is the tap that makes a proposed fact
+// canonical (docs/BUILD.md invariant 7). Every id must belong to that work and still be unverified; the database
+// refuses anything else, and the version moves with the tap.
+func (e *Engine) AcceptFields(ctx context.Context, sessionID string, baseVersion int, sourceIDs []string, clientMsgID string) (Draft, error) {
+	sess, err := e.store.Session(ctx, sessionID)
+	if err != nil {
+		return Draft{}, err
+	}
+	if sess.State != domain.SessionActive {
+		return Draft{}, ErrClosed
+	}
+	if sess.EntryID == "" {
+		return Draft{}, ErrNoDraft
+	}
+	if len(sourceIDs) == 0 {
+		return Draft{}, &Refusal{Code: CodeInvalidValue, Message: "There is nothing to accept."}
+	}
+	entry, err := e.store.Entry(ctx, sess.EntryID)
+	if err != nil {
+		return Draft{}, err
+	}
+	sources, err := e.store.Sources(ctx, entry.WorkID)
+	if err != nil {
+		return Draft{}, err
+	}
+	fields := make([]domain.Source, 0, len(sourceIDs))
+	for _, id := range sourceIDs {
+		source, ok := sourceBelongsTo(sources, id)
+		if !ok {
+			return Draft{}, &Refusal{Code: CodeInvalidValue, Message: "That field is not on this work."}
+		}
+		fields = append(fields, source)
+	}
+
+	_, _, _, err = e.store.AcceptDraftSources(ctx, store.AcceptSources{
+		SessionID: sessionID, BaseVersion: baseVersion, EntryID: sess.EntryID, WorkID: entry.WorkID,
+		Fields: fields, ClientMsgID: clientMsgID,
+	})
+	if err != nil {
+		if errors.Is(err, store.ErrStaleVersion) {
+			return Draft{}, &Refusal{Code: CodeStaleVersion, Message: "The card changed on another screen; it has been refreshed."}
+		}
+		if errors.Is(err, store.ErrNotAcceptable) {
+			return Draft{}, &Refusal{Code: CodeAlreadyAccepted, Message: "That field has already been accepted."}
+		}
+		return Draft{}, err
+	}
+	return e.Draft(ctx, sessionID)
+}
+
+// sourceBelongsTo finds the source a client named by "provider|id".
+func sourceBelongsTo(sources []domain.Source, id string) (domain.Source, bool) {
+	for _, source := range sources {
+		if source.Provider+"|"+source.ProviderID == id {
+			return source, true
+		}
+	}
+	return domain.Source{}, false
 }
