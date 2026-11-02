@@ -89,5 +89,8 @@ S09 needs S02, S07 and S08. S13 needs a working app (S09 and S12).
 
 ## What is real and what is mocked today
 
-Nothing is built. The only artifacts are the plan, the specs, the question banks, the decisions draft, and
-the clickable mockups in [`../../mockups/`](../../mockups/), which are the UI spec.
+S00, S02, S03, S04 and S05 are built: the service skeleton and its Host and Origin checks, the contract and
+its generators, the pure domain core, the database with its triggers and repositories, and the question banks
+and decisions layer that reads the config in [`../../config/`](../../config/). Everything else is still plan,
+spec and mockup. The decisions backend, the metadata providers, Polaris and R2 exist only as fakes in
+`internal/world`; `cairn-dev` runs the real service against them, offline, with no keys.

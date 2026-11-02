@@ -207,3 +207,20 @@ surface a reload notice and serve a form arrives in S09. S09 wires both stores, 
 and S13 bind-mounts `config/`.
 
 **Live checks left for Autumn:** none for this slice. The thresholds are the draft's and G4 replaces them.
+
+## 2026-11-01, S05 follow-ups
+
+**CI and the rules caught three things, all fixed in the slice.**
+
+- **`make check` could not run two fuzz targets with the same name.** The `fuzz-smoke` loop took the first file
+  that declared a target and `cd`'d into its directory, so `FuzzLoadFiles` in both `banks` and `decisions`
+  broke it. The targets are now named for what they load, and the loop iterates every file, so a name may be
+  reused later without breaking the check.
+- **The architecture test caught `decisions` importing nova's `provider` package.** That is the type of the
+  usage and cost a decision call reports, which `Result` carries; the rule now names `decide` and `provider`
+  for that adapter explicitly, in `BUILD.md` 4 and in the allow table, rather than being loosened for all of
+  nova.
+- **The coverage job needed floors for the two new packages.** `banks` sits at 85% and `decisions` at 88% now,
+  and both are above them; they parse hand-edited YAML and turn it into routing, which is critical enough to
+  hold to the same standard as `server` and `store`.
+
