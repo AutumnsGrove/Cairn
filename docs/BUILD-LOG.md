@@ -224,3 +224,44 @@ and S13 bind-mounts `config/`.
   and both are above them; they parse hand-edited YAML and turn it into routing, which is critical enough to
   hold to the same standard as `server` and `store`.
 
+## 2026-11-01, S06, providers
+
+**Built.** `internal/providers`: one package with the TMDB (film and TV) and Open Library (books) clients, the
+normalisation into `domain.Source` and `domain.Work`, the in-memory answer cache, candidate ranking, cover
+download and storage, and typed errors for every failure. `internal/world` gained real fixtures per route, a
+429 with and without `Retry-After`, a 404, a stalled reply, and a recorded query string. `internal/config` reads
+`CAIRN_TMDB_API_KEY` and `CAIRN_DATA_DIR`.
+
+**What is true now.** A title returns ranked candidates and at most five; a fetch returns a verified source with
+the provider's own document alongside it, and a stored cover under `data/covers/{provider}-{id}.{ext}` that is
+refreshed after 180 days. A missing key is "off", not an error; a 404, a 5xx, a 429, a timeout, a stalled body,
+a huge body, HTML instead of JSON and a control or bidi character in a title each end in one typed reason the
+agent can turn into the lookup_failed card. Nothing in a provider request can hold an opinion: the query is
+`medium`, `title`, `creator` and `year`, and a test asserts the wire carries only that plus the key.
+
+**G3 is answered** and committed in [`handoffs/2026-11-01-G3-tmdb-terms.md`](handoffs/2026-11-01-G3-tmdb-terms.md).
+
+**Learned, for the next agent.**
+
+- **A provider id needs its kind.** TMDB movie 603 and TV 603 are different works, so the stored id is
+  `movie:603`/`tv:603`. A bare number would merge two unrelated things.
+- **The cover size check must run before the decode.** A 4,000-pixel limit enforced by decoding first is a
+  decompression bomb with a polite message.
+- **A file's modification time is the cheapest cache timestamp, but only if you set it.** The freshness test
+  failed until the writer set mtime from the injected clock: the file had the machine's time and the rule had
+  the test's. `os.Chtimes` makes one source of truth.
+- **A bidi override is a display attack, not a curiosity.** U+202E in a title can reverse what a card shows
+  while a model still reads the real words. Both loaders strip control, format and bidi characters and separate
+  runs with a space.
+- **Open Library names authors by reference.** A work lists author keys, so a fetch is up to four requests. Author
+  and edition failures are skipped, and only a cancelled caller aborts: a thinner work beats no work.
+- **`unparam` and `gosec` caught two real things**: a `coverURL` parameter nothing used, and a 0755 cover
+  directory. Neither would have failed a test.
+- **An `*http.Client` set only in `withDefaults` is a nil pointer when a caller builds a client directly.** The
+  client constructors now apply the defaults themselves, which is also what makes them usable in a test.
+
+**Not wired yet.** Nothing constructs the `Finder`: the agent that calls it arrives in S08. The attribution text
+and logo are shipped as constants/assets here and placed in the UI by S11 and S12.
+
+**Live checks left for the operator:** a real TMDB key, and real data for a book, a translated book, a film, a
+miniseries and a remake, as the slice's Done-when says.

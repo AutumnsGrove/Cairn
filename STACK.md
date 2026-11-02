@@ -61,6 +61,10 @@ runs as a separate process in CI and on the operator's machine only. If that eve
 - **Tailwind or CSS-in-JS**: plain CSS with the design tokens from the mockups.
 - **A jsdom-only test setup for the socket**: the socket state machine is tested against a fake socket and,
   in Playwright, a real one.
+- **A rate-limiter or YAML-validation library** (`golang.org/x/time/rate`, `go-playground/validator`): the
+  provider pacing is a mutex and a `next` instant, and the two YAML loaders need `KnownFields` plus their own
+  vocabulary checks, which are the parts a general library would not know. Both are a few dozen lines with tests
+  that assert the exact error a person sees.
 
 ## Added during S00, and why
 

@@ -9,7 +9,8 @@ network does not. Each lives behind a narrow interface with a fake in the world.
 ## Depends on
 
 S03 (domain types, merge) and S01 (the real shapes and limits). **Runs in parallel with S04 and S05.** S08 needs
-it.
+it. S01 is not done, so this slice is built against the providers' public documentation and the world's fixtures;
+the real response shapes are re-checked by the operator's live run at the end of it.
 
 ## Where we start
 
@@ -59,10 +60,23 @@ request. **Properties:** normalisation never panics; a re-fetch of the same id y
 
 **G3** before covers are final: what the terms say about caching and attribution, and the decision they imply.
 
-## Open questions
+## Decisions (recorded 2026-11-01, before the slice started)
 
-- Whether to cache provider responses (proposed: a short in-memory cache to respect rate limits, never persisted
-  beyond the snapshot).
+1. **G3 is answered** in [`../handoffs/2026-11-01-G3-tmdb-terms.md`](../handoffs/2026-11-01-G3-tmdb-terms.md):
+   ship the exact TMDB notice and its logo, and store covers locally with a 180-day refresh (checked when a cover
+   is read, not by a background job). Covers ship in this slice.
+2. **Provider lookups are cached in memory only**: a bounded map (128 entries) with a 5-minute TTL over the
+   injected clock, keyed by provider and normalised query. It never touches the database, and a restart clears
+   it. A **fetch is not cached**: its result carries the provider's whole document, and 128 of those would not
+   fit on the potato; a repeated fetch is a second paced request instead.
+3. **TMDB is the v3 API with `api_key` in the query string**, read from `CAIRN_TMDB_API_KEY`, the same shape
+   Polaris uses. A missing key turns film and TV lookup off rather than failing a start (invariant 13).
+4. **`CAIRN_DATA_DIR` (default `./data`)** holds `covers/`. It is the directory S13 will mount.
+5. **The clients are one package**, `internal/providers`, with TMDB and Open Library as files rather than
+   subpackages: they share the query, candidate, result and error types, and splitting them would either cycle
+   or need a third package for the contract. The swap seam is the interface, not the directory.
+6. **No new dependency.** JSON, HTTP, rate limiting, image sizing (`image.DecodeConfig`) and atomic file writes
+   are all standard library.
 
 ## Done when
 

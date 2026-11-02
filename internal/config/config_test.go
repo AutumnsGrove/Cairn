@@ -159,3 +159,44 @@ func TestLoadRejectsMalformedEnvironment(t *testing.T) {
 		t.Fatal("Load accepted a key with no value")
 	}
 }
+
+// A provider key and the data directory are settings like any other: read here, never logged, and absent means
+// "off" rather than "broken" (docs/BUILD.md invariant 13).
+func TestLoadProviderSettings(t *testing.T) {
+	got, err := Load([]string{"CAIRN_TMDB_API_KEY=test-key", "CAIRN_DATA_DIR=/srv/cairn/data"})
+	if err != nil {
+		t.Fatalf("Load: %v", err)
+	}
+	if got.TMDBKey != "test-key" {
+		t.Errorf("TMDBKey = %q", got.TMDBKey)
+	}
+	if got.DataDir != "/srv/cairn/data" {
+		t.Errorf("DataDir = %q", got.DataDir)
+	}
+
+	defaults, err := Load(nil)
+	if err != nil {
+		t.Fatalf("Load(nil): %v", err)
+	}
+	if defaults.TMDBKey != "" {
+		t.Errorf("TMDBKey defaulted to %q; a missing key must mean off", defaults.TMDBKey)
+	}
+	if defaults.DataDir != DefaultDataDir {
+		t.Errorf("DataDir = %q, want %q", defaults.DataDir, DefaultDataDir)
+	}
+}
+
+func TestLoadRejectsUnusableProviderSettings(t *testing.T) {
+	cases := map[string]string{
+		"empty data dir":   "CAIRN_DATA_DIR=",
+		"key with newline": "CAIRN_TMDB_API_KEY=abc\ndef",
+		"key with space":   "CAIRN_TMDB_API_KEY=abc def",
+	}
+	for name, entry := range cases {
+		t.Run(name, func(t *testing.T) {
+			if _, err := Load([]string{entry}); err == nil {
+				t.Fatalf("Load(%q) succeeded", entry)
+			}
+		})
+	}
+}

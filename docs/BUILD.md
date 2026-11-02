@@ -114,7 +114,7 @@ cairn/
     store/               SQLite, migrations, triggers, repositories (sqlc)
     banks/               question-bank loader and selection (pure)
     decisions/           registry loader and the pre-read, over nova's decide package
-    providers/           tmdb/, openlibrary/, polaris/: clients behind small interfaces
+    providers/           TMDB and Open Library in one package behind small interfaces (later Polaris too)
     session/             the session engine: drafts, interactions, event log, resume
     agent/               nova embedding, tools, guardrails, the pipeline
     server/              HTTP, WebSocket, Origin and Host checks, REST, update API

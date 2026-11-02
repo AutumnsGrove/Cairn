@@ -93,6 +93,11 @@ in the commit that introduces it, with its outcome above the limit.
 | Body or verdict | 8,000 and 200 characters | Refused with a stable code |
 | Candidates per lookup | 5 | Truncated, the best first |
 | Provider response body | 2 MiB | Aborted; counts as a sad-route failure |
+| Provider call deadline | 10 s | Typed timeout; the agent shows lookup_failed and logging carries on |
+| Provider pacing | TMDB 10 calls a second, Open Library 1 | Calls wait; a 429 waits for Retry-After, or backs off by default when it has none |
+| Provider lookup cache | 128 entries, 5 minutes | A stale answer is served for at most 5 minutes; a restart clears it. A fetch is not cached: its document is too big to hold 128 of |
+| Title from a provider | 300 characters, control and bidi characters removed | Cut at a rune boundary before it is shown or merged |
+| Cover freshness | 180 days (TMDB's cache cap is 6 months) | Re-fetched when it is next read; no background job |
 | Cover download | 2 MiB, 4,000 px on a side | Skipped; the work keeps its placeholder |
 | Single questions per entry | 3 | Registry selection stops at 3 |
 | Question rounds per session | 4 | The agent stops asking and builds the draft |

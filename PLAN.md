@@ -103,7 +103,7 @@ That entry is then browsable, searchable and filterable across media in plain vi
 | Edits and history | Editing a saved entry is a draft revision with a confirm tap. Every confirmed edit stores the previous version in an **append-only revisions table, kept forever** |
 | Deleting | **Soft-delete only, and hard deletes are blocked by the database itself** (a `BEFORE DELETE` trigger aborts on entries, revisions, snapshots and answers). Deleting exists only on the plain entry view, never in chat. **There is no purge**: soft-delete is permanent, and backups hold every copy |
 | Drafts | Kept until saved or discarded; they never expire. A Drafts list, with a count on the home screen |
-| Covers | Downloaded once, stored under `data/covers/`, mirrored to R2. No hot-linked third-party images. TMDB's image terms get checked in Phase 0 before this is final |
+| Covers | Downloaded once, stored under `data/covers/`, mirrored to R2. No hot-linked third-party images. Refreshed after 180 days, inside TMDB's six-month cache cap (G3, 2026-11-01) |
 | Degraded mode | If a metadata service is down, the review can still be logged as a **manual, unverified work** and enriched later with a "fill in details" action. A review is never blocked by someone else's outage |
 | Tags | Genres from the provider plus my own free-text tags, shown on the card to accept or edit. Nothing is applied without being shown. The descriptor chips from Describe it are separate: they are answers, stored by category, and are the structured way to filter ("everything I called morally grey") |
 | Entry card | One component for the draft and the saved entry. Rating is dragged across the stars and snaps to quarters, with +/- buttons and the number always visible. Unverified fields carry a dashed marker (tap for the source) and one Accept all button. A collapsed "why" sheet shows the decision odds, the tools that ran and their sources. After confirm the session closes and the card becomes the saved entry with an Edit button. Spec: [`docs/ENTRY_CARD.md`](docs/ENTRY_CARD.md) |
@@ -135,8 +135,11 @@ What is still open, each with the phase that needs it. None of these blocks the 
 1. **Providers beyond film, TV and books** (Phase 2). MusicBrainz needs a user agent and 1 req/s; IGDB
    needs Twitch OAuth; podcasts and theatre have no obvious single source. Decide per medium as each is
    reached, and let Polaris cover the rest until then.
-2. **TMDB's image and attribution terms** (Phase 0). The cover-caching decision in [§2](#2-decisions-already-made)
-   is final only once this is read.
+2. ~~**TMDB's image and attribution terms** (Phase 0).~~ **Answered 2026-11-01 (G3).** The terms allow caching for
+   at most six months, require the exact notice and the logo, and need no commercial agreement for a private app.
+   Covers are stored locally and refreshed after 180 days when they are read; the notice and logo ship with the
+   provider package and are placed in the UI by S11 and S12
+   ([handoff](docs/handoffs/2026-11-01-G3-tmdb-terms.md)).
 3. **Polaris's ask endpoint and container networking** (Phase 0). The exact path, and how the Cairn
    container reaches Polaris's host-published port.
 

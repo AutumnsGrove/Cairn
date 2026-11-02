@@ -14,6 +14,10 @@ import (
 	"strings"
 )
 
+// DefaultDataDir is where covers and exports live when CAIRN_DATA_DIR is not set. The container mounts this at
+// /data in S13; a dev run gets ./data.
+const DefaultDataDir = "./data"
+
 // DefaultAddr is the address the service listens on. It is loopback only: `tailscale serve` is the only way
 // in, and the tailnet is the whole security boundary (docs/STANDARDS.md 6).
 const DefaultAddr = "127.0.0.1:8893"
@@ -37,16 +41,21 @@ type Config struct {
 	// Dev turns on the offline development behaviours: a friendlier error body and the dev port as an
 	// allowed Origin. It never relaxes the Host check.
 	Dev bool
+	// TMDBKey enables film and TV metadata. Empty is the normal "not set up" state, never an error: a lookup
+	// then answers a typed "off" and the card says so (docs/BUILD.md invariant 13).
+	TMDBKey string
+	// DataDir holds covers and, later, exports and backups. It is the directory S13 mounts.
+	DataDir string
 }
 
 // knownKeys is the closed set of environment keys this package reads. Anything else that starts with
 // CAIRN_ is a typo.
-var knownKeys = []string{"CAIRN_ADDR", "CAIRN_ALLOWED_HOSTS", "CAIRN_DEV"}
+var knownKeys = []string{"CAIRN_ADDR", "CAIRN_ALLOWED_HOSTS", "CAIRN_DEV", "CAIRN_DATA_DIR", "CAIRN_TMDB_API_KEY"}
 
 // Load reads settings from environ, in os.Environ() form. Passing the environment in rather than calling
 // os.Getenv keeps this pure and lets the tests be table-driven with no global state.
 func Load(environ []string) (Config, error) {
-	cfg := Config{Addr: DefaultAddr, AllowedHosts: slices.Clone(defaultHosts)}
+	cfg := Config{Addr: DefaultAddr, AllowedHosts: slices.Clone(defaultHosts), DataDir: DefaultDataDir}
 
 	seen := make(map[string]bool, len(environ))
 	values := make(map[string]string, len(environ))
@@ -86,6 +95,20 @@ func Load(environ []string) (Config, error) {
 		cfg.AllowedHosts = hosts
 	}
 
+	if v, ok := values["CAIRN_DATA_DIR"]; ok {
+		if err := validateDataDir(v); err != nil {
+			return Config{}, err
+		}
+		cfg.DataDir = v
+	}
+
+	if v, ok := values["CAIRN_TMDB_API_KEY"]; ok {
+		if err := validateKey(v); err != nil {
+			return Config{}, err
+		}
+		cfg.TMDBKey = v
+	}
+
 	if v, ok := values["CAIRN_DEV"]; ok {
 		dev, err := strconv.ParseBool(v)
 		if err != nil {
@@ -99,6 +122,29 @@ func Load(environ []string) (Config, error) {
 		return Config{}, err
 	}
 	return cfg, nil
+}
+
+// validateDataDir refuses an empty path. A relative path is fine for a dev run; the cover store creates it.
+func validateDataDir(dir string) error {
+	if strings.TrimSpace(dir) == "" {
+		return errors.New("config: CAIRN_DATA_DIR is empty; omit it to use " + DefaultDataDir)
+	}
+	if strings.ContainsRune(dir, 0) {
+		return errors.New("config: CAIRN_DATA_DIR contains a NUL byte")
+	}
+	return nil
+}
+
+// validateKey refuses a key with whitespace in it, which is almost always a key pasted with a newline. The
+// message never repeats the key.
+func validateKey(key string) error {
+	if strings.TrimSpace(key) != key {
+		return errors.New("config: CAIRN_TMDB_API_KEY has leading or trailing space")
+	}
+	if strings.ContainsAny(key, " \t\r\n") {
+		return errors.New("config: CAIRN_TMDB_API_KEY contains whitespace; it was probably pasted with a newline")
+	}
+	return nil
 }
 
 // validateAddr refuses anything that is not loopback. Binding a public interface would put the journal on

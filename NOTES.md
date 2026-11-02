@@ -174,3 +174,25 @@ disappears, because both processes share the host's loopback.
   `make gen` a drift failure.
 - **`api/` is now the contract:** 19 server events, 9 client messages, 7 interaction kinds, 18 REST paths, 34
   examples, 25 error codes and 7 notices with their copy. Both sides validate the same document.
+
+## 2026-11-01 — providers, and what TMDB's terms actually say
+
+- **A TMDB id is not unique on its own.** Movie 603 and TV 603 are different works, so the provider id Cairn
+  stores carries the kind: `movie:603` and `tv:603`. The merge joins on the whole string.
+- **TMDB v3 takes the key in the query string** (`api_key`), which Polaris already uses; the v4 bearer token is
+  a different product surface. Cairn reads `CAIRN_TMDB_API_KEY` and treats an empty value as "off", not as a
+  startup error.
+- **The image CDN is configurable and cacheable.** `/configuration` reports `secure_base_url` and the poster
+  sizes; Cairn reads it once and keeps `w342` (or the largest size the provider lists), falling back to
+  `https://image.tmdb.org/t/p/w342` when the call fails. A missing poster never fails a lookup.
+- **Caching is capped at six months by the terms (G3).** Covers are stored with the fetch time as the file's own
+  modification time and re-fetched after 180 days, checked when the cover is read rather than by a job.
+- **Attribution is exact and not negotiable.** "This application uses TMDB and the TMDB APIs but is not
+  endorsed, certified, or otherwise approved by TMDB." The logo goes with it, below Cairn's own marks.
+- **Open Library needs names by indirection.** A work lists authors by key, so a fetch reads the work, then at
+  most two author documents, then the editions list. Author and edition failures are skipped: a thinner work is
+  better than no work, and only a cancelled caller aborts the fetch.
+- **A "huge body" is not one thing.** A JSON route over the limit is `too_large`; a cover over the limit is
+  `cover_too_large`, and the size check must run before the image is decoded or a decompression bomb is a decode.
+- **A bidi override in a title is a display attack**, not just noise: U+202E can make "drama" read as something
+  else on a card. Provider text drops control, format and bidi characters, and separates runs with a space.

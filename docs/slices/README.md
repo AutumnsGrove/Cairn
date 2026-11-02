@@ -61,7 +61,7 @@ S09 needs S02, S07 and S08. S13 needs a working app (S09 and S12).
 | S03 | [Domain core](S03-domain-core.md) | 1 | done |
 | S04 | [Data layer](S04-data-layer.md) | 1 | done |
 | S05 | [Banks and decisions](S05-banks-and-decisions.md) | 1 | done |
-| S06 | [Providers](S06-providers.md) | 1 | planned |
+| S06 | [Providers](S06-providers.md) | 1 | done |
 | S07 | [Session engine](S07-session-engine.md) | 1 | planned |
 | S08 | [Agent pipeline](S08-agent-pipeline.md) | 1 | planned |
 | S09 | [Server and protocol](S09-server.md) | 1 | planned |
@@ -89,8 +89,9 @@ S09 needs S02, S07 and S08. S13 needs a working app (S09 and S12).
 
 ## What is real and what is mocked today
 
-S00, S02, S03, S04 and S05 are built: the service skeleton and its Host and Origin checks, the contract and
-its generators, the pure domain core, the database with its triggers and repositories, and the question banks
-and decisions layer that reads the config in [`../../config/`](../../config/). Everything else is still plan,
-spec and mockup. The decisions backend, the metadata providers, Polaris and R2 exist only as fakes in
-`internal/world`; `cairn-dev` runs the real service against them, offline, with no keys.
+S00, S02, S03, S04, S05 and S06 are built: the service skeleton and its Host and Origin checks, the contract and
+its generators, the pure domain core, the database with its triggers and repositories, the question banks and
+decisions layer that reads [`../../config/`](../../config/), and the TMDB and Open Library clients with their
+covers. Everything else is still plan, spec and mockup. The decisions backend, the two metadata providers,
+Polaris and R2 are reachable only through the fakes in `internal/world`; `cairn-dev` runs the real service
+against them, offline, with no keys. The live calls against the real providers are the operator's.
