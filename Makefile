@@ -52,10 +52,12 @@ test-short: ## Unit tests without the race runtime, for a fast loop
 
 fuzz-smoke: ## A short run of every fuzz target; guards the parsers that take untrusted input
 	@set -e; \
-	for t in $$(grep -rhoE '^func (Fuzz[A-Za-z0-9_]+)' --include='*_test.go' . | awk '{print $$2}'); do \
-	  pkg="$$(dirname "$$(grep -rlE "^func $$t\(" --include='*_test.go' .)")"; \
-	  echo "fuzz-smoke: $$t in $$pkg"; \
-	  ( cd "$$pkg" && $(GO) test -run '^$$' -fuzz "^$$t$$" -fuzztime=$(FUZZTIME) . ); \
+	grep -rhoE '^func (Fuzz[A-Za-z0-9_]+)' --include='*_test.go' . | awk '{print $$2}' | sort -u | while read -r t; do \
+	  grep -rlE "^func $${t}\(" --include='*_test.go' . | sort | while read -r file; do \
+	    pkg="$$(dirname "$${file}")"; \
+	    echo "fuzz-smoke: $${t} in $${pkg}"; \
+	    ( cd "$${pkg}" && $(GO) test -run '^$$' -fuzz "^$${t}$$" -fuzztime=$(FUZZTIME) . ); \
+	  done; \
 	done
 
 nocgo: ## Prove the whole module builds with cgo off, and compiles for the potato

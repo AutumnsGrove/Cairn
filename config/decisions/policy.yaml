@@ -36,8 +36,11 @@ policy:
 
     medium:
       threshold: 0.70
+      # A medium only matters once the message is routed to a review, exactly like format and revisit.
+      only_when_intent: [log_review, import_review]
       # Split read: ask "book or film?" first. Triggers when the runner-up is not negligible and the
-      # leader is not clearly ahead, e.g. book 0.55 / film 0.40.
+      # leader is not clearly ahead, e.g. book 0.55 / film 0.40. It is checked before the threshold,
+      # because two real candidates below the bar is precisely when the question is cheaper than a guess.
       ambiguity: { runner_up_min: 0.25, max_gap: 0.30 }
 
     format:
@@ -50,6 +53,7 @@ policy:
 
     extract_fidelity:
       # Never blocks. Asked in a second call, after code has built the extract from my own spans.
+      threshold: 0.60
       phase: post_extract
       option_thresholds: { drops_opinion: 0.60 }
       # adds_content should be impossible once code has verified containment. If it ever fires, it is

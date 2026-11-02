@@ -165,3 +165,45 @@ not a version.
   letting a tap look successful.
 - **A fixed identifier source in a test is a trap.** The first version of `openTest` returned one id forever, so
   every insert after the first collided on the primary key and the failures looked like repository bugs.
+
+## 2026-11-01, S05, banks and decisions
+
+**Built.** `internal/banks` (the strict loader for `config/questions/*.yaml`, the pure selection, two fuzz
+targets and a polling store) and `internal/decisions` (the registry over `config/decisions/{wording,policy}.yaml`,
+the policy engine, the pre-read and the fidelity call over nova's `decide` contract, and its own store).
+`internal/world` gains the decisions fake, scripted per check with every fault.
+
+**What is true now.** The shipped banks and registry load, and a bad one is refused with the file and key named
+while the previous config keeps serving. A form shows the tabs in PLAN.md order, hints first and dashed, at most
+three questions by weight, and never a question whose topic the message already covered. One batched call sends
+13 checks with the message, the open question and the work title as separate sources; policy then applies the
+thresholds, the option thresholds, the intent gates, the split-medium rule and the session override. A timeout,
+an outage, a malformed answer or an answer that contradicts its own probabilities leaves the turn to run with a
+notice. `adds_content` is logged as a bug and never shown as a warning.
+
+**Learned, for the next agent.**
+
+- **A YAML map has no order, so the quiet option had to become a key.** The draft's "the first option is quiet"
+  would have been silently positional. `quiet: <option>` is validated against the options and is the one name
+  policy may never give a threshold.
+- **The split-medium rule must run before the threshold.** Dune's book 0.55 / film 0.40 is below the 0.70 bar, so
+  a threshold-first engine would have asked nothing and guessed nothing. The ambiguity rule is the whole point
+  of that read.
+- **`only_when_intent` had to move from request time to policy time.** Intent is decided inside the same batched
+  call, so gating before the call is impossible; the checks are always sent and policy ignores the ones that do
+  not apply. Medium joined that list: a medium with no route is not a hint, it is noise.
+- **The digest of a config file is not the file.** Polling by mtime and size is enough for a hand edit, and it
+  behaves on a bind mount where inotify does not. A broken edit is stamped too, so the notice is raised once
+  instead of on every tick.
+- **A threshold above an option threshold is a load error, and it caught a test fixture.** The reload test tried
+  0.90 on intent while its `log_review` option needed 0.80; the loader refused the edit and the test hung. The
+  rule is right: the option bar must be the stricter of the two.
+- **`yes` and `no` are plain strings in YAML 1.2.** `gopkg.in/yaml.v3` does not turn them into booleans, so the
+  draft's quoting is harmless rather than load-bearing here; duplicate keys and unknown keys are both errors, and
+  `KnownFields` only applies through a `Decoder`, never through `Unmarshal`.
+
+**Not wired yet, by design.** `Store.Watch` is built and tested but nothing starts it: the server that would
+surface a reload notice and serve a form arrives in S09. S09 wires both stores, `cairn-dev` loads them offline,
+and S13 bind-mounts `config/`.
+
+**Live checks left for Autumn:** none for this slice. The thresholds are the draft's and G4 replaces them.

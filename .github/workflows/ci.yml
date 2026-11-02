@@ -92,9 +92,10 @@ jobs:
           go test -count=1 -coverprofile=/tmp/cover.out ./...
           go tool cover -func=/tmp/cover.out | tail -1
           # The floor per package. domain is the heart: the span locator and the save guard live there, so it
-          # carries the highest bar in the project (docs/slices/S03-domain-core.md).
+          # carries the highest bar in the project (docs/slices/S03-domain-core.md). banks and decisions parse
+          # hand-edited YAML and turn it into routing, so they carry a high bar too (S05).
           fail=0
-          for spec in "internal/domain:95" "internal/server:80" "internal/config:80" "internal/world:80" "internal/store:84"; do
+          for spec in "internal/domain:95" "internal/banks:85" "internal/decisions:88" "internal/server:80" "internal/config:80" "internal/world:80" "internal/store:84"; do
             pkg="${spec%%:*}"
             floor="${spec##*:}"
             # Generated code is excluded: sqlc's package has no tests by design, and averaging it in would

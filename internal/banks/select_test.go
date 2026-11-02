@@ -5,7 +5,7 @@ import (
 	"testing"
 )
 
-func FuzzLoadFiles(f *testing.F) {
+func FuzzLoadBanks(f *testing.F) {
 	f.Add([]byte("categories:\n  - name: feel\n    label: Feel\n    positive: [cozy]\n"), []byte("medium: book\ninclude: [feel]\n"))
 	f.Add([]byte(""), []byte(""))
 	f.Add([]byte("categories: []\n"), []byte("medium: [film, tv]\ncategories:\n  - name: a\n    label: A\n    positive: [x]\n"))

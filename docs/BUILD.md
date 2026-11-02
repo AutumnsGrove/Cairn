@@ -131,9 +131,9 @@ cairn/
 internal. `store`, `banks`, `decisions`, `providers` import `domain` only. `session` imports `domain`,
 `store`, `banks`. `agent` imports those plus `decisions` and `providers`. `server` imports `session` and
 `agent`. `world` is imported only from `_test.go` files and `cmd/cairn-dev`. Nothing outside `providers`
-names a provider endpoint. Nova's `decide` contract is named only by `decisions` (its adapter), `agent` (the
-embedding) and `world` (the fake); no other package imports nova's `agent`, `mode`, `session`, `config`,
-`tui` or `bundled` packages.
+names a provider endpoint. Nova's `decide` contract is named only by `decisions` (its adapter, with the
+`provider` package that carries its usage and cost), `agent` (the embedding) and `world` (the fake); no other
+package imports nova's `agent`, `mode`, `session`, `config`, `tui` or `bundled` packages.
 
 ## 5. How a slice is worked
 

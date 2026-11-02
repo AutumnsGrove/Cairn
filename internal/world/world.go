@@ -2,8 +2,9 @@
 // tests and `cairn-dev` can drive the real service offline.
 //
 // It is imported only from `_test.go` files and `cmd/cairn-dev`; the architecture test fails the build if
-// shipped code reaches for it (docs/BUILD.md 4). S00 builds the pattern once, with one trivial service; S05,
-// S06, S15 and S16 add the fakes for the models, the providers, Polaris and R2.
+// shipped code reaches for it (docs/BUILD.md 4). S00 builds the pattern once, with one trivial service; S05
+// adds the decisions backend (decisions.go, over nova's decide contract); S06, S15 and S16 add the metadata
+// providers, Polaris and R2.
 package world
 
 import (

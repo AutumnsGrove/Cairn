@@ -38,13 +38,12 @@ const MaxFileBytes = 256 << 10
 
 // The other limits from the same table.
 const (
-	MaxCategories       = 12
-	MaxChipsPerCategory = 80
-	MaxQuestions        = 25
-	MaxPromptChars      = 200
-	MaxOptionLabelChars = 60
-	MaxOptionsPerQuest  = 20
-	maxInstructions     = 2_000
+	MaxCategories         = 12
+	MaxChipsPerCategory   = 80
+	MaxQuestions          = 25
+	MaxPromptChars        = 200
+	MaxOptionLabelChars   = 60
+	MaxOptionsPerQuestion = 20
 )
 
 // topics is the closed set a category or question may name. It matches the decisions registry's
@@ -527,8 +526,8 @@ func buildQuestions(name string, docs []questionDoc) ([]Question, error) {
 			if len(q.Options) < 2 {
 				return nil, fmt.Errorf("banks: %s: question %q has no options; a choice needs at least two", name, q.ID)
 			}
-			if len(q.Options) > MaxOptionsPerQuest {
-				return nil, fmt.Errorf("banks: %s: question %q has more than %d options", name, q.ID, MaxOptionsPerQuest)
+			if len(q.Options) > MaxOptionsPerQuestion {
+				return nil, fmt.Errorf("banks: %s: question %q has more than %d options", name, q.ID, MaxOptionsPerQuestion)
 			}
 			values := make(map[string]bool, len(q.Options))
 			for i, opt := range q.Options {
@@ -729,17 +728,4 @@ func matchesOne(allowed []string, value string) bool {
 		return true
 	}
 	return value != "" && slices.Contains(allowed, value)
-}
-
-// The decisions registry's check names start with this prefix, and each one maps to a topic.
-const mentionPrefix = "mentions_"
-
-// TopicForCheck maps a mentions_* check to the topic the banks call it. It is exported so the policy engine and
-// the banks cannot disagree about "you mentioned this".
-func TopicForCheck(check string) (string, bool) {
-	topic, ok := strings.CutPrefix(check, mentionPrefix)
-	if !ok || !slices.Contains(topics, topic) {
-		return "", false
-	}
-	return topic, true
 }

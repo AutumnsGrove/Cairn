@@ -34,8 +34,8 @@ const novaModule = "github.com/AutumnsGrove/nova"
 // internal/world fakes that contract.
 var novaPackages = map[string][]string{
 	"agent":     nil, // the embedding: any nova package
-	"decisions": {"decide"},
-	"world":     {"decide"},
+	"decisions": {"decide", "provider"},
+	"world":     {"decide", "provider"},
 }
 
 // allow lists, per layer under internal/, the other layers that layer may import. A layer may always import
@@ -305,7 +305,7 @@ func TestCheckRejects(t *testing.T) {
 				Dir:        t.TempDir(),
 				Imports:    []string{novaModule + "/agent"},
 			}},
-			want: "may import nova only from decide",
+			want: "may import nova only from decide, provider",
 		},
 		{
 			name: "banks imports nova's decide",
