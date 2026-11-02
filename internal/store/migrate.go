@@ -95,8 +95,8 @@ func (s *Store) applyRebuild(ctx context.Context, m migration) error {
 	}
 	defer func() { _ = conn.Close() }()
 
-	if _, err := conn.ExecContext(ctx, "PRAGMA foreign_keys = OFF"); err != nil {
-		return fmt.Errorf("store: migration %s: foreign keys off: %w", m.name, err)
+	if _, offErr := conn.ExecContext(ctx, "PRAGMA foreign_keys = OFF"); offErr != nil {
+		return fmt.Errorf("store: migration %s: foreign keys off: %w", m.name, offErr)
 	}
 	defer func() {
 		_, _ = conn.ExecContext(context.WithoutCancel(ctx), "PRAGMA foreign_keys = ON")
