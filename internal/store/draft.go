@@ -248,11 +248,11 @@ func (s *Store) AcceptDraftSources(ctx context.Context, a AcceptSources) (domain
 
 		accepted := now.Format(timeLayout)
 		for _, field := range a.Fields {
-			res, err := q.AcceptWorkSourceByProvider(ctx, db.AcceptWorkSourceByProviderParams{
+			res, acceptErr := q.AcceptWorkSourceByProvider(ctx, db.AcceptWorkSourceByProviderParams{
 				AcceptedAt: &accepted, WorkID: a.WorkID, Provider: field.Provider, ProviderID: field.ProviderID,
 			})
-			if err != nil {
-				return fmt.Errorf("store: accept %s %s: %w", field.Provider, field.ProviderID, err)
+			if acceptErr != nil {
+				return fmt.Errorf("store: accept %s %s: %w", field.Provider, field.ProviderID, acceptErr)
 			}
 			if n, _ := res.RowsAffected(); n != 1 {
 				// The trigger is the guard, so a second accept of the same field is a refusal rather than a
