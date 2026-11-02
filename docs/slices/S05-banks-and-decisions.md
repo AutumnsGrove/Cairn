@@ -12,20 +12,54 @@ S03. **Runs in parallel with S04 and S06.** Uses the S01 findings (the real odds
 
 ## Where we start
 
-Drafts exist: [`../question-banks/`](../question-banks/) (`shared.yaml`, `books.yaml`, `film-tv.yaml`) and
-[`../decisions.draft.yaml`](../decisions.draft.yaml) (14 checks, wording and policy, the backend block).
+The shipped config is in place and is what the code loads: [`../../config/questions/`](../../config/questions/)
+(`shared.yaml`, `books.yaml`, `film-tv.yaml`) and [`../../config/decisions/`](../../config/decisions/)
+(`wording.yaml`, `policy.yaml`) — 14 checks, their wording, the policy block and the backend roles. It moved
+out of `docs/` at the start of this slice so that the files the service reads are the only copy.
 
 ## Settled
 
 - Banks: closed chip vocabularies by category, `include` for shared ones, stable slug values, at most three
   single questions by weight, topics link to the `mentions_*` flags, hints are dashed and never pre-selected,
-  at most one `short_text` question ([`../question-banks/books.yaml`](../question-banks/books.yaml)).
+  at most one `short_text` question ([`../../config/questions/books.yaml`](../../config/questions/books.yaml)).
 - Decisions: nova's `decide` package and `Roles`; one batched call per message; a quiet default on every check;
   thresholds per check and per option; `only_when_intent`; suppression; the medium ambiguity rule (runner-up
   at least 0.25, leader under 0.30 ahead); session bias with an override only above 0.80; text only, with the
   state sent as separate sources; a 2.5 s deadline after which the turn proceeds with a notice; Jev is named
   only in config.
 - `yes` and `no` are quoted map keys.
+
+## Decisions (recorded 2026-11-01, before the slice started)
+
+1. **The dependency rule widens for nova's `decide` contract.** `internal/decisions` is the adapter over
+   `decide.Request` and `decide.Roles`, the same way `internal/providers` owns a provider endpoint. `BUILD.md`
+   4, `internal/archtest` and `STACK.md` say so, and `internal/agent` keeps the monopoly on nova's `agent`,
+   `mode`, `session`, `config`, `tui` and `bundled` packages. `internal/world` may also name `decide`,
+   because it is the fake for that contract. (The alternative, an agent-owned adapter, would have duplicated
+   the request shape in Cairn for no gain.)
+2. **Nova is pinned to its tag** `v0.2.0` in `go.mod`, not a `replace ../nova`. The tag's `decide/` and
+   `provider/` are identical to nova's current `HEAD`, the modules are pure Go, and nothing resembles a local
+   path in CI or in the image build.
+3. **The decisions config is split in two files**: `config/decisions/wording.yaml` (the checks, their prompts
+   and options) and `config/decisions/policy.yaml` (thresholds, routing, suppression, the backend roles).
+   Tuning never edits wording.
+4. **The draft thresholds ship unchanged** and are marked as starting values in the file and in the build log.
+   G4 in S08 replaces them from recorded odds; until then a wrong threshold costs a question, never a word.
+5. **Shipped config lives under `config/`**, not `docs/`. The drafts moved there at the start of the slice and
+   every doc links to the new paths, so there is one copy and hot reload can bind-mount it.
+6. **Two dependencies:** `gopkg.in/yaml.v3` for strict YAML (unknown keys and duplicate keys both fail) and a
+   poll-based watcher with an injected ticker. No `fsnotify`: inotify on the Docker bind mounts this app uses
+   is unreliable, and a poll is trivially testable and cheap at a 2 s interval.
+7. **`applies_when.format` uses the domain's format names** (cinema, streaming, broadcast, audiobook,
+   hardback, paperback, ebook, physical, live), and a list means "any of these". The decisions `format` check
+   keeps its own option set and stays a suggestion; only the deterministic parse, her tap or a stored entry
+   field is trusted.
+8. **The quiet option is explicit**: each check names `quiet: <option>` in `wording.yaml`. A YAML map has no
+   order, so "the first option is the quiet one" was a trap; the loader validates that the named option exists
+   and that it is not also given an option threshold.
+9. **Suppression ships as a mechanism with no data.** `suppress_when_intent` exists on every check and is
+   tested; every shipped list is empty and G4 fills them in from real odds. `only_when_intent` is applied
+   after the single batched call, because `intent` is decided inside that same call.
 
 ## Scope
 
@@ -65,8 +99,9 @@ None here. **Threshold tuning is G4 in S08**, on real odds and the fixture corpu
 
 ## Open questions
 
-- One decisions file or two (wording and policy), as Polaris does. *Recommended: split at build time.*
-- The shipped starting thresholds, taken from the draft and replaced after G4.
+None. The two original questions (one decisions file or two; which thresholds ship) and seven more that the
+code forced (the nova import rule, the pin, where the config lives, the two dependencies, the format
+vocabulary, the quiet option, suppression) are answered in Decisions above.
 
 ## Done when
 

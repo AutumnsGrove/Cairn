@@ -28,6 +28,16 @@ const module = "github.com/AutumnsGrove/cairn"
 // novaModule is the only outside module our rules name.
 const novaModule = "github.com/AutumnsGrove/nova"
 
+// novaPackages lists, per layer, the nova subtrees that layer may import. A layer that is absent may not
+// import nova at all. nova's agent shell (mode, config, session, tui, bundled) is never importable from
+// Cairn: only internal/agent takes the embedding, internal/decisions adapts the decide contract, and
+// internal/world fakes that contract.
+var novaPackages = map[string][]string{
+	"agent":     nil, // the embedding: any nova package
+	"decisions": {"decide"},
+	"world":     {"decide"},
+}
+
 // allow lists, per layer under internal/, the other layers that layer may import. A layer may always import
 // its own subpackages. domain imports nothing; the adapters import domain only; the layers above reach down.
 var allow = map[string][]string{
@@ -125,10 +135,20 @@ func violation(self, selfLayer, imp string) string {
 	}
 
 	if strings.HasPrefix(imp, novaModule) {
-		if selfLayer != "agent" {
-			return fmt.Sprintf("%s imports nova (%s); only internal/agent may name nova", self, imp)
+		allowed, ok := novaPackages[selfLayer]
+		if !ok {
+			return fmt.Sprintf("%s imports nova (%s); only internal/agent, internal/decisions and internal/world may name nova", self, imp)
 		}
-		return ""
+		if allowed == nil {
+			return ""
+		}
+		sub := strings.TrimPrefix(strings.TrimPrefix(imp, novaModule), "/")
+		for _, want := range allowed {
+			if sub == want || strings.HasPrefix(sub, want+"/") {
+				return ""
+			}
+		}
+		return fmt.Sprintf("%s imports nova's %q; %s may import nova only from %s", self, sub, selfLayer, strings.Join(allowed, ", "))
 	}
 
 	if imp == module+"/internal" || strings.HasPrefix(imp, module+"/internal/") {
@@ -276,7 +296,25 @@ func TestCheckRejects(t *testing.T) {
 				Dir:        t.TempDir(),
 				Imports:    []string{novaModule + "/agent"},
 			}},
-			want: "only internal/agent may name nova",
+			want: "only internal/agent, internal/decisions and internal/world",
+		},
+		{
+			name: "decisions imports nova's app shell",
+			pkgs: []pkg{{
+				ImportPath: module + "/internal/decisions",
+				Dir:        t.TempDir(),
+				Imports:    []string{novaModule + "/agent"},
+			}},
+			want: "may import nova only from decide",
+		},
+		{
+			name: "banks imports nova's decide",
+			pkgs: []pkg{{
+				ImportPath: module + "/internal/banks",
+				Dir:        t.TempDir(),
+				Imports:    []string{novaModule + "/decide"},
+			}},
+			want: "only internal/agent, internal/decisions and internal/world",
 		},
 		{
 			name: "shipped code imports the world",
@@ -315,6 +353,8 @@ func TestCheckAllows(t *testing.T) {
 		{ImportPath: module + "/internal/agent", Dir: t.TempDir(), Imports: []string{
 			module + "/internal/session", module + "/internal/decisions", module + "/internal/providers", novaModule + "/agent", "net/http",
 		}},
+		{ImportPath: module + "/internal/decisions", Dir: t.TempDir(), Imports: []string{novaModule + "/decide"}},
+		{ImportPath: module + "/internal/decisions/pre-read", Dir: t.TempDir(), Imports: []string{novaModule + "/decide"}},
 		{ImportPath: module + "/internal/providers/tmdb", Dir: t.TempDir(), Imports: []string{module + "/internal/domain"}},
 		{ImportPath: module + "/internal/world", Dir: t.TempDir(), Imports: []string{module + "/internal/domain", module + "/internal/providers/tmdb"}},
 		{ImportPath: module + "/cmd/cairn-dev", Dir: t.TempDir(), GoFiles: []string{"main.go"}, Imports: []string{module + "/internal/world"}},

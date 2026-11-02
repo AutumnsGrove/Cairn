@@ -83,9 +83,12 @@ in the commit that introduces it, with its outcome above the limit.
 | A user message (text) | 8,000 characters | Refused with a stable code; nothing is stored |
 | Images per message | 6, each up to 10 MB | Extra or oversize images refused, the rest kept |
 | Session length | 200 messages | The session is closed with a notice; the draft is kept |
-| Decisions state per call | 12,000 characters of message, 24k tokens in all | Clipped deliberately, never sent whole; the clip is recorded |
+| Decisions state per call | 12,000 characters of message, 2,000 for a pending question or a work title, 24k tokens in all | Clipped deliberately, never sent whole; the clip is recorded |
 | Decisions questions per call | 25 | Registry load fails if exceeded |
 | Decisions deadline | 2.5 s | The turn proceeds without a pre-read, with a notice |
+| Bank file | 256 KiB, 12 categories, 80 chips per category, 25 questions | Load fails with the file and key named; the previous config stays live |
+| Decisions config file | 256 KiB, 2,000 characters per instruction, 300 per option description | Load fails with the file and key named; the previous config stays live |
+| Config reload poll | every 2 s, by mtime and size | A change is picked up on the next tick; a broken file keeps the old config and raises one notice |
 | Spans per body | 40 | Extras dropped and shown under Left out |
 | Body or verdict | 8,000 and 200 characters | Refused with a stable code |
 | Candidates per lookup | 5 | Truncated, the best first |

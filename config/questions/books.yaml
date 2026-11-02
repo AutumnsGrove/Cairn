@@ -1,4 +1,4 @@
-# DRAFT question bank: books. For Autumn to cut, reword and add to.
+# Question bank: books. For Autumn to cut, reword and add to.
 #
 # The form for a book has two parts, both skippable and neither pre-selected:
 #   1. DESCRIBE IT: tabs of multi-select chips (`categories`, plus the shared ones in `include`).
@@ -11,6 +11,9 @@
 #   - At most one `short_text` question per form.
 #   - Option and chip `value`s are STABLE keys stored with the answer, so answers stay comparable and
 #     filterable. Labels can be reworded freely (see shared.yaml for how).
+#   - `applies_when` uses the entry's own fields, so `format` is one of the domain's format names
+#     (cinema, streaming, broadcast, audiobook, hardback, paperback, ebook, physical, live). Two or more
+#     values mean "any of these". The decisions layer's format odds are a suggestion and are never used here.
 #
 # topic values: sound, visuals, acting, story, pacing, ending, characters, world, writing, or null.
 
@@ -19,14 +22,14 @@ include: [feel, content_warnings]
 
 categories:
 
-  characters:
+  - name: characters
     label: Characters
     topic: characters
     positive: [believable, relatable, memorable, multilayered, likeable, original, distinct voices, vivid side characters, strong relationships, compelling villain, grow and change, diverse cast]
     negative: [flat, one-dimensional, inconsistent, feel distant, stereotyped, limited growth, forgettable, hard to care about, too many to track]
     mixed: [morally grey, hard to like but fascinating]
 
-  plot:
+  - name: plot
     label: Plot
     topic: story
     positive: [gripping, clever plotting, addictive, twisty, well structured, satisfying conclusion, action-packed, epic scope, fast-paced, surprising]
@@ -34,14 +37,14 @@ categories:
     mixed: [predictable but satisfying, slow start strong finish, slow burn, ambiguous ending]
     neutral: [nonlinear, episodic, quiet and small]
 
-  setting:
+  - name: setting
     label: Setting and world
     topic: world
     positive: [immersive, vivid, atmospheric, richly detailed, lived-in, original, believable rules, strong sense of place]
     negative: [generic, thin worldbuilding, under-explained, over-explained, inconsistent rules, info dumps]
     neutral: [cozy, bleak, claustrophobic, sprawling, intimate]
 
-  writing:
+  - name: writing
     label: Writing style
     topic: writing
     positive: [beautiful prose, lyrical, sharp dialogue, economical, funny, distinctive voice, easy to read, immersive, clear, precise]

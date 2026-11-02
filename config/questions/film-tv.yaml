@@ -1,4 +1,4 @@
-# DRAFT question bank: films and TV. For Autumn to cut, reword and add to.
+# Question bank: films and TV. For Autumn to cut, reword and add to.
 #
 # Same structure and rules as books.yaml: a "Describe it" step of multi-select chip tabs (these
 # `categories` plus the shared ones), then at most three single questions by `weight`. Chips are a
@@ -12,33 +12,33 @@ include: [feel, content_warnings]
 
 categories:
 
-  story:
+  - name: story
     label: Story
     topic: story
     positive: [gripping, clever, original, surprising, emotional, tight, well structured, ambitious, thoughtful, satisfying ending, perfect ending, great twists]
     negative: [predictable, cliched, confusing, convoluted, plot holes, rushed, thin, disappointing ending, forgettable, unearned]
     mixed: [ambiguous ending, predictable but satisfying, slow start strong finish, messy but interesting]
 
-  performances:
+  - name: performances
     label: Performances
     topic: acting
     positive: [standout lead, great ensemble, great chemistry, memorable villain, scene-stealing support, believable, nuanced, charismatic, great child performances, great voice acting]
     negative: [wooden, over the top, miscast, uneven, forgettable, no chemistry]
 
-  visuals:
+  - name: visuals
     label: Visuals
     topic: visuals
     positive: [stunning, striking, beautiful cinematography, inventive framing, great production design, distinctive look, great costumes, practical effects, great visual effects, immersive]
     negative: [dark and murky, flat lighting, shaky camera, weak CGI, cheap-looking, overstyled, generic]
     neutral: [minimal, stylised, gritty, colourful, washed out]
 
-  sound:
+  - name: sound
     label: Sound and music
     topic: sound
     positive: [great score, memorable soundtrack, sound design carries it, immersive mix, great use of silence, great song choices, haunting, tense music]
     negative: [loud, muddy mix, hard to hear dialogue, intrusive score, forgettable music, repetitive]
 
-  pacing:
+  - name: pacing
     label: Pacing
     topic: pacing
     positive: [tight, propulsive, well paced, binge-able]

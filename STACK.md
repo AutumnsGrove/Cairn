@@ -17,14 +17,15 @@ Added, with the slice that added it:
 |---|---|---|---|---|
 | `modernc.org/sqlite` | S04 | BSD-3-Clause | The pure-Go SQLite driver. `CGO_ENABLED=0` holds and the potato needs no C toolchain. The same choice as Warbler | About 5 MB of binary, no cgo, no C library to patch |
 | `github.com/sqlc-dev/sqlc` | S04 | MIT | Generates the typed queries from plain `.sql`, so a column rename cannot leave a query behind. Run by `make gen`, pinned, never linked into the binary | A build tool and a generated package; the `drift` job keeps them honest |
+| `github.com/santhosh-tekuri/jsonschema/v6` | S02 | Apache-2.0 | Validates the session protocol in Go, so the server tests, the Vitest tests and the Playwright tests all check the same document. A hand-written validator would be a second, weaker contract | Small, pure Go, no cgo. Pulls `golang.org/x/text` for format assertions |
+| `github.com/AutumnsGrove/nova` (`decide`) | S05 | MIT | Nova's `decide` contract is the house's: `Request`, `Source`, `Response`, `ValidateResponse` and the `Roles` decorator that maps `cairn_preread` to a model, a timeout and a fallback. Writing a second interface would duplicate a contract nova's own consumers (Ivy, Polaris) already share. Pinned to tag `v0.2.0`; Cairn imports only `decide`, `decide/openrouter` (S08) and, in `agent`, nova proper | Pulls `nova/provider` and `nova/message` only, both pure Go. The tag moves when we move it, and `BUILD.md` 4 keeps nova's app shell (`mode`, `config`, `session`, `tui`, `bundled`) out of Cairn |
+| `gopkg.in/yaml.v3` | S05 | MIT and Apache-2.0 (the `internal/` parts) | The question banks and the decisions registry are YAML that the operator edits by hand. `KnownFields(true)` makes an unknown key a load error rather than a silently ignored typo, and it rejects duplicate keys, which is exactly the strictness `BUILD.md` 4a asks for. The same library nova already ships | Small, pure Go, no cgo |
 
-Planned, with the slice that adds it:
+## Planned, with the slice that adds it
 
 | Module | Slice | Licence | Why | Cost |
 |---|---|---|---|---|
-| `modernc.org/sqlite` | S04 | BSD-3-Clause | Pure-Go SQLite, so `CGO_ENABLED=0` holds and the potato needs no C toolchain. The same choice as Warbler | Large module, binary grows by roughly 5 MB; no cgo, no CVE surface from a bundled C library |
-| `github.com/santhosh-tekuri/jsonschema/v6` | S02 | Apache-2.0 | Validates the session protocol in Go, so the server tests, the Vitest tests and the Playwright tests all check the same document. A hand-written validator would be a second, weaker contract | Small, pure Go, no cgo. Pulls `golang.org/x/text` for format assertions |
-| `github.com/AutumnsGrove/nova` | S08 | MIT | The agent loop, tools, providers and the `decide` package. A new app should not re-implement tool calling. Pinned to a tag once nova's embed shape is confirmed at S01 | Submodule of the house code; the import rule excludes `mode`, `config`, `session`, `tui`, `bundled` |
+| `github.com/AutumnsGrove/nova` (`agent`, `tool`) | S08 | MIT | The agent loop, tools and providers. A new app should not re-implement tool calling. Already pinned at `v0.2.0` from S05 | The embedding is the largest piece of Cairn's behaviour; `importcheck` in nova's CI fails if Cairn reaches into its app shell |
 
 ## Runtime (frontend)
 

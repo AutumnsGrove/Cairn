@@ -1,0 +1,70 @@
+# Decisions: WHEN a check acts, and what runs it. Tuned from real odds; the wording lives in wording.yaml
+# and is never edited to tune behaviour.
+#
+# The first backend. Nothing else in the code or docs names it. These map straight onto nova's
+# decide.Roles (decide.Role{Model, Fallback, Timeout}); nova refuses -latest and ~ aliases unless told to.
+#
+# Starting values only, taken from the draft. Phase 0 and then G4 in S08 replace them from recorded odds on
+# the fixture corpus. Until then a wrong threshold costs a question, never a stored word.
+backend:
+  provider: openrouter          # nova/decide/openrouter, POST {base}/systemone
+  roles:
+    cairn_preread:
+      model: jev-1.14           # pinned, like the main model
+      timeout_ms: 2500          # slower than this and the turn runs without a pre-read
+      fallback: ""              # another model id could be named here later
+    cairn_fidelity:
+      model: jev-1.14
+      timeout_ms: 2500
+      fallback: ""
+
+policy:
+
+  # How a check's probability turns into a decision:
+  #   threshold            the smallest probability that makes a non-quiet option fire
+  #   option_thresholds    a higher bar for specific options
+  #   only_when_intent     the check is only considered when `intent` fired as one of these
+  #   suppress_when_intent the check is never considered when `intent` fired as one of these
+  #   ambiguity            for medium: a split read asks "which one?" instead of guessing
+  #   phase                post_extract checks run after the body is built, in a second call
+  #   log_as_bug           an option that should be impossible; it is logged, never shown as a warning
+  checks:
+
+    intent:
+      threshold: 0.65
+      option_thresholds: { edit_entry: 0.80, answer_pending: 0.75, import_review: 0.75 }
+
+    medium:
+      threshold: 0.70
+      # Split read: ask "book or film?" first. Triggers when the runner-up is not negligible and the
+      # leader is not clearly ahead, e.g. book 0.55 / film 0.40.
+      ambiguity: { runner_up_min: 0.25, max_gap: 0.30 }
+
+    format:
+      threshold: 0.75
+      only_when_intent: [log_review]
+
+    revisit:
+      threshold: 0.80
+      only_when_intent: [log_review]
+
+    extract_fidelity:
+      # Never blocks. Asked in a second call, after code has built the extract from my own spans.
+      phase: post_extract
+      option_thresholds: { drops_opinion: 0.60 }
+      # adds_content should be impossible once code has verified containment. If it ever fires, it is
+      # logged as a bug and not shown as a normal warning.
+      log_as_bug: [adds_content]
+
+  # Defaults for every `mentions_*` check in wording.yaml. One place, so nine checks cannot drift apart.
+  # A check named here under `checks:` would override its entry in this block.
+  mentions_defaults:
+    threshold: 0.75
+    only_when_intent: [log_review]
+
+  # Inside an entry session the session decides what a message means; the pre-read only overrides that when
+  # it is very sure (PLAN.md 2, "decision routing").
+  session_override: 0.80
+
+  # No suppression ships yet: the mechanism is built and tested, and G4 fills in the lists from real odds.
+  # suppress_when_intent is available on every check. Adding rules here changes routing without code.

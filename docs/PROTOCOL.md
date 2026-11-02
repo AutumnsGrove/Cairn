@@ -92,7 +92,7 @@ The `hint` on a question is the suggested answer: shown as a tappable hint, **ne
 
 An interaction stays open until resolved. Drafts never expire, so neither do interactions. If I type a
 normal message while one is open, the session bias rule in
-[`decisions.draft.yaml`](decisions.draft.yaml) decides whether it answers the interaction or starts
+[`decisions/policy.yaml`](../config/decisions/policy.yaml) decides whether it answers the interaction or starts
 something new.
 
 ## 5. Client to server

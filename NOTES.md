@@ -122,7 +122,7 @@ only in the `backend:` block of the decisions config, so another model can repla
   Writing Style, Content Warnings), each with a star rating and about 20 multi-select chips mixing praise and
   criticism. Cairn adopts the tabs and chips (a closed vocabulary, shown dashed as hints, never pre-selected)
   but **not** the per-category stars: one overall quarter-star rating only. Vocabularies are written fresh,
-  not copied (`docs/question-banks/`).
+  not copied (`config/questions/`).
 - **Testing and CI standard** adapted from Ivy: `docs/TESTING.md` and `docs/CI.md`. The repo is public, so the
   public-repo security rules apply, and tests use synthetic reviews only.
 

@@ -1,0 +1,127 @@
+# Decisions: WHAT the decision model is asked. Wording only. Rarely changes.
+# The thresholds, the routing rules and the backend that runs this live in policy.yaml, so tuning from real
+# odds never touches this file.
+#
+# Mechanics (verified for the Jev backend in ivy/docs/JEV.md):
+#   - Each check is one `choice` decision question: `instructions` plus `options`, whose KEYS are the options
+#     sent as criteria. The model answers with a probability per option and a confidence.
+#   - Every enabled check goes out in ONE call; they are evaluated independently against the same state.
+#   - `quiet` names the option that means "nothing here". Nothing acts unless a non-quiet option clears its
+#     threshold, so a wrong guess costs nothing. It is an explicit key, not the first line, because a YAML map
+#     has no order: relying on position was a trap the draft left open.
+#   - Probabilities are hints. Anything that must be true is enforced by deterministic code.
+#
+# State sent with each call, as separate {source, text} entries so they stay distinct:
+#   message          the latest thing I typed
+#   pending_question the question card the app just asked, if one is open (so replies are readable)
+#   work             the title of the work this session is about, if one has been chosen
+#   Images are never sent: the decision model takes text only, so a message with screenshots is read
+#   on its accompanying text. A message with images and no text defaults to import_review in code.
+#   For extract_fidelity only: original (my messages) and extract (the proposed body).
+
+preamble: >-
+  You are reading a message someone sent to a private journal app where they record reviews of
+  things they have finished: films, TV, books, games, albums, podcasts, theatre. Answer about the
+  latest message. Any pending question or work title is only context for reading it.
+
+checks:
+
+  intent:
+    quiet: chitchat
+    instructions: >-
+      What is the person doing with this message? Pick "chitchat" unless one of the other options
+      clearly fits.
+    options:
+      chitchat: A greeting, thanks, a test message, or something unrelated to recording or finding reviews.
+      log_review: Tells the app about something they finished, with an opinion, a rating, or both, so it can be recorded.
+      find_entries: Asks about reviews they have already recorded - what they watched or read, a count, a list, a comparison, or whether they have reviewed something.
+      edit_entry: Asks to change, correct or add to a review that is already saved.
+      answer_pending: Replies to the question the app just asked, rather than starting something new.
+      import_review: Brings in a review they wrote somewhere else (another app, a note), by pasting it or attaching screenshots, and asks for it to be added.
+
+  medium:
+    quiet: unknown
+    instructions: >-
+      What kind of thing are they talking about? Pick "unknown" unless the message makes one kind
+      reasonably clear.
+    options:
+      unknown: No clear kind, or the title could equally be several kinds.
+      film: A movie.
+      tv: A TV series, miniseries, or season of one.
+      book: A novel, nonfiction book, graphic novel, or audiobook of a book.
+      game: A video game or board game.
+      album: A music album, EP, or single.
+      podcast: A podcast show or episode.
+      theatre: A play, musical, opera, or live stage performance.
+      other: A finished thing that is none of the above (an exhibition, a course, a comic series).
+
+  format:
+    quiet: not_stated
+    instructions: >-
+      How did they experience it? Pick "not_stated" unless the message says or clearly implies it.
+    options:
+      not_stated: The message does not say how they watched, read or heard it.
+      cinema: Seen in a cinema.
+      streaming: Watched or listened on a streaming service or at home on demand.
+      audiobook: Listened to as an audiobook.
+      print: Read as a physical book.
+      ebook: Read on an e-reader or phone.
+      physical_media: Played from a disc, cartridge, vinyl or other physical copy.
+      live: Attended in person as a live performance.
+
+  revisit:
+    quiet: "no"
+    instructions: >-
+      Is this something they had already finished before and are experiencing again?
+    options:
+      "no": A first time, or the message does not say otherwise.
+      "yes": A rewatch, reread, replay or re-listen of something they had finished before.
+
+  extract_fidelity:
+    quiet: faithful
+    instructions: >-
+      The "original" is what the person wrote. The "extract" is the part of it proposed as their
+      review. Compare them. Pick "faithful" unless one of the others clearly applies.
+    options:
+      faithful: The extract keeps what the person said about the thing, and nothing important about their opinion is missing from it.
+      drops_opinion: The original contains an opinion, a rating or a specific point about the thing that the extract leaves out.
+      adds_content: The extract contains something that is not in the original.
+
+  # One yes/no per topic. They serve two jobs: skip a bank question the person already covered, and
+  # suggest tags. The topic names match `topic:` in the question banks.
+  mentions_sound:
+    quiet: "no"
+    instructions: Does the message say anything about the sound, music, score, voice acting or audio quality?
+    options: { "no": Nothing about sound., "yes": Says something about the sound or music. }
+  mentions_visuals:
+    quiet: "no"
+    instructions: Does the message say anything about how it looks - cinematography, art direction, design, animation or illustrations?
+    options: { "no": Nothing about how it looks., "yes": Says something about the visuals. }
+  mentions_acting:
+    quiet: "no"
+    instructions: Does the message say anything about performances or specific actors?
+    options: { "no": Nothing about performances., "yes": Says something about the acting. }
+  mentions_story:
+    quiet: "no"
+    instructions: Does the message say anything about the plot, the story, the ideas or the subject matter?
+    options: { "no": Nothing about the story or ideas., "yes": Says something about the story or ideas. }
+  mentions_pacing:
+    quiet: "no"
+    instructions: Does the message say anything about the pace or length - too slow, too fast, dragged, flew by, too long?
+    options: { "no": Nothing about pace or length., "yes": Says something about pace or length. }
+  mentions_ending:
+    quiet: "no"
+    instructions: Does the message say anything about how it ended?
+    options: { "no": Nothing about the ending., "yes": Says something about the ending. }
+  mentions_characters:
+    quiet: "no"
+    instructions: Does the message say anything about specific characters or people in it?
+    options: { "no": Nothing about characters., "yes": Says something about the characters. }
+  mentions_world:
+    quiet: "no"
+    instructions: Does the message say anything about the setting, the world it builds, or its atmosphere?
+    options: { "no": Nothing about the setting or world., "yes": Says something about the setting or world. }
+  mentions_writing:
+    quiet: "no"
+    instructions: Does the message say anything about the writing itself - prose, dialogue, style or voice?
+    options: { "no": Nothing about the writing., "yes": Says something about the writing. }

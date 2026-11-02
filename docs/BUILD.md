@@ -19,8 +19,8 @@ what Cairn is; this file is the source of truth for how it is built.
 5. For any UI: the matching page in [`../mockups/`](../mockups/) is the spec. Open it in a browser.
 
 The specs a slice may link: `PLAN.md`, `PRODUCT.md`, `DESIGN.md`, [`ENTRY_CARD.md`](ENTRY_CARD.md),
-[`PROTOCOL.md`](PROTOCOL.md), [`UPDATE.md`](UPDATE.md), the question banks and
-[`decisions.draft.yaml`](decisions.draft.yaml).
+[`PROTOCOL.md`](PROTOCOL.md), [`UPDATE.md`](UPDATE.md), and the shipped config under
+[`../config/`](../config/) (the question banks and the decisions wording and policy).
 
 ## 1. Invariants (a violation is a bug even if every test is green)
 
@@ -121,7 +121,7 @@ cairn/
     backup/              snapshot, rclone mirror, export, import, verify
     world/               in-process fakes with fault injection (tests and cairn-dev only)
     config/              strict config loading
-  config/                shipped defaults: decisions.yaml, questions/*.yaml
+  config/                shipped defaults: decisions/{wording,policy}.yaml, questions/*.yaml
   web/                   SvelteKit (Svelte 5), adapter-static, embedded into the binary
   compose/               docker-compose.yml, the host watcher, systemd units
   docs/  mockups/  scripts/  spikes/
@@ -131,7 +131,9 @@ cairn/
 internal. `store`, `banks`, `decisions`, `providers` import `domain` only. `session` imports `domain`,
 `store`, `banks`. `agent` imports those plus `decisions` and `providers`. `server` imports `session` and
 `agent`. `world` is imported only from `_test.go` files and `cmd/cairn-dev`. Nothing outside `providers`
-names a provider endpoint, and nothing outside `agent` imports nova.
+names a provider endpoint. Nova's `decide` contract is named only by `decisions` (its adapter), `agent` (the
+embedding) and `world` (the fake); no other package imports nova's `agent`, `mode`, `session`, `config`,
+`tui` or `bundled` packages.
 
 ## 5. How a slice is worked
 
