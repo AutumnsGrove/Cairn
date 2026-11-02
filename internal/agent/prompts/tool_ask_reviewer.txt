@@ -1,0 +1,2 @@
+Show the Describe it chips and a small batch of short questions. Every question is optional and she may skip
+all of them. Returns her answers. Ask the Describe step once; later calls ask another small batch.

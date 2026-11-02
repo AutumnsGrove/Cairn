@@ -133,6 +133,19 @@ type Tag struct {
 	Name string `json:"name"`
 }
 
+type TurnCall struct {
+	ID               string  `json:"id"`
+	SessionID        *string `json:"session_id"`
+	TurnIndex        int64   `json:"turn_index"`
+	Model            string  `json:"model"`
+	PromptTokens     int64   `json:"prompt_tokens"`
+	CompletionTokens int64   `json:"completion_tokens"`
+	CostUsd          float64 `json:"cost_usd"`
+	LatencyMs        int64   `json:"latency_ms"`
+	Reason           string  `json:"reason"`
+	CreatedAt        string  `json:"created_at"`
+}
+
 type Work struct {
 	ID              string `json:"id"`
 	Medium          string `json:"medium"`

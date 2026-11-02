@@ -586,3 +586,23 @@ func TestAcceptUnknownSource(t *testing.T) {
 		t.Fatalf("err = %v, want ErrNotAcceptable", err)
 	}
 }
+
+// A work read back must keep its id: the merge, the revisit check and the source list all name a work by it.
+func TestWorkReadKeepsItsID(t *testing.T) {
+	s := openTest(t)
+	ctx := context.Background()
+	if err := s.SaveWork(ctx, domain.Work{ID: "w1", Medium: "book", Title: "X"}); err != nil {
+		t.Fatal(err)
+	}
+	got, err := s.Work(ctx, "w1")
+	if err != nil {
+		t.Fatal(err)
+	}
+	if got.ID != "w1" {
+		t.Fatalf("ID = %q, want w1", got.ID)
+	}
+	found, err := s.WorksByTitle(ctx, "book", "X")
+	if err != nil || len(found) != 1 || found[0].ID != "w1" {
+		t.Fatalf("WorksByTitle = %+v, %v", found, err)
+	}
+}

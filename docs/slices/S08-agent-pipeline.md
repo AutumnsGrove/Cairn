@@ -10,6 +10,12 @@ that judge the pipeline, first against a fake model in CI and then against the r
 
 S05 (pre-read), S06 (providers), S07 (session engine), and the S01 findings. **S09 depends on it.**
 
+## Status
+
+**Built 2026-11-02; waiting at G4.** The fake-model suite and the corpus are green. The real-model run, the odds
+table from it and the threshold decision are Autumn's; the handoff is
+[`../handoffs/2026-11-02-G4-corpus-and-odds.md`](../handoffs/2026-11-02-G4-corpus-and-odds.md).
+
 ## Where we start
 
 The flow is specified in [`../../PLAN.md`](../../PLAN.md) section 5. The model is
@@ -62,6 +68,40 @@ The flow is specified in [`../../PLAN.md`](../../PLAN.md) section 5. The model i
 confirm, review text only where named, classifier output never decides. **Cost:** a test asserts the worst case
 stays inside the caps.
 
+## Built (2026-11-02)
+
+- **The embedding.** `internal/agent` builds nova's OpenRouter provider from `CAIRN_OPENROUTER_API_KEY` and
+  `CAIRN_MODEL` (pinned, no aliases), runs `agent.New(cfg).Run`, and translates nova's events into the session
+  events the protocol names. The arch test already proves no other layer imports nova.
+- **The tools.** `media_lookup`, `merge_candidates`, `ask_reviewer`, `save_entry` and `search_library`, each with a
+  strict decoder (`DisallowUnknownFields`, no trailing value, an 8 KiB cap, fuzzed), a bounded result and the
+  guard that applies to it. `ask_reviewer` opens the interaction through the session engine and blocks on
+  `agent.Responder` without holding a transaction; S09 supplies the socket-backed implementation.
+- **The pipeline.** The pre-read, the deterministic parse (rating, date, format), the medium-ambiguity card, the
+  lookup, the candidate card, the merge, the Describe step, the extracted body and verdict, the fidelity check
+  (when the decisions layer is up), the draft card, and the revisit and `lookup_failed` branches. `save_entry`
+  builds the card; the confirm tap still commits.
+- **The prompts** are versioned files under `internal/agent/prompts/`, with a test that no file invites the model
+  to write, rewrite or invent her words, and that the hint is framed as an automatic note.
+- **The budgets.** 12 tool steps, 60k input tokens by a conservative estimate, 8k output, a 120 s deadline, four
+  question rounds and one Describe step. Every turn writes a `turn_calls` row and every pre-read a `decision_calls`
+  row; the running total is read from both, never a counter.
+- **The corpus.** Thirty invented messages (ten book, ten film/TV, ten cross-cutting) in
+  `internal/agent/testdata/corpus.json`, with the expected parse, pre-read outcome, tool order and card. The CI
+  runner is `TestCorpusAgainstTheFakeModel`; the operator's live runner is `make eval` (`cmd/cairn-eval`).
+- **The hostile paths.** A title or message that addresses the model, an invented body or verdict, a rating passed
+  as an argument, a huge title, malformed tool JSON, a provider outage, a decisions outage, a model error, a model
+  timeout, the step cap and the token cap all have tests.
+
+**Settled while building.** The interaction request event now carries `interaction_id`, `kind` and `payload`, not
+the payload alone, because the client cannot draw a question it cannot name. `store.workFromRow` now keeps the
+work's id; without it the merge and the revisit check named an empty work. `UpdateDraft` now writes `work_id`, which
+is how a manual work is replaced by the real one. `session.StartDraft`, `SetWork`, `SetExtractedBody`,
+`UserMessages` and `SourceText` are the agent's small additions to the S07 engine.
+
+**Not this slice.** `lookup_web`, `ask_polaris_freeform` (S15) and `read_source_image` (S18) are not offered. The
+fidelity check runs only when the decisions layer is configured; it never blocks.
+
 ## Gates
 
 **G4**: the corpus, the odds table from a real run, the proposed thresholds, and the labelling needed from the
@@ -69,11 +109,37 @@ operator, before any threshold is treated as tuned. Real evals are the operator'
 
 ## Open questions
 
-- The system prompt's voice (proposed: terse, plain, no cheerfulness, no emojis).
-- The number of corpus messages per medium.
+None. The two below were answered by Autumn on 2026-11-02 and are recorded as decisions.
+
+## Decisions (recorded 2026-11-02)
+
+1. **The prompt's voice is terse and plain**: short sentences, no praise, no persona, no emojis. It may ask more
+   than three questions across the session, because the code already bounds it: at most three single questions
+   per `ask_reviewer` form and four question rounds per session. The prompt says neither number; the code is the
+   cap.
+2. **The corpus is 30 messages**: 10 book, 10 film/TV, 10 cross-cutting (split medium, vague rating, no rating,
+   framing only, already reviewed, provider down, hostile title, injection in the message, oversized input,
+   empty input). A case records the expected parse, the expected pre-read outcome and the expected tool order.
+3. **`save_entry` builds the draft card; it never commits.** The tool validates the rating and the body and writes
+   the draft through the session engine, then says the card is waiting for her confirm. Only the confirm tap
+   commits (docs/BUILD.md invariant 2). The tool keeps its plan name so the model's vocabulary is unchanged.
+4. **Provider config is explicit.** `CAIRN_OPENROUTER_API_KEY` enables the model; `CAIRN_MODEL` defaults to the
+   pinned `deepseek/deepseek-v4.1-flash-1017`. A `-latest` or `~` alias is refused at startup, because a model
+   that moves silently makes every recorded cost and eval meaningless.
+5. **The user is an interface, not a socket.** `agent.Responder` opens an interaction through the session engine
+   and blocks on its answer. S09 supplies the WebSocket-backed implementation; S08 proves the blocking and the
+   result with a scripted responder.
+6. **The turn ledger is a new table (`turn_calls`).** `decision_calls` already exists; every model turn writes one
+   `turn_calls` row with tokens, cost and outcome. Both are cost records only: ids, counts and money, never text.
+7. **Side-effecting tools run one at a time.** Every tool except `search_library` sets `Parallel: false`, so a
+   lookup and a merge cannot race the card. `search_library` is a pure read and may run in a batch.
 
 ## Done when
 
 The pipeline passes its three routes against the fake, the corpus runner produces a report, the safety
 assertions are green, and (as the operator's live check) the real model completes the flow on the corpus within
 the cost caps.
+
+This sitting builds all of S08.1 to S08.8 and stops at **G4**: the corpus, the odds table produced by the fake
+run, the proposed thresholds and the labelling asked of Autumn are in a committed handoff. No threshold is
+treated as tuned until she answers.

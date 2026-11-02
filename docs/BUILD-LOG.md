@@ -369,3 +369,35 @@ edited.
 **Wired by S09.** The queue and the event payloads are the engine's; encoding them into the contract's wire shapes,
 and treating a `revises` id as trusted only after checking it names the same work, is the server's job.
 
+
+
+## 2026-11-02, S08, the agent pipeline
+
+**Built.** `internal/agent`: the nova embedding, the five tools, the pipeline from a message to a draft card, the
+versioned prompts, the budgets and their ledgers, the translation of nova's events into the session's, the
+thirty-case invented corpus and its fake-model runner, and `cmd/cairn-eval` for the operator's real-model run.
+`CAIRN_OPENROUTER_API_KEY` and `CAIRN_MODEL` (default `deepseek/deepseek-v4.1-flash-1017`, aliases refused) are
+the new settings. The fidelity check runs after an extract and can only add a warning; a second message in a
+session sees the stored transcript rather than only her words. `internal/world` gained a scripted OpenRouter chat fake that speaks the real SSE stream, so the
+agent tests run nova's real provider. Migration 0005 adds `turn_calls`, the turn half of the cost ledger.
+
+**What is true now.** A message becomes a card through the real session engine and real metadata calls. The body is
+only ever text the span locator found in her messages; an invented quote is dropped, an invented verdict is left
+empty, and `save_entry` refuses a card that fails the save guard. The model cannot set a rating, because the tool
+has no rating argument and the strict decoder rejects one. A hostile title, a hostile message, a malformed tool
+call, a huge argument, a provider outage, a decisions outage, a model error and a model timeout each have a test
+and a defined outcome; every one of them leaves her message stored. The corpus passes 30/30 against the fake.
+
+**Learned.** The interaction request event carried only the question's payload, so a client could not name or
+route it; it now carries the id and the kind. `workFromRow` dropped the work's id, which the merge and the revisit
+check both need; the corpus caught it on the first run. A card cannot exist without a work, because `entries.work_id`
+is not nullable, so the pipeline starts the card at the merge (or at a manual work after an outage), not at the first
+message. The pre-read's `format: print` is not the domain's format vocabulary, so the field stays empty when the
+message only says "print": the card asks rather than guessing hardback or paperback.
+
+**G4, waiting for Autumn.** The corpus and the fake-run report are committed. The odds table from a real run, the
+proposed thresholds and the labelling needed are in `docs/handoffs/2026-11-02-G4-corpus-and-odds.md`. No threshold
+is treated as tuned until she answers, and the real-model run is hers.
+
+**Wired by S09.** The socket-backed `agent.Responder`, the wire encoding of the events, the `revises` check against
+the same work, and the host and origin guard around the whole turn.

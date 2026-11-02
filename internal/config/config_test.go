@@ -163,7 +163,10 @@ func TestLoadRejectsMalformedEnvironment(t *testing.T) {
 // A provider key and the data directory are settings like any other: read here, never logged, and absent means
 // "off" rather than "broken" (docs/BUILD.md invariant 13).
 func TestLoadProviderSettings(t *testing.T) {
-	got, err := Load([]string{"CAIRN_TMDB_API_KEY=test-key", "CAIRN_DATA_DIR=/srv/cairn/data"})
+	got, err := Load([]string{
+		"CAIRN_TMDB_API_KEY=test-key", "CAIRN_DATA_DIR=/srv/cairn/data",
+		"CAIRN_OPENROUTER_API_KEY=test-or-key", "CAIRN_MODEL=vendor/model-pinned",
+	})
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
@@ -173,6 +176,12 @@ func TestLoadProviderSettings(t *testing.T) {
 	if got.DataDir != "/srv/cairn/data" {
 		t.Errorf("DataDir = %q", got.DataDir)
 	}
+	if got.OpenRouterKey != "test-or-key" {
+		t.Errorf("OpenRouterKey = %q", got.OpenRouterKey)
+	}
+	if got.Model != "vendor/model-pinned" {
+		t.Errorf("Model = %q", got.Model)
+	}
 
 	defaults, err := Load(nil)
 	if err != nil {
@@ -181,16 +190,43 @@ func TestLoadProviderSettings(t *testing.T) {
 	if defaults.TMDBKey != "" {
 		t.Errorf("TMDBKey defaulted to %q; a missing key must mean off", defaults.TMDBKey)
 	}
+	if defaults.OpenRouterKey != "" {
+		t.Errorf("OpenRouterKey defaulted to %q; a missing key must mean off", defaults.OpenRouterKey)
+	}
+	if defaults.Model != DefaultModel {
+		t.Errorf("Model = %q, want the pinned default %q", defaults.Model, DefaultModel)
+	}
 	if defaults.DataDir != DefaultDataDir {
 		t.Errorf("DataDir = %q, want %q", defaults.DataDir, DefaultDataDir)
 	}
 }
 
+// Bad: an alias would move under us, so it is a startup error. A role name without a slash is refused too, because
+// it cannot name a provider's model.
+func TestLoadRejectsAMovingModel(t *testing.T) {
+	cases := map[string]string{
+		"latest alias":     "CAIRN_MODEL=vendor/model-latest",
+		"tilde alias":      "CAIRN_MODEL=~vendor/model",
+		"no provider part": "CAIRN_MODEL=model",
+		"empty":            "CAIRN_MODEL=",
+		"with a space":     "CAIRN_MODEL=vendor/model name",
+	}
+	for name, entry := range cases {
+		t.Run(name, func(t *testing.T) {
+			if _, err := Load([]string{entry}); err == nil {
+				t.Fatalf("Load(%q) succeeded, want a refusal", entry)
+			}
+		})
+	}
+}
+
 func TestLoadRejectsUnusableProviderSettings(t *testing.T) {
 	cases := map[string]string{
-		"empty data dir":   "CAIRN_DATA_DIR=",
-		"key with newline": "CAIRN_TMDB_API_KEY=abc\ndef",
-		"key with space":   "CAIRN_TMDB_API_KEY=abc def",
+		"empty data dir":            "CAIRN_DATA_DIR=",
+		"key with newline":          "CAIRN_TMDB_API_KEY=abc\ndef",
+		"key with space":            "CAIRN_TMDB_API_KEY=abc def",
+		"openrouter key newline":    "CAIRN_OPENROUTER_API_KEY=sk-or-abc\ndef",
+		"openrouter key with space": "CAIRN_OPENROUTER_API_KEY=sk-or-abc def",
 	}
 	for name, entry := range cases {
 		t.Run(name, func(t *testing.T) {

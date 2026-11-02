@@ -60,6 +60,7 @@ func (s *Store) UpdateDraft(ctx context.Context, u UpdateDraft) (domain.Entry, i
 			return fmt.Errorf("store: encode spans: %w", err)
 		}
 		res, err := q.UpdateDraft(ctx, db.UpdateDraftParams{
+			WorkID:  entry.WorkID,
 			RatingQ: int64(entry.Rating), RatingScale: entry.RatingScale, Favourite: boolToInt(entry.Favourite),
 			Season: seasonPtr(entry.Season), Verdict: entry.Verdict, Body: entry.Body,
 			BodyOrigin: string(entry.BodyOrigin), BodySpansJson: string(spans), Format: entry.Format,

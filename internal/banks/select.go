@@ -27,6 +27,7 @@ type Request struct {
 type OfferedChip struct {
 	Value  string
 	Label  string
+	Tone   string
 	Hinted bool
 }
 
@@ -158,7 +159,7 @@ func matchChip(chips []Chip, hint string) (string, bool) {
 func orderChips(chips []Chip, hinted map[string]bool) []OfferedChip {
 	out := make([]OfferedChip, 0, len(chips))
 	for _, chip := range chips {
-		out = append(out, OfferedChip{Value: chip.Value, Label: chip.Label, Hinted: hinted[chip.Value]})
+		out = append(out, OfferedChip{Value: chip.Value, Label: chip.Label, Tone: chip.Tone, Hinted: hinted[chip.Value]})
 	}
 	sort.SliceStable(out, func(i, j int) bool {
 		if out[i].Hinted != out[j].Hinted {

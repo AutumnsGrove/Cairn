@@ -1,0 +1,2 @@
+Find a work in the metadata services. Use the title she said, plus a creator or year if she gave one.
+Returns up to five candidates. Only the title, creator, year and medium are sent.

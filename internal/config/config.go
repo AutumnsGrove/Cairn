@@ -22,6 +22,10 @@ const DefaultDataDir = "./data"
 // in, and the tailnet is the whole security boundary (docs/STANDARDS.md 6).
 const DefaultAddr = "127.0.0.1:8893"
 
+// DefaultModel is the pinned chat model (docs/BUILD.md 2). The pin is the point: an alias such as -latest or ~
+// moves under us, and then every recorded cost and eval measures a different model.
+const DefaultModel = "deepseek/deepseek-v4.1-flash-1017"
+
 // defaultHosts are the Host values a request may carry. The tailnet name is here because `tailscale serve`
 // forwards the browser's Host header unchanged, so a request that reached the service through the tailnet
 // still says the tailnet name.
@@ -44,18 +48,29 @@ type Config struct {
 	// TMDBKey enables film and TV metadata. Empty is the normal "not set up" state, never an error: a lookup
 	// then answers a typed "off" and the card says so (docs/BUILD.md invariant 13).
 	TMDBKey string
+	// OpenRouterKey enables the chat model. Empty means the model is off, and the pipeline degrades to a draft
+	// she fills in herself rather than failing a turn.
+	OpenRouterKey string
+	// Model is the pinned chat model id. It is always set; a key is what makes it reachable.
+	Model string
 	// DataDir holds covers and, later, exports and backups. It is the directory S13 mounts.
 	DataDir string
 }
 
 // knownKeys is the closed set of environment keys this package reads. Anything else that starts with
 // CAIRN_ is a typo.
-var knownKeys = []string{"CAIRN_ADDR", "CAIRN_ALLOWED_HOSTS", "CAIRN_DEV", "CAIRN_DATA_DIR", "CAIRN_TMDB_API_KEY"}
+var knownKeys = []string{
+	"CAIRN_ADDR", "CAIRN_ALLOWED_HOSTS", "CAIRN_DEV", "CAIRN_DATA_DIR", "CAIRN_TMDB_API_KEY",
+	"CAIRN_OPENROUTER_API_KEY", "CAIRN_MODEL",
+}
 
 // Load reads settings from environ, in os.Environ() form. Passing the environment in rather than calling
 // os.Getenv keeps this pure and lets the tests be table-driven with no global state.
 func Load(environ []string) (Config, error) {
-	cfg := Config{Addr: DefaultAddr, AllowedHosts: slices.Clone(defaultHosts), DataDir: DefaultDataDir}
+	cfg := Config{
+		Addr: DefaultAddr, AllowedHosts: slices.Clone(defaultHosts), DataDir: DefaultDataDir,
+		Model: DefaultModel,
+	}
 
 	seen := make(map[string]bool, len(environ))
 	values := make(map[string]string, len(environ))
@@ -103,10 +118,24 @@ func Load(environ []string) (Config, error) {
 	}
 
 	if v, ok := values["CAIRN_TMDB_API_KEY"]; ok {
-		if err := validateKey(v); err != nil {
+		if err := validateKey("CAIRN_TMDB_API_KEY", v); err != nil {
 			return Config{}, err
 		}
 		cfg.TMDBKey = v
+	}
+
+	if v, ok := values["CAIRN_OPENROUTER_API_KEY"]; ok {
+		if err := validateKey("CAIRN_OPENROUTER_API_KEY", v); err != nil {
+			return Config{}, err
+		}
+		cfg.OpenRouterKey = v
+	}
+
+	if v, ok := values["CAIRN_MODEL"]; ok {
+		if err := validateModel(v); err != nil {
+			return Config{}, err
+		}
+		cfg.Model = v
 	}
 
 	if v, ok := values["CAIRN_DEV"]; ok {
@@ -136,13 +165,31 @@ func validateDataDir(dir string) error {
 }
 
 // validateKey refuses a key with whitespace in it, which is almost always a key pasted with a newline. The
-// message never repeats the key.
-func validateKey(key string) error {
+// message names the variable and never repeats the key.
+func validateKey(name, key string) error {
 	if strings.TrimSpace(key) != key {
-		return errors.New("config: CAIRN_TMDB_API_KEY has leading or trailing space")
+		return fmt.Errorf("config: %s has leading or trailing space", name)
 	}
 	if strings.ContainsAny(key, " \t\r\n") {
-		return errors.New("config: CAIRN_TMDB_API_KEY contains whitespace; it was probably pasted with a newline")
+		return fmt.Errorf("config: %s contains whitespace; it was probably pasted with a newline", name)
+	}
+	return nil
+}
+
+// validateModel refuses an empty id, a role name (no slash) and the two alias spellings nova refuses. The main
+// model is pinned, so a moving id is a startup error rather than a quiet change of what the journal runs on.
+func validateModel(model string) error {
+	if strings.TrimSpace(model) == "" {
+		return errors.New("config: CAIRN_MODEL is empty; omit it to use " + DefaultModel)
+	}
+	if model != strings.TrimSpace(model) || strings.ContainsAny(model, " \t\r\n") {
+		return errors.New("config: CAIRN_MODEL contains whitespace")
+	}
+	if strings.HasSuffix(model, "-latest") || strings.HasPrefix(model, "~") {
+		return fmt.Errorf("config: CAIRN_MODEL=%q is an alias; name a pinned model id", model)
+	}
+	if !strings.Contains(model, "/") {
+		return fmt.Errorf("config: CAIRN_MODEL=%q is not a provider/model id", model)
 	}
 	return nil
 }

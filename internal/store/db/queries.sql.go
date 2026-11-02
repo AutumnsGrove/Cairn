@@ -318,6 +318,41 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) er
 	return err
 }
 
+const createTurnCall = `-- name: CreateTurnCall :exec
+INSERT INTO turn_calls (id, session_id, turn_index, model, prompt_tokens, completion_tokens, cost_usd, latency_ms,
+                        reason, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+`
+
+type CreateTurnCallParams struct {
+	ID               string  `json:"id"`
+	SessionID        *string `json:"session_id"`
+	TurnIndex        int64   `json:"turn_index"`
+	Model            string  `json:"model"`
+	PromptTokens     int64   `json:"prompt_tokens"`
+	CompletionTokens int64   `json:"completion_tokens"`
+	CostUsd          float64 `json:"cost_usd"`
+	LatencyMs        int64   `json:"latency_ms"`
+	Reason           string  `json:"reason"`
+	CreatedAt        string  `json:"created_at"`
+}
+
+func (q *Queries) CreateTurnCall(ctx context.Context, arg CreateTurnCallParams) error {
+	_, err := q.db.ExecContext(ctx, createTurnCall,
+		arg.ID,
+		arg.SessionID,
+		arg.TurnIndex,
+		arg.Model,
+		arg.PromptTokens,
+		arg.CompletionTokens,
+		arg.CostUsd,
+		arg.LatencyMs,
+		arg.Reason,
+		arg.CreatedAt,
+	)
+	return err
+}
+
 const createWork = `-- name: CreateWork :exec
 
 INSERT INTO works (id, medium, title, original_title, year, creator_json, details_json, cover_path,
@@ -1156,6 +1191,44 @@ func (q *Queries) ListSessionEventsSince(ctx context.Context, arg ListSessionEve
 	return items, nil
 }
 
+const listTurnCalls = `-- name: ListTurnCalls :many
+SELECT id, session_id, turn_index, model, prompt_tokens, completion_tokens, cost_usd, latency_ms, reason, created_at FROM turn_calls WHERE session_id = ? ORDER BY turn_index, created_at, id
+`
+
+func (q *Queries) ListTurnCalls(ctx context.Context, sessionID *string) ([]TurnCall, error) {
+	rows, err := q.db.QueryContext(ctx, listTurnCalls, sessionID)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []TurnCall{}
+	for rows.Next() {
+		var i TurnCall
+		if err := rows.Scan(
+			&i.ID,
+			&i.SessionID,
+			&i.TurnIndex,
+			&i.Model,
+			&i.PromptTokens,
+			&i.CompletionTokens,
+			&i.CostUsd,
+			&i.LatencyMs,
+			&i.Reason,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listWorkSources = `-- name: ListWorkSources :many
 SELECT id, work_id, provider, provider_id, raw_json, trust, citations_json, polaris_thread_id, fetched_at, accepted_at FROM work_sources WHERE work_id = ? ORDER BY fetched_at, id
 `
@@ -1321,6 +1394,26 @@ func (q *Queries) SaveEntry(ctx context.Context, arg SaveEntryParams) error {
 	return err
 }
 
+const sessionCost = `-- name: SessionCost :one
+SELECT CAST(
+    COALESCE((SELECT SUM(t.cost_usd) FROM turn_calls AS t WHERE t.session_id = ?), 0) +
+    COALESCE((SELECT SUM(d.cost_usd) FROM decision_calls AS d WHERE d.session_id = ?), 0)
+AS REAL) AS total
+`
+
+type SessionCostParams struct {
+	SessionID   *string `json:"session_id"`
+	SessionID_2 *string `json:"session_id_2"`
+}
+
+// The running total is the turn ledger plus the decisions ledger, never a cached counter that can drift.
+func (q *Queries) SessionCost(ctx context.Context, arg SessionCostParams) (float64, error) {
+	row := q.db.QueryRowContext(ctx, sessionCost, arg.SessionID, arg.SessionID_2)
+	var total float64
+	err := row.Scan(&total)
+	return total, err
+}
+
 const setSessionState = `-- name: SetSessionState :exec
 UPDATE sessions SET state = ?, updated_at = ? WHERE id = ?
 `
@@ -1353,12 +1446,13 @@ func (q *Queries) SoftDeleteEntry(ctx context.Context, arg SoftDeleteEntryParams
 
 const updateDraft = `-- name: UpdateDraft :execresult
 UPDATE entries
-SET rating_q = ?, rating_scale = ?, favourite = ?, season = ?, verdict = ?, body = ?, body_origin = ?,
+SET work_id = ?, rating_q = ?, rating_scale = ?, favourite = ?, season = ?, verdict = ?, body = ?, body_origin = ?,
     body_spans_json = ?, format = ?, finished_on = ?, updated_at = ?
 WHERE id = ? AND status = 'draft'
 `
 
 type UpdateDraftParams struct {
+	WorkID        string  `json:"work_id"`
 	RatingQ       int64   `json:"rating_q"`
 	RatingScale   string  `json:"rating_scale"`
 	Favourite     int64   `json:"favourite"`
@@ -1376,6 +1470,7 @@ type UpdateDraftParams struct {
 // A draft's fields. The status guard is the WHERE clause, so a saved entry can never be rewritten this way.
 func (q *Queries) UpdateDraft(ctx context.Context, arg UpdateDraftParams) (sql.Result, error) {
 	return q.db.ExecContext(ctx, updateDraft,
+		arg.WorkID,
 		arg.RatingQ,
 		arg.RatingScale,
 		arg.Favourite,

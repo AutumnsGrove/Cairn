@@ -60,17 +60,25 @@ func (s *Store) OpenInteraction(ctx context.Context, in Interaction) (domain.Int
 	id := s.NewID()
 	var out domain.Interaction
 	var event domain.SessionEvent
-	err := s.InTx(ctx, func(q *db.Queries) error {
-		appended, err := s.appendEvent(ctx, q, in.SessionID, EventInteractionRequest, in.Payload)
-		if err != nil {
-			return err
+	payload, err := json.Marshal(map[string]any{
+		"interaction_id": id,
+		"kind":           in.Kind,
+		"payload":        in.Payload,
+	})
+	if err != nil {
+		return domain.Interaction{}, domain.SessionEvent{}, fmt.Errorf("store: encode interaction event: %w", err)
+	}
+	err = s.InTx(ctx, func(q *db.Queries) error {
+		appended, appendErr := s.appendEvent(ctx, q, in.SessionID, EventInteractionRequest, payload)
+		if appendErr != nil {
+			return appendErr
 		}
 		event = appended
-		if err := q.CreateInteraction(ctx, db.CreateInteractionParams{
+		if createErr := q.CreateInteraction(ctx, db.CreateInteractionParams{
 			ID: id, SessionID: in.SessionID, Kind: in.Kind, PayloadJson: string(in.Payload),
 			OpenedSeq: int64(appended.Seq), OpenedAt: now.Format(timeLayout),
-		}); err != nil {
-			return fmt.Errorf("store: create interaction: %w", err)
+		}); createErr != nil {
+			return fmt.Errorf("store: create interaction: %w", createErr)
 		}
 		out = domain.Interaction{
 			ID: id, SessionID: in.SessionID, Kind: in.Kind, Payload: in.Payload,

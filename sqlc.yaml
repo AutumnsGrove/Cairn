@@ -33,3 +33,5 @@ sql:
             go_type: { type: string, pointer: true }
           - column: decision_calls.session_id
             go_type: { type: string, pointer: true }
+          - column: turn_calls.session_id
+            go_type: { type: string, pointer: true }

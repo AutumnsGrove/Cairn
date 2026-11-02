@@ -1,0 +1,2 @@
+Fetch the chosen candidate's full metadata and make it this card's work. Call it after media_lookup and
+after she has picked one. It stores the source snapshot and returns the merged work.

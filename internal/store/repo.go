@@ -501,7 +501,7 @@ func (s *Store) entryParams(e domain.Entry) (db.CreateEntryParams, error) {
 
 func workFromRow(row db.Work) domain.Work {
 	w := domain.Work{
-		Medium: row.Medium, Title: row.Title, OriginalTitle: row.OriginalTitle, Year: int(row.Year),
+		ID: row.ID, Medium: row.Medium, Title: row.Title, OriginalTitle: row.OriginalTitle, Year: int(row.Year),
 		CoverPath: row.CoverPath, CoverSource: row.CoverSource,
 		PrimaryProvider: row.PrimaryProvider, PrimaryID: row.PrimaryID, Verified: row.Verified == 1,
 	}

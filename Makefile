@@ -18,7 +18,7 @@ GOVERSION := $(shell $(GO) env GOVERSION)
 
 .DEFAULT_GOAL := check
 .PHONY: help check fmt fmt-check vet lint test test-short race fuzz-smoke nocgo web web-check e2e gen \
-        guard gitleaks build dev clean tidy version verify-embed
+        guard gitleaks build dev eval clean tidy version verify-embed
 
 help: ## Show this help
 	@grep -hE '^[a-zA-Z_-]+:.*?## ' $(MAKEFILE_LIST) | awk 'BEGIN {FS = ":.*?## "}; {printf "  \033[36m%-14s\033[0m %s\n", $$1, $$2}'
@@ -112,6 +112,9 @@ build: ## Build the binary
 
 dev: ## The real service against the in-process world, offline
 	$(GO) run ./cmd/cairn-dev
+
+eval: ## The S08 corpus against the real model (operator's live check; needs CAIRN_OPENROUTER_API_KEY)
+	$(GO) run ./cmd/cairn-eval
 
 tidy:
 	$(GO) mod tidy

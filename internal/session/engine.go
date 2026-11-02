@@ -735,6 +735,168 @@ func (e *Engine) OfferRevisit(ctx context.Context, sessionID string, previous do
 	})
 }
 
+// StartDraft creates the card for an entry session whose work is known. It is the agent's first write of the
+// draft, after a lookup or a manual work has been chosen. A session has one card; a second is refused.
+//
+// The entry must name a stored work: entries.work_id is not nullable, and a card without a work could not be saved
+// (docs/ENTRY_CARD.md 2). The work is created first, so a failed link leaves no half-card.
+func (e *Engine) StartDraft(ctx context.Context, sessionID string, entry domain.Entry) (Draft, error) {
+	sess, err := e.store.Session(ctx, sessionID)
+	if err != nil {
+		return Draft{}, err
+	}
+	if sess.State != domain.SessionActive {
+		return Draft{}, ErrClosed
+	}
+	if sess.EntryID != "" {
+		return Draft{}, &Refusal{Code: CodeInvalidValue, Message: "This session already has a card."}
+	}
+	if entry.WorkID == "" {
+		return Draft{}, &Refusal{Code: CodeInvalidValue, Message: "A card needs a work before it can exist."}
+	}
+	if _, err := e.store.Work(ctx, entry.WorkID); err != nil {
+		if errors.Is(err, store.ErrNotFound) {
+			return Draft{}, &Refusal{Code: CodeInvalidValue, Message: "That work is not in the library."}
+		}
+		return Draft{}, err
+	}
+	if entry.ID == "" {
+		entry.ID = e.newID()
+	}
+	entry.Status = domain.StatusDraft
+	entry.Deleted = false
+	if entry.RatingScale == "" {
+		entry.RatingScale = domain.RatingScale
+	}
+	if entry.BodyOrigin == "" {
+		entry.BodyOrigin = domain.BodyTyped
+	}
+	if err := e.store.CreateDraft(ctx, entry); err != nil {
+		return Draft{}, err
+	}
+	if err := e.store.LinkDraft(ctx, sessionID, entry.ID); err != nil {
+		return Draft{}, err
+	}
+	if _, err := e.Append(ctx, sessionID, store.EventDraftSnapshot, map[string]any{"version": 0, "draft": entry}); err != nil {
+		return Draft{}, err
+	}
+	return e.Draft(ctx, sessionID)
+}
+
+// SetWork attaches the work a lookup chose to an existing card. It is how "log without details" starts from a
+// manual work and is later filled in, and how a lookup that lands after the first parse moves the card onto the
+// real work without a second entry.
+func (e *Engine) SetWork(ctx context.Context, sessionID string, baseVersion int, workID, clientMsgID string) (Draft, error) {
+	sess, err := e.store.Session(ctx, sessionID)
+	if err != nil {
+		return Draft{}, err
+	}
+	if sess.State != domain.SessionActive {
+		return Draft{}, ErrClosed
+	}
+	if sess.EntryID == "" {
+		return Draft{}, ErrNoDraft
+	}
+	if workID == "" {
+		return Draft{}, invalid("work")
+	}
+	if _, workErr := e.store.Work(ctx, workID); workErr != nil {
+		if errors.Is(workErr, store.ErrNotFound) {
+			return Draft{}, &Refusal{Code: CodeInvalidValue, Message: "That work is not in the library."}
+		}
+		return Draft{}, workErr
+	}
+	_, _, _, err = e.store.UpdateDraft(ctx, store.UpdateDraft{
+		SessionID: sessionID, BaseVersion: baseVersion, EntryID: sess.EntryID, ClientMsgID: clientMsgID,
+		Mutate: func(entry *domain.Entry) { entry.WorkID = workID },
+	})
+	if errors.Is(err, store.ErrStaleVersion) {
+		return Draft{}, &Refusal{Code: CodeStaleVersion, Message: "The card changed on another screen; it has been refreshed."}
+	}
+	if err != nil {
+		return Draft{}, err
+	}
+	return e.Draft(ctx, sessionID)
+}
+
+// SetExtractedBody writes the body the model quoted and the verdict, after proving every character is hers. The
+// locator drops an invented quote and snaps a slipped one to her exact wording; a body with no located span is
+// refused, never stored (docs/BUILD.md invariant 1, docs/ENTRY_CARD.md 3). An invented verdict is simply empty.
+func (e *Engine) SetExtractedBody(ctx context.Context, sessionID string, baseVersion int, sourceText string,
+	bodyQuotes []string, verdictQuote, clientMsgID string,
+) (Draft, error) {
+	draft, err := e.Draft(ctx, sessionID)
+	if err != nil {
+		return Draft{}, err
+	}
+	located := domain.LocateContext(ctx, sourceText, bodyQuotes)
+	if len(located.Spans) == 0 {
+		return Draft{}, &domain.GuardError{Code: domain.CodeBodyNotYourWords, Message: "Those words are not in what you wrote."}
+	}
+	body := domain.Compose(sourceText, located.Spans)
+	if len(body) > domain.MaxBodyLength {
+		return Draft{}, &domain.GuardError{Code: domain.CodeBodyTooLong, Message: "That is longer than a review can be."}
+	}
+	verdict := ""
+	if quote := strings.TrimSpace(verdictQuote); quote != "" && len(quote) <= domain.MaxVerdictLength {
+		if found := domain.LocateContext(ctx, sourceText, []string{quote}); len(found.Spans) == 1 {
+			verdict = found.Spans[0].Text
+		}
+	}
+	spans := located.Spans
+	_, _, _, err = e.store.UpdateDraft(ctx, store.UpdateDraft{
+		SessionID: sessionID, BaseVersion: baseVersion, EntryID: draft.Entry.ID, ClientMsgID: clientMsgID,
+		Mutate: func(entry *domain.Entry) {
+			entry.Body = body
+			entry.BodySpans = spans
+			entry.BodyOrigin = domain.BodyExtracted
+			entry.Verdict = verdict
+		},
+	})
+	if errors.Is(err, store.ErrStaleVersion) {
+		return Draft{}, &Refusal{Code: CodeStaleVersion, Message: "The card changed on another screen; it has been refreshed."}
+	}
+	if err != nil {
+		return Draft{}, err
+	}
+	return e.Draft(ctx, sessionID)
+}
+
+// UserMessages is every message she typed in this session, in order. It is the transcript the model reads and the
+// source the span locator proves a body against, so a saved body can never contain a word she did not write.
+func (e *Engine) UserMessages(ctx context.Context, sessionID string) ([]string, error) {
+	events, err := e.store.EventsSince(ctx, sessionID, 0)
+	if err != nil {
+		return nil, err
+	}
+	var out []string
+	for _, event := range events {
+		if event.Kind != store.EventUserMessage {
+			continue
+		}
+		var payload struct {
+			Text string `json:"text"`
+		}
+		if err := json.Unmarshal(event.Payload, &payload); err != nil {
+			return nil, fmt.Errorf("session: read message: %w", err)
+		}
+		if strings.TrimSpace(payload.Text) == "" {
+			continue
+		}
+		out = append(out, payload.Text)
+	}
+	return out, nil
+}
+
+// SourceText is those messages joined by a newline: the one string the span locator searches.
+func (e *Engine) SourceText(ctx context.Context, sessionID string) (string, error) {
+	messages, err := e.UserMessages(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+	return strings.Join(messages, "\n"), nil
+}
+
 // StartRevision opens a working copy of a saved entry so it can be edited with the same draft operations as any
 // other card. The copy is a draft of its own; on confirm its fields move onto the saved entry and the copy is
 // retired, which is how "edit a saved entry" keeps one entry rather than making a second.

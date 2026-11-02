@@ -91,6 +91,9 @@ in the commit that introduces it, with its outcome above the limit.
 | Config reload poll | every 2 s, by mtime and size | A change is picked up on the next tick; a broken file keeps the old config and raises one notice |
 | Spans per body | 40 | Extras dropped and shown under Left out |
 | Body or verdict | 8,000 and 200 characters | Refused with a stable code |
+| Tool arguments per call | 8 KiB | Refused with a stable code; the tool does not run |
+| Span source per body | 64 KiB | The extract cannot be built; typing the body is still allowed |
+| Corpus file | 1 MiB | Load fails with the file named |
 | Candidates per lookup | 5 | Truncated, the best first |
 | Provider response body | 2 MiB | Aborted; counts as a sad-route failure |
 | Provider call deadline | 10 s | Typed timeout; the agent shows lookup_failed and logging carries on |

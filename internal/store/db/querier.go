@@ -29,6 +29,7 @@ type Querier interface {
 	// Written in the same transaction as the confirm that creates it.
 	CreateRevision(ctx context.Context, arg CreateRevisionParams) error
 	CreateSession(ctx context.Context, arg CreateSessionParams) error
+	CreateTurnCall(ctx context.Context, arg CreateTurnCallParams) error
 	// Every query the repositories run. sqlc generates typed Go from these, so the SQL is the source of truth and the
 	// generated code is committed (docs/STANDARDS.md 2).
 	CreateWork(ctx context.Context, arg CreateWorkParams) error
@@ -62,6 +63,7 @@ type Querier interface {
 	ListOpenInteractions(ctx context.Context, sessionID string) ([]Interaction, error)
 	ListRevisions(ctx context.Context, entryID string) ([]EntryRevision, error)
 	ListSessionEventsSince(ctx context.Context, arg ListSessionEventsSinceParams) ([]SessionEvent, error)
+	ListTurnCalls(ctx context.Context, sessionID *string) ([]TurnCall, error)
 	ListWorkSources(ctx context.Context, workID string) ([]WorkSource, error)
 	RecordMirror(ctx context.Context, arg RecordMirrorParams) error
 	RememberClientMessage(ctx context.Context, arg RememberClientMessageParams) error
@@ -70,6 +72,8 @@ type Querier interface {
 	RestoreEntry(ctx context.Context, arg RestoreEntryParams) error
 	// The confirm tap. Only a draft becomes saved, and only through this statement.
 	SaveEntry(ctx context.Context, arg SaveEntryParams) error
+	// The running total is the turn ledger plus the decisions ledger, never a cached counter that can drift.
+	SessionCost(ctx context.Context, arg SessionCostParams) (float64, error)
 	SetSessionState(ctx context.Context, arg SetSessionStateParams) error
 	SoftDeleteEntry(ctx context.Context, arg SoftDeleteEntryParams) error
 	// A draft's fields. The status guard is the WHERE clause, so a saved entry can never be rewritten this way.

@@ -39,6 +39,19 @@ func TestOpenInteractionIsAtomic(t *testing.T) {
 	if event.Kind != EventInteractionRequest || event.Seq != interaction.OpenedSeq {
 		t.Errorf("event = %+v, interaction opened at %d", event, interaction.OpenedSeq)
 	}
+	// The client draws the question from the event, so the event names the question and its kind, not the payload
+	// alone (docs/PROTOCOL.md 3).
+	var wire struct {
+		InteractionID string          `json:"interaction_id"`
+		Kind          string          `json:"kind"`
+		Payload       json.RawMessage `json:"payload"`
+	}
+	if decodeErr := json.Unmarshal(event.Payload, &wire); decodeErr != nil {
+		t.Fatalf("event payload: %v", decodeErr)
+	}
+	if wire.InteractionID != interaction.ID || wire.Kind != "describe" || len(wire.Payload) == 0 {
+		t.Errorf("event payload = %+v", wire)
+	}
 
 	open, err := s.OpenInteractions(ctx, "s1")
 	if err != nil {

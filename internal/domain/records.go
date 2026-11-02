@@ -108,6 +108,35 @@ type Interaction struct {
 // Open reports whether the interaction is still waiting.
 func (i Interaction) Open() bool { return i.ResolvedSeq == nil }
 
+// DecisionCall is one recorded decisions call: the odds, what fired, what it cost. It holds no text, so the
+// ledger can never become a copy of her message (docs/BUILD.md invariant 5).
+type DecisionCall struct {
+	ID           string          `json:"id"`
+	SessionID    string          `json:"session_id,omitempty"`
+	MessageIndex int             `json:"message_index"`
+	Backend      string          `json:"backend"`
+	Model        string          `json:"model"`
+	Odds         json.RawMessage `json:"odds"`
+	Fired        []string        `json:"fired"`
+	CostUSD      float64         `json:"cost_usd"`
+	LatencyMS    int             `json:"latency_ms"`
+	CreatedAt    time.Time       `json:"created_at"`
+}
+
+// TurnCall is one recorded model turn: the tokens and money it cost and how it ended. It holds no text either.
+type TurnCall struct {
+	ID               string    `json:"id"`
+	SessionID        string    `json:"session_id,omitempty"`
+	TurnIndex        int       `json:"turn_index"`
+	Model            string    `json:"model"`
+	PromptTokens     int       `json:"prompt_tokens"`
+	CompletionTokens int       `json:"completion_tokens"`
+	CostUSD          float64   `json:"cost_usd"`
+	LatencyMS        int       `json:"latency_ms"`
+	Reason           string    `json:"reason,omitempty"`
+	CreatedAt        time.Time `json:"created_at"`
+}
+
 // ClientMessage is one row of the idempotency ledger: the first outcome of one client_msg_id.
 type ClientMessage struct {
 	SessionID   string    `json:"session_id"`

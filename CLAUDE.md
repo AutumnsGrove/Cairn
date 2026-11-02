@@ -63,6 +63,7 @@ make e2e        # Playwright against the real binary and the world, on a phone v
 make gen        # regenerate types from api/ (nothing to generate until S02)
 make web        # build the frontend into a scratch directory and into internal/webui/dist
 make dev        # the real service against the in-process world, offline
+make eval       # the S08 corpus against the real model (operator's live check; needs CAIRN_OPENROUTER_API_KEY)
 make guard      # embed placeholder, fuzz seeds, no live provider in tests, gitleaks
 ```
 

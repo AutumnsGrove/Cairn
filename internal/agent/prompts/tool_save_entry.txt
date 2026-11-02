@@ -1,0 +1,2 @@
+Build the draft card from exact quotes copied from her messages. It saves nothing: she confirms the card.
+It refuses a body that is not her own words, and it never sets a rating the service did not read.

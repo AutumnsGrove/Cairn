@@ -91,7 +91,7 @@ func TestOpenMigratesToTheCurrentVersion(t *testing.T) {
 
 	for _, table := range []string{
 		"works", "work_sources", "entries", "answers", "sessions", "session_events",
-		"entry_revisions", "decision_calls", "tags", "entry_tags", "media", "mirrors",
+		"entry_revisions", "decision_calls", "turn_calls", "tags", "entry_tags", "media", "mirrors",
 	} {
 		var name string
 		err := s.readers.QueryRowContext(context.Background(),

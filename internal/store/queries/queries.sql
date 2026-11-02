@@ -125,6 +125,21 @@ INSERT INTO decision_calls (id, session_id, message_index, backend, model, odds_
                             latency_ms, created_at)
 VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
+-- name: CreateTurnCall :exec
+INSERT INTO turn_calls (id, session_id, turn_index, model, prompt_tokens, completion_tokens, cost_usd, latency_ms,
+                        reason, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+
+-- name: ListTurnCalls :many
+SELECT * FROM turn_calls WHERE session_id = ? ORDER BY turn_index, created_at, id;
+
+-- name: SessionCost :one
+-- The running total is the turn ledger plus the decisions ledger, never a cached counter that can drift.
+SELECT CAST(
+    COALESCE((SELECT SUM(t.cost_usd) FROM turn_calls AS t WHERE t.session_id = ?), 0) +
+    COALESCE((SELECT SUM(d.cost_usd) FROM decision_calls AS d WHERE d.session_id = ?), 0)
+AS REAL) AS total;
+
 -- name: UpsertTag :exec
 INSERT INTO tags (id, name) VALUES (?, ?) ON CONFLICT (name) DO NOTHING;
 
@@ -191,7 +206,7 @@ UPDATE sessions SET entry_id = ?, updated_at = ? WHERE id = ?;
 -- name: UpdateDraft :execresult
 -- A draft's fields. The status guard is the WHERE clause, so a saved entry can never be rewritten this way.
 UPDATE entries
-SET rating_q = ?, rating_scale = ?, favourite = ?, season = ?, verdict = ?, body = ?, body_origin = ?,
+SET work_id = ?, rating_q = ?, rating_scale = ?, favourite = ?, season = ?, verdict = ?, body = ?, body_origin = ?,
     body_spans_json = ?, format = ?, finished_on = ?, updated_at = ?
 WHERE id = ? AND status = 'draft';
 
