@@ -11,7 +11,7 @@ import (
 
 type Querier interface {
 	// The one legitimate update to a snapshot: an unverified web field, accepted once. The trigger enforces the rest.
-	AcceptWorkSource(ctx context.Context, arg AcceptWorkSourceParams) error
+	AcceptWorkSource(ctx context.Context, arg AcceptWorkSourceParams) (sql.Result, error)
 	// The sequence number is chosen in the same statement, so two appenders cannot pick the same one. The unique
 	// index on (session_id, seq) is the backstop: if two ever did, one of them fails rather than being replayed twice.
 	AppendSessionEvent(ctx context.Context, arg AppendSessionEventParams) error
@@ -46,7 +46,7 @@ type Querier interface {
 	// positional because a repeated named argument makes sqlc emit fewer struct fields than the driver has "?".
 	// A row-value comparison is used so SQLite can walk the (finished_on, id) index instead of sorting.
 	ListLibrary(ctx context.Context, arg ListLibraryParams) ([]Entry, error)
-	ListMediaForEntry(ctx context.Context, entryID sql.NullString) ([]Medium, error)
+	ListMediaForEntry(ctx context.Context, entryID *string) ([]Medium, error)
 	ListMirrors(ctx context.Context, limit int64) ([]Mirror, error)
 	ListRevisions(ctx context.Context, entryID string) ([]EntryRevision, error)
 	ListSessionEventsSince(ctx context.Context, arg ListSessionEventsSinceParams) ([]SessionEvent, error)

@@ -68,6 +68,18 @@ None.
   going from null to a value. Every other update to `work_sources` aborts, and accepting the same row twice
   aborts, because the second accept would be a change of an already-accepted row.
 
+## Built (2026-10-31)
+
+`internal/store` is complete for Phase 1: migrations (now two, both append-only), the schema and its eight
+triggers, the doctor with its active probe, the writer/reader split, and repositories over 45 generated queries
+for works, sources, entries, answers, revisions, sessions, the event log, tags, media and mirrors. Library and
+draft lists are cursor-paginated, and every list query has an `EXPLAIN QUERY PLAN` test that asserts an index
+and no temporary sort. Coverage is 85%.
+
+The decisions Autumn made are at the top of this file. Two things the build settled on its own: **a draft is not
+a version**, so the first confirm writes no revision, and **accepting a source is an error when it changes
+nothing**, because a silent no-op would look like an accepted field that is not accepted.
+
 ## Done when
 
 The protected tables cannot be deleted from or altered by any SQL the application, a test or a manual shell can

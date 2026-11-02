@@ -10,7 +10,7 @@ import (
 	"database/sql"
 )
 
-const acceptWorkSource = `-- name: AcceptWorkSource :exec
+const acceptWorkSource = `-- name: AcceptWorkSource :execresult
 UPDATE work_sources SET trust = 'accepted', accepted_at = ? WHERE id = ? AND trust = 'unverified'
 `
 
@@ -20,9 +20,8 @@ type AcceptWorkSourceParams struct {
 }
 
 // The one legitimate update to a snapshot: an unverified web field, accepted once. The trigger enforces the rest.
-func (q *Queries) AcceptWorkSource(ctx context.Context, arg AcceptWorkSourceParams) error {
-	_, err := q.db.ExecContext(ctx, acceptWorkSource, arg.AcceptedAt, arg.ID)
-	return err
+func (q *Queries) AcceptWorkSource(ctx context.Context, arg AcceptWorkSourceParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, acceptWorkSource, arg.AcceptedAt, arg.ID)
 }
 
 const appendSessionEvent = `-- name: AppendSessionEvent :exec
@@ -93,16 +92,16 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateDecisionCallParams struct {
-	ID           string         `json:"id"`
-	SessionID    sql.NullString `json:"session_id"`
-	MessageIndex int64          `json:"message_index"`
-	Backend      string         `json:"backend"`
-	Model        string         `json:"model"`
-	OddsJson     string         `json:"odds_json"`
-	FiredJson    string         `json:"fired_json"`
-	CostUsd      float64        `json:"cost_usd"`
-	LatencyMs    int64          `json:"latency_ms"`
-	CreatedAt    string         `json:"created_at"`
+	ID           string  `json:"id"`
+	SessionID    *string `json:"session_id"`
+	MessageIndex int64   `json:"message_index"`
+	Backend      string  `json:"backend"`
+	Model        string  `json:"model"`
+	OddsJson     string  `json:"odds_json"`
+	FiredJson    string  `json:"fired_json"`
+	CostUsd      float64 `json:"cost_usd"`
+	LatencyMs    int64   `json:"latency_ms"`
+	CreatedAt    string  `json:"created_at"`
 }
 
 func (q *Queries) CreateDecisionCall(ctx context.Context, arg CreateDecisionCallParams) error {
@@ -174,13 +173,13 @@ VALUES (?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateMediaParams struct {
-	ID             string         `json:"id"`
-	EntryID        sql.NullString `json:"entry_id"`
-	SessionID      sql.NullString `json:"session_id"`
-	Path           string         `json:"path"`
-	Kind           string         `json:"kind"`
-	TranscriptJson string         `json:"transcript_json"`
-	CreatedAt      string         `json:"created_at"`
+	ID             string  `json:"id"`
+	EntryID        *string `json:"entry_id"`
+	SessionID      *string `json:"session_id"`
+	Path           string  `json:"path"`
+	Kind           string  `json:"kind"`
+	TranscriptJson string  `json:"transcript_json"`
+	CreatedAt      string  `json:"created_at"`
 }
 
 func (q *Queries) CreateMedia(ctx context.Context, arg CreateMediaParams) error {
@@ -226,14 +225,14 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateSessionParams struct {
-	ID           string         `json:"id"`
-	Kind         string         `json:"kind"`
-	Title        string         `json:"title"`
-	EntryID      sql.NullString `json:"entry_id"`
-	MessagesJson string         `json:"messages_json"`
-	State        string         `json:"state"`
-	CreatedAt    string         `json:"created_at"`
-	UpdatedAt    string         `json:"updated_at"`
+	ID           string  `json:"id"`
+	Kind         string  `json:"kind"`
+	Title        string  `json:"title"`
+	EntryID      *string `json:"entry_id"`
+	MessagesJson string  `json:"messages_json"`
+	State        string  `json:"state"`
+	CreatedAt    string  `json:"created_at"`
+	UpdatedAt    string  `json:"updated_at"`
 }
 
 func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) error {
@@ -815,7 +814,7 @@ const listMediaForEntry = `-- name: ListMediaForEntry :many
 SELECT id, entry_id, session_id, path, kind, transcript_json, created_at FROM media WHERE entry_id = ? ORDER BY created_at
 `
 
-func (q *Queries) ListMediaForEntry(ctx context.Context, entryID sql.NullString) ([]Medium, error) {
+func (q *Queries) ListMediaForEntry(ctx context.Context, entryID *string) ([]Medium, error) {
 	rows, err := q.db.QueryContext(ctx, listMediaForEntry, entryID)
 	if err != nil {
 		return nil, err
@@ -1086,9 +1085,9 @@ UPDATE entries SET deleted_at = ?, updated_at = ? WHERE id = ? AND deleted_at IS
 `
 
 type SoftDeleteEntryParams struct {
-	DeletedAt sql.NullString `json:"deleted_at"`
-	UpdatedAt string         `json:"updated_at"`
-	ID        string         `json:"id"`
+	DeletedAt *string `json:"deleted_at"`
+	UpdatedAt string  `json:"updated_at"`
+	ID        string  `json:"id"`
 }
 
 func (q *Queries) SoftDeleteEntry(ctx context.Context, arg SoftDeleteEntryParams) error {

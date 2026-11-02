@@ -64,6 +64,8 @@ type Conflict struct {
 
 // Work is the canonical thing an entry is about, after a merge.
 type Work struct {
+	// ID is empty until the work is stored; a merge of sources does not invent one.
+	ID              string            `json:"id,omitempty"`
 	Medium          string            `json:"medium"`
 	Title           string            `json:"title"`
 	OriginalTitle   string            `json:"original_title,omitempty"`

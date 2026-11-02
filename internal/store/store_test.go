@@ -24,10 +24,12 @@ func fixedNow() time.Time { return time.Date(2026, time.October, 31, 12, 0, 0, 0
 func openTest(t *testing.T) *Store {
 	t.Helper()
 	path := filepath.Join(t.TempDir(), "cairn.db")
+	// The identifier source counts up, because several rows in one test must not collide on the primary key.
+	var next int
 	s, err := Open(context.Background(), Options{
 		Path:  path,
 		Now:   fixedNow,
-		NewID: func() string { return "test-id" },
+		NewID: func() string { next++; return fmt.Sprintf("test-id-%d", next) },
 	})
 	if err != nil {
 		t.Fatalf("Open: %v", err)
@@ -79,8 +81,12 @@ func TestOpenMigratesToTheCurrentVersion(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Version: %v", err)
 	}
-	if version != 1 {
-		t.Fatalf("version = %d, want 1", version)
+	migrations, err := loadMigrations()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if version != migrations[len(migrations)-1].version {
+		t.Fatalf("version = %d, want the latest embedded %d", version, migrations[len(migrations)-1].version)
 	}
 
 	for _, table := range []string{
@@ -126,7 +132,7 @@ func TestDoctorIsHealthy(t *testing.T) {
 	if !h.OK() {
 		t.Fatalf("a fresh store is unhealthy: %+v", h)
 	}
-	if h.Version != 1 {
+	if h.Version < 1 {
 		t.Errorf("version = %d", h.Version)
 	}
 }
@@ -505,7 +511,7 @@ func TestInjectedClockAndIDs(t *testing.T) {
 	if got := s.Now(); !got.Equal(fixedNow()) {
 		t.Errorf("Now = %v, want the injected clock", got)
 	}
-	if got := s.NewID(); got != "test-id" {
+	if got := s.NewID(); !strings.HasPrefix(got, "test-id-") {
 		t.Errorf("NewID = %q, want the injected source", got)
 	}
 	if s.Queries() == nil {

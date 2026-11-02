@@ -26,7 +26,7 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?);
 -- name: ListWorkSources :many
 SELECT * FROM work_sources WHERE work_id = ? ORDER BY fetched_at, id;
 
--- name: AcceptWorkSource :exec
+-- name: AcceptWorkSource :execresult
 -- The one legitimate update to a snapshot: an unverified web field, accepted once. The trigger enforces the rest.
 UPDATE work_sources SET trust = 'accepted', accepted_at = ? WHERE id = ? AND trust = 'unverified';
 

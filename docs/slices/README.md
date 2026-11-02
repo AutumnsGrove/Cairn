@@ -59,7 +59,7 @@ S09 needs S02, S07 and S08. S13 needs a working app (S09 and S12).
 | S01 | [Spikes](S01-spikes.md) | 0 | planned |
 | S02 | [Contract first](S02-contract.md) | 1 | done |
 | S03 | [Domain core](S03-domain-core.md) | 1 | done |
-| S04 | [Data layer](S04-data-layer.md) | 1 | in progress (S04.1, .2, .6 done) |
+| S04 | [Data layer](S04-data-layer.md) | 1 | done |
 | S05 | [Banks and decisions](S05-banks-and-decisions.md) | 1 | planned |
 | S06 | [Providers](S06-providers.md) | 1 | planned |
 | S07 | [Session engine](S07-session-engine.md) | 1 | planned |

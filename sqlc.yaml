@@ -14,16 +14,22 @@ sql:
         emit_json_tags: true
         emit_empty_slices: true
         emit_pointers_for_null_types: false
+        # Nullable columns become pointers, so a caller cannot confuse "empty" with "absent" and a repository does
+        # not have to unwrap sql.NullString at every use.
         overrides:
           - column: entries.finished_on
-            go_type:
-              type: string
-              pointer: true
+            go_type: { type: string, pointer: true }
+          - column: entries.deleted_at
+            go_type: { type: string, pointer: true }
           - column: entries.season
-            go_type:
-              type: int64
-              pointer: true
+            go_type: { type: int64, pointer: true }
           - column: work_sources.accepted_at
-            go_type:
-              type: string
-              pointer: true
+            go_type: { type: string, pointer: true }
+          - column: sessions.entry_id
+            go_type: { type: string, pointer: true }
+          - column: media.entry_id
+            go_type: { type: string, pointer: true }
+          - column: media.session_id
+            go_type: { type: string, pointer: true }
+          - column: decision_calls.session_id
+            go_type: { type: string, pointer: true }

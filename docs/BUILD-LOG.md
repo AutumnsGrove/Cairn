@@ -141,3 +141,27 @@ tests, event-log compaction, and the restore path. The slice stays "in progress"
   not the protection is there, so the doctor writes probe rows inside a transaction and rolls the whole thing back.
 - **A failed migration must not stamp its version.** The schema change and `PRAGMA user_version` share one
   transaction, and a test asserts the version does not move when the SQL is broken.
+
+## 2026-10-31, S04 done, the data layer
+
+**Built.** The repository layer over the generated queries: works and sources (with the one allowed update),
+entries (draft, confirm with its revision in the same transaction, soft delete, restore, the library with a
+cursor, drafts, a work's timeline), answers, revisions, sessions, the event log (append with a sequence number,
+replay since N, compaction of streamed chunks), tags, media and mirrors. Two migrations, eight triggers, the
+doctor, and an `EXPLAIN QUERY PLAN` test for every list query.
+
+**What is true now.** The database refuses what the rules forbid, with raw SQL, whatever the Go code above it
+believes. The library pages by cursor and never repeats or skips a row. A confirm over a saved entry writes the
+previous version first, in the same transaction; the first confirm of a draft writes nothing, because a draft is
+not a version.
+
+**Learned.**
+
+- **A migration is not a place to change a query's shape by memory.** Adding the tiebreaker column to the list
+  indexes removed a temporary B-tree from every page, which the `EXPLAIN` test now asserts, so the next person to
+  touch an index finds out immediately if the sort comes back.
+- **`RowsAffected` is what makes an accept honest.** The update's own WHERE clause is the guard, so a second
+  accept changes nothing and reports nothing; the repository turns that zero into `ErrNotAcceptable` rather than
+  letting a tap look successful.
+- **A fixed identifier source in a test is a trap.** The first version of `openTest` returned one id forever, so
+  every insert after the first collided on the primary key and the failures looked like repository bugs.
