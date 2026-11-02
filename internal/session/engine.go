@@ -378,3 +378,224 @@ func cleanTitleString(title string) string {
 	}
 	return title
 }
+
+// Refusal is a rule that said no, with a stable code the UI maps to its own copy. It is the engine's counterpart of
+// the domain's GuardError: the same shape, because the client treats both the same way.
+type Refusal struct {
+	Code    string
+	Message string
+}
+
+// Error renders the refusal for a log; the code is what the client receives.
+func (r *Refusal) Error() string { return r.Code + ": " + r.Message }
+
+// The codes a draft operation can be refused with.
+const (
+	CodeUnknownField = "unknown_field"
+	CodeInvalidValue = "invalid_value"
+	CodeStaleVersion = "stale_version"
+	CodeNotADraft    = "not_a_draft"
+	CodeMessageLong  = "message_too_long"
+	CodeSessionFull  = "session_full"
+)
+
+// MaxMessageLength is the user message limit from docs/STANDARDS.md 4a.
+const MaxMessageLength = 8000
+
+// Edit is one draft_edit: the version it was made against, the fields it sets, and the message it came from.
+type Edit struct {
+	BaseVersion int
+	Set         map[string]json.RawMessage
+	ClientMsgID string
+}
+
+// EditDraft applies a field patch. An unknown field or a value outside its range is refused by name, and a stale
+// version changes nothing and returns the current draft so the client can redraw
+// (docs/PROTOCOL.md 5, "draft_edit").
+func (e *Engine) EditDraft(ctx context.Context, sessionID string, in Edit) (Draft, error) {
+	sess, err := e.store.Session(ctx, sessionID)
+	if err != nil {
+		return Draft{}, err
+	}
+	if sess.State != domain.SessionActive {
+		return Draft{}, ErrClosed
+	}
+	if sess.EntryID == "" {
+		return Draft{}, ErrNoDraft
+	}
+
+	patch, err := parsePatch(in.Set)
+	if err != nil {
+		return Draft{}, err
+	}
+	_, _, _, err = e.store.UpdateDraft(ctx, store.UpdateDraft{
+		SessionID: sessionID, BaseVersion: in.BaseVersion, EntryID: sess.EntryID, ClientMsgID: in.ClientMsgID,
+		Mutate: func(entry *domain.Entry) { patch(entry) },
+	})
+	if err != nil {
+		if errors.Is(err, store.ErrStaleVersion) {
+			return Draft{}, &Refusal{Code: CodeStaleVersion, Message: "The card changed on another screen; it has been refreshed."}
+		}
+		return Draft{}, err
+	}
+	return e.Draft(ctx, sessionID)
+}
+
+// parsePatch validates the fields a patch may set and returns the mutation. Anything else is refused by name, so a
+// typo in a client cannot silently do nothing.
+func parsePatch(set map[string]json.RawMessage) (func(*domain.Entry), error) {
+	mutators := make([]func(*domain.Entry), 0, len(set))
+	for field, raw := range set {
+		field := field
+		raw := raw
+		switch field {
+		case "rating":
+			var value int
+			if err := json.Unmarshal(raw, &value); err != nil || value < 0 || value > domain.MaxRating {
+				return nil, invalid(field)
+			}
+			mutators = append(mutators, func(entry *domain.Entry) { entry.Rating = value })
+		case "body":
+			var value string
+			if err := json.Unmarshal(raw, &value); err != nil || len(value) > domain.MaxBodyLength {
+				return nil, invalid(field)
+			}
+			mutators = append(mutators, func(entry *domain.Entry) {
+				entry.Body = value
+				// Typed on the card is her own input, which is the one origin that needs no proof.
+				entry.BodyOrigin = domain.BodyTyped
+				entry.BodySpans = nil
+			})
+		case "verdict":
+			var value string
+			if err := json.Unmarshal(raw, &value); err != nil || len(value) > domain.MaxVerdictLength {
+				return nil, invalid(field)
+			}
+			mutators = append(mutators, func(entry *domain.Entry) { entry.Verdict = value })
+		case "format":
+			var value string
+			if err := json.Unmarshal(raw, &value); err != nil || len(value) > 32 {
+				return nil, invalid(field)
+			}
+			mutators = append(mutators, func(entry *domain.Entry) { entry.Format = value })
+		case "finished_on":
+			var value string
+			if err := json.Unmarshal(raw, &value); err != nil {
+				return nil, invalid(field)
+			}
+			mutators = append(mutators, func(entry *domain.Entry) { entry.FinishedOn = value })
+		case "favourite":
+			var value bool
+			if err := json.Unmarshal(raw, &value); err != nil {
+				return nil, invalid(field)
+			}
+			mutators = append(mutators, func(entry *domain.Entry) { entry.Favourite = value })
+		case "season":
+			var value *int
+			if err := json.Unmarshal(raw, &value); err != nil || (value != nil && *value < 1) {
+				return nil, invalid(field)
+			}
+			mutators = append(mutators, func(entry *domain.Entry) { entry.Season = value })
+		default:
+			return nil, &Refusal{Code: CodeUnknownField, Message: "The card has no field called " + field + "."}
+		}
+	}
+	return func(entry *domain.Entry) {
+		for _, mutate := range mutators {
+			mutate(entry)
+		}
+	}, nil
+}
+
+// invalid is the refusal for a value outside its range.
+func invalid(field string) error {
+	return &Refusal{Code: CodeInvalidValue, Message: "That is not a value the " + field + " field can take."}
+}
+
+// ConfirmRequest carries the version the client saw and her messages, which is what an extracted body has to be
+// contained in. SourceText is empty for a typed or imported body.
+type ConfirmRequest struct {
+	BaseVersion int
+	ClientMsgID string
+	SourceText  string
+}
+
+// Confirm is the commit. It runs the domain's save guard and then saves the entry, its revision, the session link,
+// the closed state, the events and the ledger row in one transaction. Two devices confirming at once produce one
+// save: the second finds the session closed or the version stale.
+func (e *Engine) Confirm(ctx context.Context, sessionID string, in ConfirmRequest) (domain.Entry, int, []domain.SessionEvent, error) {
+	draft, err := e.Draft(ctx, sessionID)
+	if err != nil {
+		return domain.Entry{}, 0, nil, err
+	}
+	if guardErr := domain.ValidateForSave(draft.Entry, in.SourceText); guardErr != nil {
+		return domain.Entry{}, 0, nil, guardErr
+	}
+	entry, version, events, err := e.store.ConfirmDraft(ctx, store.Confirm{
+		SessionID: sessionID, BaseVersion: in.BaseVersion, Entry: draft.Entry, ClientMsgID: in.ClientMsgID,
+	})
+	if errors.Is(err, store.ErrStaleVersion) {
+		return domain.Entry{}, 0, nil, &Refusal{Code: CodeStaleVersion, Message: "The card changed on another screen; it has been refreshed."}
+	}
+	return entry, version, events, err
+}
+
+// Discard throws the draft away: the session closes, the draft stays in the database, and nothing is deleted.
+func (e *Engine) Discard(ctx context.Context, sessionID string) error {
+	sess, err := e.store.Session(ctx, sessionID)
+	if err != nil {
+		return err
+	}
+	if sess.State != domain.SessionActive {
+		return ErrClosed
+	}
+	return e.store.DiscardDraft(ctx, sessionID)
+}
+
+// AppendUserMessage stores what she typed, enforcing the message and session limits, and records the ledger row.
+func (e *Engine) AppendUserMessage(ctx context.Context, sessionID, text, clientMsgID string) (domain.SessionEvent, error) {
+	if strings.TrimSpace(text) == "" {
+		return domain.SessionEvent{}, &Refusal{Code: CodeInvalidValue, Message: "There is nothing in that message."}
+	}
+	if len(text) > MaxMessageLength {
+		return domain.SessionEvent{}, &Refusal{Code: CodeMessageLong, Message: "That message is longer than Cairn accepts."}
+	}
+	sess, err := e.store.Session(ctx, sessionID)
+	if err != nil {
+		return domain.SessionEvent{}, err
+	}
+	if sess.State != domain.SessionActive {
+		return domain.SessionEvent{}, ErrClosed
+	}
+	events, err := e.store.EventsSince(ctx, sessionID, 0)
+	if err != nil {
+		return domain.SessionEvent{}, err
+	}
+	messages := 0
+	for _, event := range events {
+		if event.Kind == store.EventUserMessage {
+			messages++
+		}
+	}
+	if messages >= MaxMessagesPerSession {
+		return domain.SessionEvent{}, &Refusal{Code: CodeSessionFull, Message: "This conversation is full; start a new one."}
+	}
+	// The ledger is checked before anything is written, so a retried message is not stored twice.
+	if _, seen, seenErr := e.Seen(ctx, sessionID, clientMsgID); seenErr != nil {
+		return domain.SessionEvent{}, seenErr
+	} else if seen {
+		return domain.SessionEvent{}, store.ErrDuplicateClientMessage
+	}
+	event, err := e.Append(ctx, sessionID, store.EventUserMessage, map[string]string{
+		"text": text, "message_id": e.newID(), "client_msg_id": clientMsgID,
+	})
+	if err != nil {
+		return domain.SessionEvent{}, err
+	}
+	if ledgerErr := e.store.RememberClient(ctx, domain.ClientMessage{
+		SessionID: sessionID, ClientMsgID: clientMsgID, Seq: event.Seq, Status: "accepted",
+	}); ledgerErr != nil {
+		return domain.SessionEvent{}, ledgerErr
+	}
+	return event, nil
+}

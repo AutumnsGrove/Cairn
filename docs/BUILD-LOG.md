@@ -309,3 +309,24 @@ their rules, a rebuild that leaves a dangling reference being rolled back with t
 guard still refusing to confirm an unrated draft. The two skipped session tests are live again, so the Drafts list
 now has its happy, bad and sad routes.
 
+
+## 2026-11-01, S07, the draft operations and the confirm
+
+**Built.** `store.UpdateDraft` and `store.ConfirmDraft`: one transaction each, covering the version check, the
+field write, the snapshot event and the client-message ledger. `session.EditDraft` validates a field patch by name
+and range before anything is written; `session.Confirm` runs the domain's save guard first and then commits the
+entry, its revision, the session link, the closed state, the snapshot and saved events and the ledger row together;
+`session.Discard` closes without deleting; `session.AppendUserMessage` enforces the 8,000-character and 200-message
+limits and refuses a replayed `client_msg_id` before storing anything.
+
+**What is true now.** A stale edit is refused with a current-version code and changes nothing. Two devices
+confirming produce one save, because the second finds the version stale or the session closed. A body that claims
+to be extracted from her words but is not is refused by the guard before the transaction opens. Discarding keeps
+the draft: nothing is deleted, ever.
+
+**Still to do in S07.** `accept_unverified` and `include_left_out` (both are store calls the engine can wrap),
+revisit/edit-existing as a first-class flow (the confirm already writes a revision when it replaces a saved entry),
+the one-deep message queue and the question-round cap, and an engine test that a killed process resumes with the
+draft, the open question and the log intact (the store's restart tests cover the pieces; the assembled route is
+S09's).
+
