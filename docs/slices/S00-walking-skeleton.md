@@ -61,8 +61,11 @@ None. The operator's action is applying the repository settings listed in S00.5.
 
 - **Module path** is `github.com/AutumnsGrove/cairn`, capitalised like Warbler, Ivy and Coffer. Meridian's
   lowercase path is not the house style; it is left as it is.
-- **Go is pinned to the minor, `go 1.26`,** in `go.mod`. CI reads `go-version-file` and takes the latest
-  1.26.x; patch bumps arrive as ordinary Dependabot pull requests. The machine here has go1.26.1.
+- **Go is pinned in `go.mod` and CI reads it from there** (`go-version-file`), so the local toolchain and the
+  runner cannot drift apart. The pin is now an exact patch (`go 1.27.3`), not the minor, because adding a
+  dependency makes `go get` rewrite the directive to the toolchain in use. That is worth knowing: the bump also
+  moved `Dockerfile` and `STACK.md`, and it needs a golangci-lint and CodeQL release that understands the new
+  version, which is why the linter is pinned at v2.15.0.
 - **No branch-per-slice yet.** Commits go straight to `main` until S13 (deploy and update), when the
   PR-required ruleset is switched on. This supersedes the earlier assumption in [`../BUILD.md`](../BUILD.md) 5
   and the PR-required ruleset in [`../CI.md`](../CI.md) 4.6; both are amended to match. Required checks still

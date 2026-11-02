@@ -97,7 +97,12 @@ jobs:
           for spec in "internal/domain:95" "internal/server:80" "internal/config:80" "internal/world:80" "internal/store:84"; do
             pkg="${spec%%:*}"
             floor="${spec##*:}"
-            pct=$(go tool cover -func=/tmp/cover.out | grep "cairn/$pkg/" | awk '{gsub(/%/,"",$3); s+=$3; n++} END {if (n) printf "%.0f", s/n; else print 0}')
+            # Generated code is excluded: sqlc's package has no tests by design, and averaging it in would
+            # punish the schema for being generated rather than hand-written.
+            pct=$(go tool cover -func=/tmp/cover.out \
+              | grep "cairn/$pkg/" \
+              | grep -v "/db/" \
+              | awk '{gsub(/%/,"",$3); s+=$3; n++} END {if (n) printf "%.0f", s/n; else print 0}')
             echo "$pkg coverage: ${pct}% (floor ${floor}%)"
             if [ "$pct" -lt "$floor" ]; then
               echo "::error::$pkg coverage is ${pct}%, below the ${floor}% floor"
@@ -254,6 +259,12 @@ jobs:
       - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
         with:
           persist-credentials: false
+      # The extractor runs the module's own Go. Without this it uses the runner image's, and with GOTOOLCHAIN=local
+      # a go.mod asking for a newer version makes autobuild fail for every project.
+      - uses: actions/setup-go@40f1582b2485089dde7abd97c1529aa768e1baff # v5
+        with:
+          go-version-file: ${{ env.GO_VERSION_FILE }}
+          cache: true
       - uses: github/codeql-action/init@4bfa242aa49c5f7c6770b98670d354a7dfac05f8 # v3
         with:
           languages: go, javascript-typescript
