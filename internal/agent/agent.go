@@ -255,7 +255,13 @@ func (a *Agent) HandleMessage(ctx context.Context, in TurnInput) (Outcome, error
 		return a.finish(ctx, state, "model_off")
 	}
 
-	runErr := a.runModel(ctx, state)
+	runErr := a.runModel(ctx, state, "")
+	if runErr == nil {
+		// The model answered in prose where a tool call was due. One nudge, never a loop.
+		if nudge := state.stallNudge(); nudge != "" {
+			runErr = a.runModel(ctx, state, nudge)
+		}
+	}
 	if runErr != nil {
 		// A model failure is a sad route, not a lost message: the notice says so and the session stays open.
 		code, text := "model_unavailable",
@@ -282,8 +288,9 @@ func (a *Agent) HandleMessage(ctx context.Context, in TurnInput) (Outcome, error
 }
 
 // runModel drives nova's loop over the session's transcript and the automatic note.
-func (a *Agent) runModel(ctx context.Context, state *RunState) error {
-	history, prompt, err := a.transcript(ctx, state)
+// A non-empty nudge continues the stored transcript with that note instead of replaying her last message.
+func (a *Agent) runModel(ctx context.Context, state *RunState, nudge string) error {
+	history, prompt, err := a.transcript(ctx, state, nudge)
 	if err != nil {
 		return err
 	}
@@ -328,8 +335,10 @@ func (a *Agent) runModel(ctx context.Context, state *RunState) error {
 	elapsed := a.now().Sub(start)
 
 	state.Ended = "done"
+	var callUsage provider.Usage
 	if res != nil {
-		state.Usage = res.Usage
+		callUsage = res.Usage
+		state.Usage = addUsage(state.Usage, res.Usage)
 		if res.Reason != "" {
 			state.Ended = res.Reason
 		}
@@ -351,8 +360,8 @@ func (a *Agent) runModel(ctx context.Context, state *RunState) error {
 	}
 	if recordErr := a.store.RecordTurn(recordCtx, domain.TurnCall{
 		SessionID: state.SessionID, TurnIndex: state.turnIndex, Model: a.model,
-		PromptTokens: state.Usage.PromptTokens, CompletionTokens: state.Usage.CompletionTokens,
-		CostUSD: state.Usage.CostUSD, LatencyMS: int(elapsed.Milliseconds()), Reason: state.Ended,
+		PromptTokens: callUsage.PromptTokens, CompletionTokens: callUsage.CompletionTokens,
+		CostUSD: callUsage.CostUSD, LatencyMS: int(elapsed.Milliseconds()), Reason: state.Ended,
 	}); recordErr != nil {
 		a.log.Error("turn ledger write failed", "session", state.SessionID, "err", recordErr.Error())
 	}
@@ -362,7 +371,7 @@ func (a *Agent) runModel(ctx context.Context, state *RunState) error {
 // transcript builds the history and the prompt. The stored transcript carries the previous turns, so a second
 // message in the same session sees what the model already said and did. The automatic note goes immediately
 // before her latest message, framed as data; the message itself is the prompt.
-func (a *Agent) transcript(ctx context.Context, state *RunState) ([]message.Message, message.Message, error) {
+func (a *Agent) transcript(ctx context.Context, state *RunState, nudge string) ([]message.Message, message.Message, error) {
 	messages, err := a.session.UserMessages(ctx, state.SessionID)
 	if err != nil {
 		return nil, message.Message{}, err
@@ -379,6 +388,11 @@ func (a *Agent) transcript(ctx context.Context, state *RunState) ([]message.Mess
 		if err := json.Unmarshal(sess.Messages, &history); err != nil {
 			return nil, message.Message{}, fmt.Errorf("agent: read the session transcript: %w", err)
 		}
+	}
+	if nudge != "" {
+		// The stored transcript already holds her messages and this turn's calls, so the nudge is the only new
+		// prompt. It is the agent's own note, never her words.
+		return history, message.Message{Role: message.RoleUser, Content: nudge, Synthetic: true}, nil
 	}
 	if len(history) == 0 {
 		for _, text := range messages[:len(messages)-1] {
@@ -445,4 +459,19 @@ func firstDuration(value, fallback time.Duration) time.Duration {
 		return value
 	}
 	return fallback
+}
+
+// addUsage sums two usages so an outcome that took two model runs reports the whole cost.
+func addUsage(a, b provider.Usage) provider.Usage {
+	a.PromptTokens += b.PromptTokens
+	a.CompletionTokens += b.CompletionTokens
+	a.ReasoningTokens += b.ReasoningTokens
+	a.TotalTokens += b.TotalTokens
+	a.CachedTokens += b.CachedTokens
+	a.CacheWriteTokens += b.CacheWriteTokens
+	a.CostUSD += b.CostUSD
+	if b.CostSource != "" {
+		a.CostSource = b.CostSource
+	}
+	return a
 }

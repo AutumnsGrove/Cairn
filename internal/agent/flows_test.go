@@ -581,3 +581,133 @@ func TestMediaLookupTellsTheModelTheChosenID(t *testing.T) {
 		t.Errorf("the result does not tell the model the chosen id: %q", result.Content)
 	}
 }
+
+// After she picks a candidate the model must call merge_candidates. A real model sometimes answers in prose
+// instead ("is that the one?"), which used to end the turn with her message stored and no card. The pipeline now
+// gives it one nudge.
+func stalledAfterPickScript(second ...world.ChatTurn) []world.ChatTurn {
+	script := []world.ChatTurn{
+		{ToolCalls: []world.ChatToolCall{toolCall("c1", "media_lookup", `{"title":"The Lantern Keeper","medium":"book"}`)}},
+		{Text: "I found one match, The Lantern Keeper. Is that the one you finished?"},
+	}
+	return append(script, second...)
+}
+
+func runStalledPick(t *testing.T, script []world.ChatTurn) (*rig, Outcome) {
+	t.Helper()
+	r := newRig(t, rigOptions{script: script})
+	r.fake.Set("intent", map[string]float64{"log_review": 0.95})
+	r.fake.Set("medium", map[string]float64{"book": 0.95})
+	r.fake.Set("format", map[string]float64{"not_stated": 0.95})
+	r.fake.Set("revisit", map[string]float64{"no": 0.95})
+	r.responder.script("choose_candidate", "openlibrary|OL1W")
+	ctx := context.Background()
+	sess, _ := r.session.CreateEntry(ctx)
+	out, err := r.agent.HandleMessage(ctx, TurnInput{
+		SessionID: sess.ID, Text: "the lantern keeper, 4/5, the middle dragged a bit", ClientMsgID: "m1",
+	})
+	if err != nil {
+		t.Fatalf("HandleMessage: %v", err)
+	}
+	return r, out
+}
+
+// Happy: one nudge, then the model finishes the flow and the card exists.
+func TestPipelineNudgesAModelThatStallsAfterThePick(t *testing.T) {
+	r, out := runStalledPick(t, stalledAfterPickScript(
+		world.ChatTurn{ToolCalls: []world.ChatToolCall{toolCall("c2", "merge_candidates", `{"candidate_id":"openlibrary|OL1W"}`)}},
+		world.ChatTurn{ToolCalls: []world.ChatToolCall{toolCall("c3", "save_entry", `{"body_quotes":["the middle dragged a bit"]}`)}},
+		world.ChatTurn{Text: "Ready."},
+	))
+	if out.Draft == nil {
+		t.Fatalf("no card after the model stalled on the pick (ended %q, steps %d)", out.Ended, out.Steps)
+	}
+	if out.Draft.Entry.Body != "the middle dragged a bit" {
+		t.Errorf("body = %q", out.Draft.Entry.Body)
+	}
+	if got := r.chat.Turns(); got != 5 {
+		t.Errorf("model turns = %d, want 5 (lookup, prose, merge, save, ready)", got)
+	}
+}
+
+// Bad: a model that ignores the nudge too is not asked again. The message stays stored and the turn ends.
+func TestPipelineNudgesOnlyOnce(t *testing.T) {
+	r, out := runStalledPick(t, stalledAfterPickScript(
+		world.ChatTurn{Text: "Still not sure which one you meant."},
+		world.ChatTurn{ToolCalls: []world.ChatToolCall{toolCall("c2", "merge_candidates", `{"candidate_id":"openlibrary|OL1W"}`)}},
+	))
+	if out.Draft != nil {
+		t.Fatal("a card appeared from a second nudge")
+	}
+	if got := r.chat.Turns(); got != 3 {
+		t.Errorf("model turns = %d, want 3 (lookup, prose, one nudged reply)", got)
+	}
+}
+
+// Sad: a chat reply with no pick behind it is not a stall and gets no nudge.
+func TestPipelineDoesNotNudgeAPlainReply(t *testing.T) {
+	r := newRig(t, rigOptions{script: []world.ChatTurn{{Text: "Hello."}, {Text: "should never be served"}}})
+	r.fake.Set("intent", map[string]float64{"chitchat": 0.95})
+	ctx := context.Background()
+	sess, _ := r.session.CreateEntry(ctx)
+	if _, err := r.agent.HandleMessage(ctx, TurnInput{SessionID: sess.ID, Text: "hello", ClientMsgID: "m1"}); err != nil {
+		t.Fatalf("HandleMessage: %v", err)
+	}
+	if got := r.chat.Turns(); got != 1 {
+		t.Errorf("model turns = %d, want 1", got)
+	}
+}
+
+// The card exists but the model asks about the missing rating in prose and never calls save_entry. The card is
+// only a draft she confirms, so the pipeline asks once for the save instead of leaving a card with no body.
+func stalledAfterMergeScript(second ...world.ChatTurn) []world.ChatTurn {
+	script := []world.ChatTurn{
+		{ToolCalls: []world.ChatToolCall{toolCall("c1", "media_lookup", `{"title":"The Lantern Keeper","medium":"book"}`)}},
+		{ToolCalls: []world.ChatToolCall{toolCall("c2", "merge_candidates", `{"candidate_id":"openlibrary|OL1W"}`)}},
+		{Text: "Card is on The Lantern Keeper. Want to add anything else?"},
+	}
+	return append(script, second...)
+}
+
+// Happy: one nudge, then save_entry builds the card with her own words.
+func TestPipelineNudgesAModelThatNeverSavesTheCard(t *testing.T) {
+	r, out := runStalledPick(t, stalledAfterMergeScript(
+		world.ChatTurn{ToolCalls: []world.ChatToolCall{toolCall("c3", "save_entry", `{"body_quotes":["the middle dragged a bit"]}`)}},
+		world.ChatTurn{Text: "Ready."},
+	))
+	if out.Draft == nil || out.Draft.Entry.Body != "the middle dragged a bit" {
+		t.Fatalf("the card has no body after the nudge: %+v", out.Draft)
+	}
+	if got := r.chat.Turns(); got != 5 {
+		t.Errorf("model turns = %d, want 5", got)
+	}
+}
+
+// Bad: still no save after the nudge. It is not asked again and the card stays a draft she can fill in.
+func TestPipelineNudgesTheSaveOnlyOnce(t *testing.T) {
+	r, out := runStalledPick(t, stalledAfterMergeScript(
+		world.ChatTurn{Text: "Anything else?"},
+		world.ChatTurn{ToolCalls: []world.ChatToolCall{toolCall("c3", "save_entry", `{"body_quotes":["the middle dragged a bit"]}`)}},
+	))
+	if out.Draft == nil || out.Draft.Entry.Body != "" {
+		t.Errorf("want a draft with no body, got %+v", out.Draft)
+	}
+	if got := r.chat.Turns(); got != 4 {
+		t.Errorf("model turns = %d, want 4", got)
+	}
+}
+
+// Sad: save_entry was called and refused (her words were not in the message). That is the model reporting a
+// refusal, not a stall, so there is no nudge.
+func TestPipelineDoesNotNudgeARefusedSave(t *testing.T) {
+	r, _ := runStalledPick(t, []world.ChatTurn{
+		{ToolCalls: []world.ChatToolCall{toolCall("c1", "media_lookup", `{"title":"The Lantern Keeper","medium":"book"}`)}},
+		{ToolCalls: []world.ChatToolCall{toolCall("c2", "merge_candidates", `{"candidate_id":"openlibrary|OL1W"}`)}},
+		{ToolCalls: []world.ChatToolCall{toolCall("c3", "save_entry", `{"body_quotes":["words she never typed"]}`)}},
+		{Text: "I could not use those words."},
+		{Text: "should never be served"},
+	})
+	if got := r.chat.Turns(); got != 4 {
+		t.Errorf("model turns = %d, want 4 (no nudge after a refused save)", got)
+	}
+}

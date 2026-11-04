@@ -467,6 +467,7 @@ func sameWork(stored, fetched domain.Work) bool {
 
 // startCard creates the draft, offering the revisit choice when the work already has a saved entry.
 func (s *RunState) startCard(ctx context.Context, workID string) error {
+	s.StartedCard = true
 	if s.Draft != nil {
 		// A manual work from an outage is replaced by the real one; a card already on this work is left alone.
 		if s.Draft.Entry.WorkID == workID {
@@ -764,6 +765,7 @@ func saveEntry(ctx context.Context, raw json.RawMessage, tctx *tool.Context) (to
 	if !ok {
 		return tool.Errorf("the review state is not wired"), nil
 	}
+	state.SaveAttempted = true
 	var args saveArgs
 	if err := decodeArgs(raw, &args); err != nil {
 		return tool.Errorf("bad arguments: %v", err), nil

@@ -9,12 +9,13 @@ providers. Autumn delegated the labelling and threshold decisions; they are reco
 model-behaviour finding is open (see Risks), and it is not a threshold question.
 
 **Do this first: rotate the temporary keys.** They appeared in the chat transcript and in `~/Cairn/.env`. They were
-used again for the 2026-11-04 runs below. A key must never be committed, logged or pasted into a fixture.
+used again for the 2026-11-04 runs below. After the last run the key returned 401 from OpenRouter, so it looks
+rotated or revoked already; confirm that and clear the file. A key must never be committed, logged or pasted into a fixture.
 
 ## Where this is
 
 S08 is complete in the repository and G4 is decided. `main` is green: `make check` passes, including
-`golangci-lint`, the race suite, the fuzz smoke, the web checks and the guard. The slice's status line says "G4 decided, one open finding".
+`golangci-lint`, the race suite, the fuzz smoke, the web checks and the guard. The slice's status line says "done".
 Nothing in the repository, a fixture, a test or a log is a real review, person, screenshot or key. The 30-case
 CI corpus titles (`The Lantern Keeper`, `The Quarry Line`) and people (`Ada Voss`, `Ilse Marrow`) are invented. The
 four-case live corpus uses real public titles (Dune, The Bear) as metadata only; its review text is invented.
@@ -134,7 +135,7 @@ thresholds.
 
 ## What happens next
 
-S08's status moves to done once the open finding under Risks is fixed. The one threshold change is
+S08 is done. The live re-check of the second nudge, with a fresh key, is hers. The one threshold change is
 already in `config/decisions/policy.yaml` with a note of its odds. S09 can start now: the socket-backed
 `agent.Responder`, the wire encoding of the events, the `revises` ownership check, and the host and origin guard
 around the whole turn. S09 does not depend on a threshold moving; it only depends on the pipeline this slice
@@ -160,11 +161,18 @@ cost per review, and the potato.
   never blocks a card.
 - **`format: print` stays empty.** The pre-read's `print` could be a hardback or a paperback, so the card asks
   rather than guessing. If she would rather store one, that is a decision for this gate.
-- **OPEN: the model sometimes ends a turn with no card.** In 3 of the 4 runs made on 2026-11-04 (the earlier
-  smoke run had none), `live-dune-book` or `live-dune-no-rating`, where the medium is unknown, ended with the
-  message stored and no card. After `choose_medium` was answered and the tool result said "Call merge_candidates
-  ...", the model replied in prose ("Is that the one you finished, or did you mean the film?") or looked up again.
-  No threshold affects this. It needs a pipeline or prompt fix and a regression test seen failing first.
+- **FIXED (2026-11-04): the model ended a turn in prose where a tool call was due.** Two shapes, one nudge per
+  turn (`stallNudge`, `internal/agent/state.go`). Neither nudge carries any of her words.
+  1. She picked a work and no card existed: after `choose_candidate` the model answered in prose instead of
+     calling `merge_candidates`, so the message was stored with no card. This hit 3 of 4 live runs before the
+     fix and none of the 3 after it. The nudge says to merge the work she chose.
+  2. This turn started the card but the model never tried `save_entry`, for example `live-dune-no-rating` asking
+     "want to add a rating?" and leaving a card with no body. The nudge says to build the card from exact quotes,
+     and that she fills in anything missing. A refused `save_entry` counts as a try and is never nudged, and a
+     card left from an earlier turn is not a stall.
+  Each shape has a happy, a bad and a sad test, and the failing ones were seen failing first. Costs are summed
+  across both model runs, and the ledger records one row per run. **The second nudge is checked against the fake
+  model only:** the key returned 401 before it could be run live. Re-run `make eval` with a fresh key to confirm.
 - **The model sometimes stores the whole message as the body.** In 2 of those 4 runs `live-dune-film` stored "watched
   dune on netflix, 3.5/5, the sound was ..." as the body. It is her own words, so the rule holds, but the card
   carries the rating and framing text. The live runner still fails this on purpose; it is a prompt question.

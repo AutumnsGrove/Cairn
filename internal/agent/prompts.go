@@ -35,4 +35,8 @@ func promptText(name string) string {
 const (
 	wrapUpInstruction = "Stop looking things up. Say in one short sentence what you still need from me, or that the card is ready. Do not write any of my words."
 	wrapUpFallback    = "The card is not ready yet. Try again, or fill it in by hand."
+	// The nudges are sent at most once per turn, when the model answered in prose where a tool call was due. They
+	// repeat what the tool result already said and carry none of her words.
+	nudgePickInstruction = "I already chose the work. Do not ask me again. Call merge_candidates with that candidate now, then continue."
+	nudgeSaveInstruction = "Build the card now. Call save_entry with exact quotes from my message. Anything missing I will fill in on the card."
 )

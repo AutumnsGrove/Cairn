@@ -12,10 +12,10 @@ S05 (pre-read), S06 (providers), S07 (session engine), and the S01 findings. **S
 
 ## Status
 
-**Built 2026-11-02; live-checked 2026-11-04; G4 decided 2026-11-04; one open finding.** The fake-model suite and the invented corpus are
+**Built 2026-11-02; live-checked 2026-11-04; G4 decided 2026-11-04; done.** The fake-model suite and the invented corpus are
 green. A real-title live smoke run reached valid book, film and TV cards against the real model, the real Jev
-pre-read, OpenLibrary and TMDB. `medium` moved from 0.70 to 0.65 and the rest stayed. A model that ends a turn with no card after a pick is open and is not a threshold
-question. The handoff is
+pre-read, OpenLibrary and TMDB. `medium` moved from 0.70 to 0.65 and the rest stayed. A model that ends a turn in prose where a tool call was due now gets one nudge
+(`stallNudge`). The second nudge has not been re-checked live; the handoff says how. The handoff is
 [`../handoffs/2026-11-02-G4-corpus-and-odds.md`](../handoffs/2026-11-02-G4-corpus-and-odds.md).
 
 ## Where we start

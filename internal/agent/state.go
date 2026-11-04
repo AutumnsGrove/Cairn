@@ -48,6 +48,10 @@ type RunState struct {
 	Answers       []domain.Answer
 	skipAll       bool
 	SaveCalled    bool
+	// SaveAttempted is set when save_entry is called at all, even if it is refused.
+	SaveAttempted bool
+	// StartedCard is set when this turn put a card on a work, so a card left from an earlier turn is not a stall.
+	StartedCard   bool
 	lookupRetries int
 	stopped       bool
 
@@ -152,6 +156,24 @@ func (s *RunState) onMessage(m message.Message, _ *provider.Usage) error {
 	}
 	s.transcript = append(s.transcript, m)
 	return nil
+}
+
+// stallNudge returns the one nudge a turn that ended in prose should get, or "" when the turn did not stall. A
+// turn that stopped for a budget or an error never stalls. Two shapes do:
+//   - she picked a work and no card exists, so merge_candidates never ran;
+//   - this turn started the card but the model never tried save_entry. A refused save counts as a try: a prose reply to a
+//     refusal is the model talking to her, not a stall.
+func (s *RunState) stallNudge() string {
+	if s.Ended != "done" || s.stopped {
+		return ""
+	}
+	if s.Chosen != nil && s.Draft == nil {
+		return nudgePickInstruction
+	}
+	if s.Draft != nil && s.StartedCard && !s.SaveAttempted {
+		return nudgeSaveInstruction
+	}
+	return ""
 }
 
 // guardCall bounds the number of tool steps and stops tools once the card has been built.
