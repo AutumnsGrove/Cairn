@@ -58,7 +58,19 @@ None.
 
 ## Open questions
 
-- The rate limit on client messages per second (proposed: generous, only to bound abuse).
+None. The rate limit was answered by Autumn on 2026-11-04 and is recorded below.
+
+## Decisions (recorded 2026-11-04)
+
+1. **Client messages are limited to 10 per second and 60 per minute per session.** The limit is per session, not
+   per connection, because two devices may share one session. A message over the limit is refused with the stable
+   code `rate_limited` and nothing is stored; the `ack` is `rejected` with that code. Five refusals in ten seconds
+   closes the socket with a stable code. A human typing on a phone is far below this, and the one-deep queue still
+   refuses a second message mid-turn.
+2. **The existing caps stay:** a 64 KiB frame, 200 messages per session, and one queued message per session. The
+   rate limit is the fourth bound, not a replacement for any of them.
+3. **A rate-limited message changes nothing.** It gets no `draft_snapshot`, no event and no ledger row; the client
+   can retry later with the same `client_msg_id`.
 
 ## Done when
 

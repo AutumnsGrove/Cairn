@@ -108,6 +108,7 @@ in the commit that introduces it, with its outcome above the limit.
 | Tokens per turn | 60k in, 8k out | The turn ends with a notice |
 | Turn deadline | 120 s | Cancelled; the message is kept as a draft |
 | Messages queued per session | 1 | A second is refused until the first is taken |
+| Client messages | 10 per second and 60 per minute per session | Refused with `rate_limited`; five refusals in 10 s closes the socket with a stable code |
 | WebSocket frame | 64 KiB | The connection is closed with a stable code |
 | Polaris ask | 2,000 characters in, 90 s | Refused or timed out, offered as a retry |
 | List page size | 50 default, 100 max | Capped |
