@@ -366,3 +366,15 @@ func sameSet(a, b []string) bool {
 	}
 	return true
 }
+
+// The live corpus is the operator's real-title smoke test. It is loaded here so a broken fixture is caught before a
+// live run, but it is never run in CI: the real providers and the real model are hers.
+func TestLiveCorpusLoads(t *testing.T) {
+	cases, err := LoadCorpus("testdata/corpus-live.json")
+	if err != nil {
+		t.Fatalf("LoadCorpus: %v", err)
+	}
+	if len(cases) != 4 {
+		t.Fatalf("live corpus = %d cases, want 4", len(cases))
+	}
+}

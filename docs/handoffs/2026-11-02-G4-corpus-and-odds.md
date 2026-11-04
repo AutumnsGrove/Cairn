@@ -3,8 +3,9 @@
 **Gate.** G4 in [`../BUILD.md`](../BUILD.md) 6: "S08: before tuning any threshold. The fixture corpus, the odds
 table from a real run, the proposed thresholds, and the labelling you need from the operator."
 
-**Status: waiting for Autumn.** S08.1 to S08.8 are built and the fake-model suite is green. No threshold has been
-tuned, and none should be until she has run the live eval and labelled the corpus.
+**Status: waiting for Autumn.** S08.1 to S08.8 are built, the fake-model suite is green, and a four-case real-title
+live smoke run reached valid cards against the real model and providers. The threshold decision and the corpus
+labelling are still hers.
 
 ## Where this is
 
@@ -21,7 +22,9 @@ stored with a notice. A provider outage offers `lookup_failed`, and "log without
 unverified work. The saved entry is still the only commit: `save_entry` builds the card, and nothing in S08 saves
 without her confirm.
 
-**The real model has not been run.** That is the live check this gate asks for.
+**The real model has now been run** on a four-case real-title smoke corpus, using the operator's temporary keys.
+The full labelling and the threshold decision are still hers. The invented 30-case corpus remains the CI suite;
+its titles cannot be found by the real providers, so `make eval` runs the real-title live corpus instead.
 
 ## What I did
 
@@ -31,9 +34,13 @@ without her confirm.
 - `internal/world/chat.go`: a scripted OpenRouter chat fake that speaks the real SSE stream, so the suite drives
   nova's real provider.
 - `internal/agent/testdata/corpus.json`: 30 invented messages with the expected parse, pre-read outcome, tool order
-  and card.
-- `internal/agent/corpus_test.go`: the CI runner against the fake model; it passes 30/30.
-- `cmd/cairn-eval`: the operator's runner against the real model and decisions backend.
+  and card, for the fake model in CI.
+- `internal/agent/testdata/corpus-live.json`: four real-title cases (Dune book, Dune film, The Bear TV, Dune with no
+  rating) for the operator's live smoke run. The review text is invented; only the titles are real metadata.
+- `internal/agent/corpus_test.go`: the CI runner against the fake model; it passes 30/30, and the live corpus is
+  loaded but never run in CI.
+- `cmd/cairn-eval`: the operator's runner against the real model and decisions backend; `make eval` runs the live
+  corpus.
 - Migration 0005 (`turn_calls`), the `CAIRN_OPENROUTER_API_KEY` and `CAIRN_MODEL` settings (pinned, no aliases),
   and the fixed interaction-request event payload (`interaction_id`, `kind`, `payload`).
 
@@ -49,6 +56,30 @@ Each case records her message, the pre-read odds, the expected intent and medium
 format, the model's tool order, the body quote and verdict, and whether the result is a card, a manual work, a
 revision or no card at all.
 
+## Live check (2026-11-04)
+
+The operator's temporary keys were used in a shell environment only; they are not in the repository, a fixture, a
+test or a log, and the temporary environment file was deleted. **They should be rotated because they appeared in the
+chat transcript.**
+
+- The pinned chat model `deepseek/deepseek-v4.1-flash-1017` exists and answers.
+- The Jev pre-read is reachable through `/systemone` and returns real odds.
+- OpenLibrary and TMDB answer; TMDB had one transient timeout and the `lookup_failed` → retry branch handled it.
+- A four-case real-title run built valid cards for Dune (book), Dune (film) and The Bear (TV), and exercised the
+  missing-rating `fill_gap` branch. The film and TV cases matched the expected fields. The two Dune book cases
+  differed only where the model chose two exact spans instead of one and chose a verdict; both are her own words
+  and the cards are valid. The fidelity warning fired once (`drops_opinion`), never blocking.
+- **The medium check is the weak one.** "finished dune" read film 0.44 / unknown 0.42 / book 0.13; "watched dune on
+  netflix" read film 0.97; "the bear on tv" read tv 0.67, just under the 0.70 threshold; the no-rating Dune read
+  unknown 0.47 / book 0.37. When the check does not fire, the `choose_medium` card is what keeps the flow moving.
+  On one run the model answered `choice=unknown` while its probabilities favoured film; the decisions layer
+  rejected that as inconsistent, correctly. These are the threshold and wording questions for this gate.
+- The deterministic format cue corrected the pre-read's "streaming" for "on tv" to `broadcast`, which is the
+  code-decides rule working.
+- Three bugs were found and fixed from the live run: a provider error could carry `api_key` in a URL (now
+  redacted); an unknown medium handed the model an error instead of the `choose_medium` card; and the candidate
+  result omitted the id the model needs to merge.
+
 ## What I need
 
 1. **Run the live eval.** From the repo root, with her key in the environment (the command never prints, logs or
@@ -58,11 +89,11 @@ revision or no card at all.
    CAIRN_OPENROUTER_API_KEY=... CAIRN_TMDB_API_KEY=... make eval > /tmp/cairn-eval.json
    ```
 
-   It runs the 30 cases against the real model and the real decisions backend and writes a JSON report: every
-   case's odds, what the model actually did, and where the card differed from the invented expectation. The chat
-   model costs a few cents for the corpus at the pinned prices; the decisions calls are fractions of a cent. The
-   command exits 1 if any case failed, and 2 if the key is missing. A missing TMDB key is normal: the film/TV cases
-   then report the provider as off.
+   It runs the four real-title cases against the real model and the real decisions backend and writes a JSON
+   report: every case's odds, what the model actually did, and where the card differed from the expected card. The
+   chat model costs a few cents for the corpus at the pinned prices; the decisions calls are fractions of a cent.
+   The command exits 1 if any case failed, and 2 if the key is missing. A missing TMDB key is normal: the film/TV
+   cases then report the provider as off. The invented 30-case corpus is the CI check, not this run.
 2. **Label the corpus.** For each case, is the expected card what she would want? The ones that most need her eye:
    - the vague and missing ratings (`book-vague-rating`, `book-no-rating`, `film-vague`, `film-no-rating`,
      `tv-no-rating`): should the agent ask, and is the fill value stored as she expects?
@@ -110,13 +141,18 @@ Once she has answered, S08's status moves to done, the thresholds (if changed) a
 around the whole turn. S09 does not depend on a threshold moving; it only depends on the pipeline this slice
 leaves behind.
 
-The live checks that stay hers: the real model on the corpus, the real decisions backend, the real TMDB and Open
-Library calls, cost per review, and the potato.
+The live checks that stay hers: the real model on a wider real-title corpus, threshold labelling from its odds,
+cost per review, and the potato.
 
 ## Risks
 
-- **The corpus is invented, so it cannot prove judgment.** It proves plumbing and guards; the real model's choices
-  and the real odds are what the live run measures. A green fake run must not be read as "the model is good".
+- **The 30-case CI corpus is invented, so it cannot prove judgment.** It proves plumbing and guards. The four-case
+  live corpus proves the real path works, not that the model's choices are good; the model split one body and chose
+  a verdict differently from the expectation, and both were valid. A green fake run must not be read as "the model
+  is good".
+- **The medium check is weak on real messages.** Dune-as-a-book can read as film/unknown, and The Bear read tv at
+  0.67, below the 0.70 threshold. The `choose_medium` card is the fallback; whether the threshold or the wording
+  should change is this gate's question.
 - **The prompt is not a licence to ask forever.** The code caps a form at three single questions and a session at
   four rounds. "It may ask more than three questions" across rounds is the recorded answer; a prompt that tried to
   ask nine at once would be refused by `ask_reviewer`.
@@ -125,5 +161,5 @@ Library calls, cost per review, and the potato.
   never blocks a card.
 - **`format: print` stays empty.** The pre-read's `print` could be a hardback or a paperback, so the card asks
   rather than guessing. If she would rather store one, that is a decision for this gate.
-- **The real providers are not exercised.** The film cases need a TMDB key; without one they report the provider as
-  off, which is the honest state and not a test failure.
+- **Keys are single-use for a live check.** The temporary keys appeared in the chat transcript and must be rotated;
+  a key must never be committed, logged or pasted into a fixture.

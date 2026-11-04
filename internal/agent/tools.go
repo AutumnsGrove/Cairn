@@ -151,7 +151,35 @@ func mediaLookup(ctx context.Context, raw json.RawMessage, tctx *tool.Context) (
 		args.Medium = state.Medium
 	}
 	if args.Medium == "" {
-		return tool.Errorf("which medium is it? Pass book, film or tv."), nil
+		// The pre-read could not tell. Ask her with the same card the split read uses, rather than handing the
+		// model a question it has no tool to ask.
+		mediums := []string{"book", "film", "tv"}
+		if state.Agent.banks != nil && len(state.Agent.banks.Mediums()) > 0 {
+			mediums = state.Agent.banks.Mediums()
+		}
+		if state.Agent.responder == nil {
+			return tool.Errorf("which medium is it? Pass book, film or tv."), nil
+		}
+		options := make([]map[string]string, 0, len(mediums))
+		for _, medium := range mediums {
+			options = append(options, map[string]string{"value": medium, "label": mediumLabel(medium)})
+		}
+		resolution, askErr := state.ask(ctx, "choose_medium", map[string]any{"options": options})
+		if askErr != nil {
+			return tool.Errorf("could not ask which medium: %v", askErr), nil
+		}
+		choice, _ := decodeChoice(resolution)
+		found := false
+		for _, medium := range mediums {
+			if strings.EqualFold(choice, medium) {
+				args.Medium, found = medium, true
+				break
+			}
+		}
+		if !found {
+			return tool.Errorf("that is not a medium I can look up"), nil
+		}
+		state.Medium = args.Medium
 	}
 	switch args.Medium {
 	case "book", "film", "tv":
@@ -219,7 +247,8 @@ func mediaLookup(ctx context.Context, raw json.RawMessage, tctx *tool.Context) (
 	state.Chosen = &chosen
 	details.Summary = "Chose " + chosen.Title
 	return resultWithDetails(details,
-		"She chose %s (%d, %s). Call merge_candidates; do not pick a different one.", chosen.Title, chosen.Year, chosen.Medium), nil
+		"She chose %s (%d, %s). Call merge_candidates with candidate_id %q; do not pick a different one.",
+		chosen.Title, chosen.Year, chosen.Medium, chosen.Provider+"|"+chosen.ProviderID), nil
 }
 
 // lookupFailed opens the one card every provider failure maps to. It is the outage branch: try again, ask Polaris

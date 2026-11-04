@@ -113,8 +113,8 @@ build: ## Build the binary
 dev: ## The real service against the in-process world, offline
 	$(GO) run ./cmd/cairn-dev
 
-eval: ## The S08 corpus against the real model (operator's live check; needs CAIRN_OPENROUTER_API_KEY)
-	$(GO) run ./cmd/cairn-eval
+eval: ## The real-title live corpus against the real model (operator's check; needs CAIRN_OPENROUTER_API_KEY)
+	$(GO) run ./cmd/cairn-eval internal/agent/testdata/corpus-live.json
 
 tidy:
 	$(GO) mod tidy

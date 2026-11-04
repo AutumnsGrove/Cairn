@@ -1,0 +1,139 @@
+[
+  {
+    "id": "live-dune-book",
+    "group": "book",
+    "message": "finished dune, 4.5/5. the world felt lived in but the middle dragged a bit",
+    "medium": "book",
+    "title": "Dune",
+    "preread": {},
+    "tools": [
+      "media_lookup",
+      "merge_candidates",
+      "save_entry"
+    ],
+    "body_quote": "the world felt lived in but the middle dragged a bit",
+    "verdict_quote": "",
+    "choose_medium": "book",
+    "lookup_choice": "retry",
+    "expected": {
+      "intent": "log_review",
+      "medium": "book",
+      "rating": 18,
+      "date": "",
+      "format": "",
+      "body": "the world felt lived in but the middle dragged a bit",
+      "verdict": "",
+      "work_title": "Dune",
+      "ambiguous": [],
+      "manual_work": false,
+      "no_card": false,
+      "notice": "",
+      "revises": false
+    },
+    "awkward": "the model may split the body into two exact spans",
+    "hostile": false
+  },
+  {
+    "id": "live-dune-film",
+    "group": "film_tv",
+    "message": "watched dune on netflix, 3.5/5, the sound was enormous but it was too long",
+    "medium": "film",
+    "title": "Dune",
+    "preread": {},
+    "tools": [
+      "media_lookup",
+      "merge_candidates",
+      "save_entry"
+    ],
+    "body_quote": "the sound was enormous but it was too long",
+    "verdict_quote": "",
+    "choose_medium": "film",
+    "lookup_choice": "retry",
+    "expected": {
+      "intent": "log_review",
+      "medium": "film",
+      "rating": 14,
+      "date": "",
+      "format": "streaming",
+      "body": "the sound was enormous but it was too long",
+      "verdict": "",
+      "work_title": "Dune",
+      "ambiguous": [],
+      "manual_work": false,
+      "no_card": false,
+      "notice": "",
+      "revises": false
+    },
+    "hostile": false,
+    "awkward": ""
+  },
+  {
+    "id": "live-tv-bear",
+    "group": "film_tv",
+    "message": "watched the bear on tv, 4.5/5, the kitchen scenes were relentless",
+    "medium": "tv",
+    "title": "The Bear",
+    "preread": {},
+    "tools": [
+      "media_lookup",
+      "merge_candidates",
+      "save_entry"
+    ],
+    "body_quote": "the kitchen scenes were relentless",
+    "verdict_quote": "",
+    "choose_medium": "tv",
+    "lookup_choice": "retry",
+    "expected": {
+      "intent": "log_review",
+      "medium": "tv",
+      "rating": 18,
+      "date": "",
+      "format": "broadcast",
+      "body": "the kitchen scenes were relentless",
+      "verdict": "",
+      "work_title": "The Bear",
+      "ambiguous": [],
+      "manual_work": false,
+      "no_card": false,
+      "notice": "",
+      "revises": false
+    },
+    "hostile": false,
+    "awkward": ""
+  },
+  {
+    "id": "live-dune-no-rating",
+    "group": "book",
+    "message": "finished dune. the world felt lived in but the middle dragged a bit",
+    "medium": "book",
+    "title": "Dune",
+    "preread": {},
+    "tools": [
+      "media_lookup",
+      "merge_candidates",
+      "save_entry"
+    ],
+    "body_quote": "the world felt lived in but the middle dragged a bit",
+    "verdict_quote": "",
+    "fill_rating": "4/5",
+    "choose_medium": "book",
+    "lookup_choice": "retry",
+    "expected": {
+      "intent": "log_review",
+      "medium": "book",
+      "rating": 16,
+      "date": "",
+      "format": "",
+      "body": "the world felt lived in but the middle dragged a bit",
+      "verdict": "",
+      "work_title": "Dune",
+      "ambiguous": [],
+      "manual_work": false,
+      "no_card": false,
+      "notice": "",
+      "revises": false
+    },
+    "awkward": "no rating",
+    "hostile": false
+  }
+]

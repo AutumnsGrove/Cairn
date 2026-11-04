@@ -12,8 +12,9 @@ S05 (pre-read), S06 (providers), S07 (session engine), and the S01 findings. **S
 
 ## Status
 
-**Built 2026-11-02; waiting at G4.** The fake-model suite and the corpus are green. The real-model run, the odds
-table from it and the threshold decision are Autumn's; the handoff is
+**Built 2026-11-02; live-checked 2026-11-04; waiting at G4.** The fake-model suite and the invented corpus are
+green. A real-title live smoke run reached valid book, film and TV cards against the real model, the real Jev
+pre-read, OpenLibrary and TMDB. The threshold decision and the corpus labelling are Autumn's; the handoff is
 [`../handoffs/2026-11-02-G4-corpus-and-odds.md`](../handoffs/2026-11-02-G4-corpus-and-odds.md).
 
 ## Where we start
@@ -88,7 +89,10 @@ stays inside the caps.
   row; the running total is read from both, never a counter.
 - **The corpus.** Thirty invented messages (ten book, ten film/TV, ten cross-cutting) in
   `internal/agent/testdata/corpus.json`, with the expected parse, pre-read outcome, tool order and card. The CI
-  runner is `TestCorpusAgainstTheFakeModel`; the operator's live runner is `make eval` (`cmd/cairn-eval`).
+  runner is `TestCorpusAgainstTheFakeModel`. A separate four-case real-title corpus
+  (`internal/agent/testdata/corpus-live.json`) is the operator's live smoke run: the invented titles cannot be
+  found by the real providers, so the live run needs real works. `make eval` (`cmd/cairn-eval`) runs the live
+  corpus; the invented one stays the fake/CI suite.
 - **The hostile paths.** A title or message that addresses the model, an invented body or verdict, a rating passed
   as an argument, a huge title, malformed tool JSON, a provider outage, a decisions outage, a model error, a model
   timeout, the step cap and the token cap all have tests.
@@ -101,6 +105,17 @@ is how a manual work is replaced by the real one. `session.StartDraft`, `SetWork
 
 **Not this slice.** `lookup_web`, `ask_polaris_freeform` (S15) and `read_source_image` (S18) are not offered. The
 fidelity check runs only when the decisions layer is configured; it never blocks.
+
+**Live check (2026-11-04).** The pinned chat model and the Jev pre-read both answer. A four-case real-title smoke
+run built valid cards for Dune (book and film) and The Bear (TV), and exercised the `fill_gap` rating branch. The
+two strict differences were the model splitting a body into two exact spans and choosing a verdict; both are her
+own words and the cards are valid. The medium check is the weak one: "finished dune" read film 0.44 / unknown
+0.42 / book 0.13, "watched dune on netflix" film 0.97, "the bear on tv" tv 0.67 (below the 0.70 threshold), and
+the no-rating Dune unknown 0.47 / book 0.37. The `choose_medium` card is what keeps the flow moving. The
+deterministic format cue corrected the pre-read's "streaming" for "on tv" to `broadcast`, which is the code-decides
+rule working. Three bugs were found and fixed: a provider error could carry `api_key` in a URL, an unknown medium
+handed the model an error instead of `choose_medium`, and the candidate result omitted the id the model needs to
+merge.
 
 ## Gates
 

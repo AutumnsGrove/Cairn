@@ -520,3 +520,64 @@ func TestPipelineCarriesTheStoredTranscript(t *testing.T) {
 		t.Errorf("the second request did not carry the previous assistant message:\n%s", last)
 	}
 }
+
+// When the pre-read cannot name a medium, the lookup asks with the choose_medium card instead of handing the model
+// an error it has no tool to fix.
+func TestPipelineAsksTheMediumWhenThePreReadDoesNotKnow(t *testing.T) {
+	script := []world.ChatTurn{
+		{ToolCalls: []world.ChatToolCall{toolCall("c1", "media_lookup", `{"title":"The Lantern Keeper"}`)}},
+		{ToolCalls: []world.ChatToolCall{toolCall("c2", "merge_candidates", `{"candidate_id":"openlibrary|OL1W"}`)}},
+		{ToolCalls: []world.ChatToolCall{toolCall("c3", "save_entry", `{"body_quotes":["the middle dragged a bit"]}`)}},
+		{Text: "Ready."},
+	}
+	r := newRig(t, rigOptions{script: script})
+	r.fake.Set("intent", map[string]float64{"log_review": 0.95})
+	r.fake.Set("medium", map[string]float64{"unknown": 0.95})
+	r.fake.Set("format", map[string]float64{"not_stated": 0.95})
+	r.fake.Set("revisit", map[string]float64{"no": 0.95})
+	r.responder.script("choose_medium", "book")
+	r.responder.script("choose_candidate", "openlibrary|OL1W")
+	ctx := context.Background()
+	sess, _ := r.session.CreateEntry(ctx)
+	out, err := r.agent.HandleMessage(ctx, TurnInput{
+		SessionID: sess.ID, Text: "the lantern keeper, 4/5, the middle dragged a bit", ClientMsgID: "m1",
+	})
+	if err != nil {
+		t.Fatalf("HandleMessage: %v", err)
+	}
+	if out.Draft == nil {
+		t.Fatal("no card after the medium question")
+	}
+	events, _ := r.store.EventsSince(ctx, sess.ID, 0)
+	var kinds []string
+	for _, ev := range events {
+		if ev.Kind != store.EventInteractionRequest {
+			continue
+		}
+		var payload struct {
+			Kind string `json:"kind"`
+		}
+		if json.Unmarshal(ev.Payload, &payload) == nil {
+			kinds = append(kinds, payload.Kind)
+		}
+	}
+	if !strings.Contains(strings.Join(kinds, ","), "choose_medium") {
+		t.Errorf("interactions = %v, want a choose_medium card", kinds)
+	}
+}
+
+// After her tap, the model needs the candidate id to call merge_candidates; the result must carry it.
+func TestMediaLookupTellsTheModelTheChosenID(t *testing.T) {
+	r := newRig(t, rigOptions{})
+	ctx := context.Background()
+	sess, _ := r.session.CreateEntry(ctx)
+	state := &RunState{Agent: r.agent, SessionID: sess.ID, Medium: "book"}
+	r.responder.script("choose_candidate", "openlibrary|OL1W")
+	result, err := mediaLookup(ctx, json.RawMessage(`{"title":"The Lantern Keeper","medium":"book"}`), &tool.Context{Data: state})
+	if err != nil || result.IsError {
+		t.Fatalf("mediaLookup = %+v, %v", result, err)
+	}
+	if !strings.Contains(result.Content, "openlibrary|OL1W") {
+		t.Errorf("the result does not tell the model the chosen id: %q", result.Content)
+	}
+}

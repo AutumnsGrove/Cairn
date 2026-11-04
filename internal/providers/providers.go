@@ -18,6 +18,7 @@ import (
 	"errors"
 	"fmt"
 	"net/http"
+	"regexp"
 	"slices"
 	"sort"
 	"strings"
@@ -81,7 +82,16 @@ func (e *Error) Error() string {
 	if e.Err != nil {
 		msg += ": " + e.Err.Error()
 	}
-	return msg
+	return redactSecrets(msg)
+}
+
+// secretParamRE catches a key in a query string. A provider error is a log line, and a log line must never carry
+// the key, even when an http client put the whole URL into its own error (docs/BUILD.md invariant 9).
+var secretParamRE = regexp.MustCompile(`(?i)(api_key=)[^&\s"']+`)
+
+// redactSecrets replaces a query-string key's value, keeping the parameter name so the error still explains itself.
+func redactSecrets(message string) string {
+	return secretParamRE.ReplaceAllString(message, "${1}REDACTED")
 }
 
 // Unwrap keeps the cause for errors.Is and errors.As.

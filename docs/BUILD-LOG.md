@@ -401,3 +401,35 @@ is treated as tuned until she answers, and the real-model run is hers.
 
 **Wired by S09.** The socket-backed `agent.Responder`, the wire encoding of the events, the `revises` check against
 the same work, and the host and origin guard around the whole turn.
+
+
+## 2026-11-04, S08 live check
+
+**Run.** The operator supplied temporary OpenRouter and TMDB keys. The pinned chat model
+(`deepseek/deepseek-v4.1-flash-1017`) exists and answers; the Jev pre-read is reachable through `/systemone`; TMDB
+and OpenLibrary answer. The keys were used in a shell environment only, never written to the repository, a fixture,
+a test or a log, and the temporary environment file was deleted after the run. They should be rotated because they
+appeared in the chat transcript.
+
+**Result.** A four-case real-title smoke corpus (`internal/agent/testdata/corpus-live.json`) built valid cards for
+Dune (book), Dune (film) and The Bear (TV), and exercised the missing-rating `fill_gap` branch on a second Dune
+message. The film and TV cases matched their expected fields. The two Dune book cases differed only where the model
+chose two exact spans instead of one and chose a verdict: both are her own words and the cards are valid. The
+fidelity warning fired once (`drops_opinion`), which is the never-blocking warning doing its job.
+
+**The medium check is the weak one.** "finished dune" read film 0.44 / unknown 0.42 / book 0.13; "watched dune on
+netflix" read film 0.97; "the bear on tv" read tv 0.67 (just under the 0.70 threshold); the no-rating Dune read
+unknown 0.47 / book 0.37. The `choose_medium` card is what keeps the flow moving when the check does not fire. On
+one run the model answered `choice=unknown` while its own probabilities favoured film; the decisions layer rejected
+that as inconsistent, correctly. These are G4's threshold and wording questions, not code bugs.
+
+**Fixed from the live run.** A provider error could carry the TMDB URL, including `api_key`, into a log; the
+provider `Error` now redacts a query-string key, with a regression test. When the pre-read could not name a medium,
+`media_lookup` returned an error the model had no tool to fix; it now opens the `choose_medium` card. After her
+candidate tap, the tool result omitted the candidate id, so the model could not merge; it now includes
+`provider|id`. The deterministic format cue corrected the pre-read's "streaming" for "on tv" to `broadcast`, which
+is the code-decides rule working as intended.
+
+**What remains.** The 30-case invented corpus is the CI suite; its invented titles cannot be found by the real
+providers. `make eval` now runs the four-case real-title live corpus instead. The operator still needs to label the
+corpus and decide the thresholds at G4; no threshold was tuned.

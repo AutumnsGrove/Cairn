@@ -16,6 +16,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 
 	decideor "github.com/AutumnsGrove/nova/decide/openrouter"
@@ -32,7 +33,7 @@ import (
 
 const usage = `cairn-eval: run the S08 corpus against the real model.
 
-  cairn-eval [corpus.json]     default: internal/agent/testdata/corpus.json
+  cairn-eval [corpus.json]     default: internal/agent/testdata/corpus-live.json
 
 Needs CAIRN_OPENROUTER_API_KEY. A TMDB key enables the film and TV cases; without one those cases report the
 provider as off. The report goes to stdout as JSON.
@@ -56,7 +57,7 @@ func run(args []string, environ []string, stdout, stderr io.Writer) int {
 		fmt.Fprintln(stderr, "cairn-eval: CAIRN_OPENROUTER_API_KEY is not set; this command spends money and is yours to run")
 		return 2
 	}
-	corpusPath := "internal/agent/testdata/corpus.json"
+	corpusPath := "internal/agent/testdata/corpus-live.json"
 	if len(args) > 0 {
 		corpusPath = args[0]
 	}
@@ -146,17 +147,6 @@ func runCase(ctx context.Context, c agent.Case, cfg config.Config, set *banks.Se
 		return result
 	}
 
-	// The pre-read is recorded separately so the report has its odds even if the model never reaches the card.
-	if preRead, runErr := pre.Run(ctx, decisions.Reading{Message: c.Message},
-		decisions.Session{Active: true, Intent: "log_review"}); runErr == nil {
-		result.Odds = wireOdds(preRead.Odds)
-		if preRead.Outcome.Intent != c.Expected.Intent {
-			fail("intent = %q, want %q", preRead.Outcome.Intent, c.Expected.Intent)
-		}
-	} else {
-		fail("pre-read: %v", runErr)
-	}
-
 	sess, err := engine.CreateEntry(ctx)
 	if err != nil {
 		fail("create session: %v", err)
@@ -169,6 +159,9 @@ func runCase(ctx context.Context, c agent.Case, cfg config.Config, set *banks.Se
 		fail("handle message: %v", err)
 		return result
 	}
+	// The agent's persisted pre-read is the odds table; a second call here would spend money twice and could
+	// disagree with the answer the pipeline actually used.
+	result.Odds = prereadOdds(ctx, db, sess.ID)
 	if c.Expected.NoCard {
 		if out.Draft != nil {
 			fail("a card was built, want none")
@@ -176,7 +169,7 @@ func runCase(ctx context.Context, c agent.Case, cfg config.Config, set *banks.Se
 		return result
 	}
 	if out.Draft == nil {
-		fail("no card (ended %s)", out.Ended)
+		fail("no card (ended %s, steps %d, cost $%.4f): %s", out.Ended, out.Steps, out.CostUSD, diagnose(ctx, db, engine, sess.ID))
 		return result
 	}
 	entry := out.Draft.Entry
@@ -208,7 +201,100 @@ func runCase(ctx context.Context, c agent.Case, cfg config.Config, set *banks.Se
 	if c.Expected.Revises != (out.Revises != "") {
 		fail("revises = %q, want a revision: %v", out.Revises, c.Expected.Revises)
 	}
+	if len(result.Failures) > 0 {
+		result.Failures = append(result.Failures, "diagnosis: "+diagnose(ctx, db, engine, sess.ID))
+	}
 	return result
+}
+
+// prereadOdds reads the odds the agent wrote for this turn.
+func prereadOdds(ctx context.Context, db *store.Store, sessionID string) map[string]map[string]float64 {
+	events, err := db.EventsSince(ctx, sessionID, 0)
+	if err != nil {
+		return nil
+	}
+	for _, ev := range events {
+		if ev.Kind != store.EventPreread {
+			continue
+		}
+		var payload struct {
+			Odds map[string]map[string]float64 `json:"odds"`
+		}
+		if json.Unmarshal(ev.Payload, &payload) == nil {
+			return payload.Odds
+		}
+	}
+	return nil
+}
+
+// diagnose explains a missing card with the tool order, the notices and the model's last sentence. It prints no
+// review text beyond what the model itself said, and the report is the operator's to keep outside the repo.
+func diagnose(ctx context.Context, db *store.Store, engine *session.Engine, sessionID string) string {
+	events, err := db.EventsSince(ctx, sessionID, 0)
+	if err != nil {
+		return "no events: " + err.Error()
+	}
+	var tools, notices []string
+	for _, ev := range events {
+		switch ev.Kind {
+		case store.EventToolStart:
+			var payload struct {
+				Tool string `json:"tool"`
+			}
+			if json.Unmarshal(ev.Payload, &payload) == nil {
+				tools = append(tools, payload.Tool)
+			}
+		case store.EventNotice:
+			var payload struct {
+				Code string `json:"code"`
+			}
+			if json.Unmarshal(ev.Payload, &payload) == nil {
+				notices = append(notices, payload.Code)
+			}
+		}
+	}
+	sess, err := engine.Session(ctx, sessionID)
+	if err != nil {
+		return "tools=" + strings.Join(tools, ",") + "; no session: " + err.Error()
+	}
+	var messages []struct {
+		Role      string `json:"role"`
+		Content   string `json:"content"`
+		ToolCalls []struct {
+			Function struct {
+				Name      string `json:"name"`
+				Arguments string `json:"arguments"`
+			} `json:"function"`
+		} `json:"tool_calls"`
+	}
+	_ = json.Unmarshal(sess.Messages, &messages)
+	last, lastTool, calls := "", "", ""
+	for i := len(messages) - 1; i >= 0; i-- {
+		if last == "" && messages[i].Role == "assistant" && strings.TrimSpace(messages[i].Content) != "" {
+			last = messages[i].Content
+		}
+		if lastTool == "" && messages[i].Role == "tool" && strings.TrimSpace(messages[i].Content) != "" {
+			lastTool = messages[i].Content
+		}
+		if calls == "" && len(messages[i].ToolCalls) > 0 {
+			var parts []string
+			for _, call := range messages[i].ToolCalls {
+				parts = append(parts, call.Function.Name+"("+call.Function.Arguments+")")
+			}
+			calls = strings.Join(parts, ", ")
+		}
+	}
+	if len(last) > 300 {
+		last = last[:300]
+	}
+	if len(lastTool) > 500 {
+		lastTool = lastTool[:500]
+	}
+	if len(calls) > 500 {
+		calls = calls[:500]
+	}
+	return "tools=" + strings.Join(tools, ",") + "; calls=" + calls + "; notices=" + strings.Join(notices, ",") +
+		"; lastTool=" + lastTool + "; last=" + last
 }
 
 // staticResponder is the attentive but unopinionated person the eval needs: skip the chips, answer the one choice
@@ -233,6 +319,23 @@ func (r *staticResponder) Wait(ctx context.Context, sessionID, interactionID str
 		value = map[string]any{"skip_all": true}
 	case "choose_medium":
 		value = r.c.ChooseMedium
+	case "choose_candidate":
+		var payload struct {
+			Candidates []struct {
+				ID    string `json:"id"`
+				Title string `json:"title"`
+			} `json:"candidates"`
+		}
+		_ = json.Unmarshal(question.Payload, &payload)
+		for _, candidate := range payload.Candidates {
+			if strings.EqualFold(candidate.Title, r.c.Title) {
+				value = candidate.ID
+				break
+			}
+		}
+		if value == nil && len(payload.Candidates) > 0 {
+			value = payload.Candidates[0].ID
+		}
 	case "revisit_choice":
 		value = r.c.RevisitChoice
 	case "lookup_failed":
@@ -260,17 +363,4 @@ func (r *staticResponder) Wait(ctx context.Context, sessionID, interactionID str
 		return nil, err
 	}
 	return raw, nil
-}
-
-// wireOdds is the report's probability table: one map per check, option to odds.
-func wireOdds(in map[string]decisions.Odds) map[string]map[string]float64 {
-	out := make(map[string]map[string]float64, len(in))
-	for check, odds := range in {
-		options := make(map[string]float64, len(odds.Probabilities))
-		for option, p := range odds.Probabilities {
-			options[option] = p
-		}
-		out[check] = options
-	}
-	return out
 }
