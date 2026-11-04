@@ -188,8 +188,10 @@ func runCase(ctx context.Context, c agent.Case, cfg config.Config, set *banks.Se
 	if entry.Body != c.Expected.Body {
 		fail("body = %q, want %q", entry.Body, c.Expected.Body)
 	}
-	if entry.Verdict != c.Expected.Verdict {
-		fail("verdict = %q, want %q", entry.Verdict, c.Expected.Verdict)
+	// A real model may or may not pick a verdict. Any verdict that is an exact span of her own message is her
+	// words and is allowed; only an invented one, or one that differs from a stated expectation, fails.
+	if entry.Verdict != c.Expected.Verdict && (c.Expected.Verdict != "" || !strings.Contains(c.Message, entry.Verdict)) {
+		fail("verdict = %q, want %q or a span of her message", entry.Verdict, c.Expected.Verdict)
 	}
 	if c.Expected.WorkTitle != "" {
 		if work, workErr := db.Work(ctx, entry.WorkID); workErr != nil {

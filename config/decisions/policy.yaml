@@ -35,7 +35,10 @@ policy:
       option_thresholds: { edit_entry: 0.80, answer_pending: 0.75, import_review: 0.75 }
 
     medium:
-      threshold: 0.70
+      # G4 (2026-11-04), 4 real-title messages, 5 readings: correct leaders 0.67, 0.71 (tv), 0.95, 0.97 (film);
+      # the only wrong leader was film 0.49 for a book. 0.70 put The Bear on the line; 0.65 sits between. A wrong
+      # guess costs a question, so this stays on the cautious side. Too few readings to tune further.
+      threshold: 0.65
       # A medium only matters once the message is routed to a review, exactly like format and revisit.
       only_when_intent: [log_review, import_review]
       # Split read: ask "book or film?" first. Triggers when the runner-up is not negligible and the

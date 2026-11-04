@@ -3,16 +3,21 @@
 **Gate.** G4 in [`../BUILD.md`](../BUILD.md) 6: "S08: before tuning any threshold. The fixture corpus, the odds
 table from a real run, the proposed thresholds, and the labelling you need from the operator."
 
-**Status: waiting for Autumn.** S08.1 to S08.8 are built, the fake-model suite is green, and a four-case real-title
-live smoke run reached valid cards against the real model and providers. The threshold decision and the corpus
-labelling are still hers.
+**Status: decided on 2026-11-04, with Autumn's delegation, from four real-title cases.** S08.1 to S08.8 are built,
+the fake-model suite is green, and four real-title live runs reached valid cards against the real model and
+providers. Autumn delegated the labelling and threshold decisions; they are recorded under "Decisions" below. One
+model-behaviour finding is open (see Risks), and it is not a threshold question.
+
+**Do this first: rotate the temporary keys.** They appeared in the chat transcript and in `~/Cairn/.env`. They were
+used again for the 2026-11-04 runs below. A key must never be committed, logged or pasted into a fixture.
 
 ## Where this is
 
-S08 is complete in the repository and stops at this gate. `main` is green: `make check` and `golangci-lint` pass,
-including the race suite, the fuzz smoke, the web checks and the guard. The slice's status line says "waiting at
-G4". Nothing in the repository, a fixture, a test or a log is a real review, title, person, screenshot or key. The
-corpus titles (`The Lantern Keeper`, `The Quarry Line`) and people (`Ada Voss`, `Ilse Marrow`) are invented.
+S08 is complete in the repository and G4 is decided. `main` is green: `make check` passes, including
+`golangci-lint`, the race suite, the fuzz smoke, the web checks and the guard. The slice's status line says "G4 decided, one open finding".
+Nothing in the repository, a fixture, a test or a log is a real review, person, screenshot or key. The 30-case
+CI corpus titles (`The Lantern Keeper`, `The Quarry Line`) and people (`Ada Voss`, `Ilse Marrow`) are invented. The
+four-case live corpus uses real public titles (Dune, The Bear) as metadata only; its review text is invented.
 
 The whole book and film flows reach a draft card against the fake model: the right work, rating, date, format,
 body spans, verdict and answers. A model that invents a body or a verdict cannot store it; one that tries to pass a
@@ -80,49 +85,43 @@ chat transcript.**
   redacted); an unknown medium handed the model an error instead of the `choose_medium` card; and the candidate
   result omitted the id the model needs to merge.
 
-## What I need
+## Odds from the real runs (2026-11-04)
 
-1. **Run the live eval.** From the repo root, with her key in the environment (the command never prints, logs or
-   commits it):
+Four real-title messages, the pinned chat model and the real Jev pre-read, 5 runs in all (one earlier, one from
+`make eval`, three after the changes below). Probabilities are the pre-read's; "range" is across runs.
 
-   ```bash
-   CAIRN_OPENROUTER_API_KEY=... CAIRN_TMDB_API_KEY=... make eval > /tmp/cairn-eval.json
-   ```
+| Case | Message | Medium read (range) | Right answer | Format read | Fires at 0.70 | Fires at 0.65 |
+|---|---|---|---|---|---|---|
+| `live-dune-book` | "finished dune, 4.5/5. ..." | film .40-.49, unknown .40-.42, book .09-.16 | book | not_stated .99 | no, asks (split read) | no, asks (split read) |
+| `live-dune-no-rating` | "finished dune. ..." | unknown .45-.53, book .35-.42 | book | not_stated 1.0 | no, asks (split read) | no, asks (split read) |
+| `live-dune-film` | "watched dune on netflix, 3.5/5, ..." | film .95-.97 | film | streaming 1.0 | yes | yes |
+| `live-tv-bear` | "watched the bear on tv, 4.5/5, ..." | tv .67-.74, film .17-.21 | tv | not_stated .51 / streaming .49 | only 3 of 5 runs | yes, all runs |
 
-   It runs the four real-title cases against the real model and the real decisions backend and writes a JSON
-   report: every case's odds, what the model actually did, and where the card differed from the expected card. The
-   chat model costs a few cents for the corpus at the pinned prices; the decisions calls are fractions of a cent.
-   The command exits 1 if any case failed, and 2 if the key is missing. A missing TMDB key is normal: the film/TV
-   cases then report the provider as off. The invented 30-case corpus is the CI check, not this run.
-2. **Label the corpus.** For each case, is the expected card what she would want? The ones that most need her eye:
-   - the vague and missing ratings (`book-vague-rating`, `book-no-rating`, `film-vague`, `film-no-rating`,
-     `tv-no-rating`): should the agent ask, and is the fill value stored as she expects?
-   - the framing-only cases (`book-framing-only`, `film-framing-only`): is asking her for the few words, then
-     storing them as a typed body, the right fallback?
-   - the split medium (`cross-split-medium`): is book the right answer for "the lantern keeper"?
-   - the hostile cases (`book-hostile-message`, `film-hostile-message`, `cross-injection`,
-     `cross-title-injection`): is the honest quote the body she would expect, with the instruction ignored?
-   - the revisit cases (`book-already-reviewed`, `cross-revisit-new-entry`): edit the saved entry or make a new one?
-   - the outage and empty cases (`cross-provider-down`, `cross-empty`, `cross-only-rating`): is "log without
-     details" or "no card" the right outcome at this stage, before Polaris (S15)?
-   - the format cases (`book-audiobook`, `book-ebook`, `film-cinema`, `film-physical`): is the format she would
-     have picked?
-3. **Approve or change the thresholds.** These are the starting values from
-   [`../../config/decisions/policy.yaml`](../../config/decisions/policy.yaml), not tuned. G4 replaces them from real
-   odds on the corpus.
+Every other check was far from its threshold: `intent` log_review 1.0 and `revisit` no .99-1.0 on all four. The
+`mentions_*` readings are mostly 0 or 1 with a few mid values (`mentions_story` .26-.38 on the Dune book cases,
+`mentions_world` .57 on The Bear), all well away from 0.75 or from a case where it mattered. The fidelity odds are
+not in the report, so `extract_fidelity` has no evidence either way.
 
-   | Check | Threshold | Notes |
-   |---|---|---|
-   | `intent` | 0.65 | `edit_entry` 0.80, `answer_pending` 0.75, `import_review` 0.75 |
-   | `medium` | 0.70 | Ambiguity: runner-up at least 0.25 and leader gap under 0.30 asks "which one?" |
-   | `format` | 0.75 | Only when the intent is `log_review` |
-   | `revisit` | 0.80 | Backed by the exact work match in code, not the probability alone |
-   | `extract_fidelity` | 0.60 | `drops_opinion` 0.60; `adds_content` is logged as a bug, never shown as a warning |
-   | `mentions_*` | 0.75 | One default for the nine topic checks |
-   | Session override | 0.80 | Inside an entry session the session's own reading stands unless the pre-read is this sure |
+## Decisions
 
-4. **Confirm the two recorded answers** from 2026-11-02: the prompt is terse and plain with no emojis and may ask
-   more than three questions across rounds; the corpus is 10 book, 10 film/TV, 10 cross-cutting.
+Autumn delegated these on 2026-11-04. They rest on very little data, so only the one change with real evidence was
+made.
+
+- **`medium` 0.70 to 0.65 (changed in `config/decisions/policy.yaml`).** The Bear read tv between 0.67 and 0.74, so
+  0.70 put it on the line and it fired in only 3 of 5 runs. The only wrong leader seen was film 0.49 for a book.
+  0.65 sits between them. A wrong guess costs a question and never a stored word, so the cautious side wins.
+- **Everything else unchanged:** `intent` 0.65, `format` 0.75, `revisit` 0.80, `extract_fidelity` 0.60,
+  `mentions_*` 0.75, session override 0.80. No reading came near them, so nothing here could justify a move.
+- **A verdict is allowed in the live run.** The agent may pick a verdict if it is an exact span of her own message
+  (`cmd/cairn-eval`). An invented verdict, or any change to a stated expectation, still fails. This is the "my
+  words are mine" rule, and the CI corpus is unchanged.
+- **Split Dune read asks "which one?".** For "finished dune" the pre-read reads film or unknown, not book. Asking
+  is the right outcome: the fallback is `choose_medium`, as designed.
+- **Labelling covers the four live cases only.** The 26 other cases test plumbing against the fake model. Their
+  expectations are unchanged and were not re-judged against what she would want. If she wants to, the cases to look
+  at are the vague and missing ratings, the framing-only cases, the revisit cases and the outage cases.
+- **The two recorded answers from 2026-11-02 stand:** the prompt is terse and plain with no emojis and may ask more
+  than three questions across rounds; the corpus is 10 book, 10 film/TV, 10 cross-cutting.
 
 To reproduce the fake run, which is the CI check and not hers:
 
@@ -135,8 +134,8 @@ thresholds.
 
 ## What happens next
 
-Once she has answered, S08's status moves to done, the thresholds (if changed) are edited in
-`config/decisions/policy.yaml` with a note of the odds they came from, and S09 starts: the socket-backed
+S08's status moves to done once the open finding under Risks is fixed. The one threshold change is
+already in `config/decisions/policy.yaml` with a note of its odds. S09 can start now: the socket-backed
 `agent.Responder`, the wire encoding of the events, the `revises` ownership check, and the host and origin guard
 around the whole turn. S09 does not depend on a threshold moving; it only depends on the pipeline this slice
 leaves behind.
@@ -161,5 +160,12 @@ cost per review, and the potato.
   never blocks a card.
 - **`format: print` stays empty.** The pre-read's `print` could be a hardback or a paperback, so the card asks
   rather than guessing. If she would rather store one, that is a decision for this gate.
-- **Keys are single-use for a live check.** The temporary keys appeared in the chat transcript and must be rotated;
-  a key must never be committed, logged or pasted into a fixture.
+- **OPEN: the model sometimes ends a turn with no card.** In 3 of the 4 runs made on 2026-11-04 (the earlier
+  smoke run had none), `live-dune-book` or `live-dune-no-rating`, where the medium is unknown, ended with the
+  message stored and no card. After `choose_medium` was answered and the tool result said "Call merge_candidates
+  ...", the model replied in prose ("Is that the one you finished, or did you mean the film?") or looked up again.
+  No threshold affects this. It needs a pipeline or prompt fix and a regression test seen failing first.
+- **The model sometimes stores the whole message as the body.** In 2 of those 4 runs `live-dune-film` stored "watched
+  dune on netflix, 3.5/5, the sound was ..." as the body. It is her own words, so the rule holds, but the card
+  carries the rating and framing text. The live runner still fails this on purpose; it is a prompt question.
+- **Keys:** see "Do this first" at the top. A key must never be committed, logged or pasted into a fixture.

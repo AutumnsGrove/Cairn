@@ -12,9 +12,10 @@ S05 (pre-read), S06 (providers), S07 (session engine), and the S01 findings. **S
 
 ## Status
 
-**Built 2026-11-02; live-checked 2026-11-04; waiting at G4.** The fake-model suite and the invented corpus are
+**Built 2026-11-02; live-checked 2026-11-04; G4 decided 2026-11-04; one open finding.** The fake-model suite and the invented corpus are
 green. A real-title live smoke run reached valid book, film and TV cards against the real model, the real Jev
-pre-read, OpenLibrary and TMDB. The threshold decision and the corpus labelling are Autumn's; the handoff is
+pre-read, OpenLibrary and TMDB. `medium` moved from 0.70 to 0.65 and the rest stayed. A model that ends a turn with no card after a pick is open and is not a threshold
+question. The handoff is
 [`../handoffs/2026-11-02-G4-corpus-and-odds.md`](../handoffs/2026-11-02-G4-corpus-and-odds.md).
 
 ## Where we start
