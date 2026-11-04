@@ -86,6 +86,7 @@
       ],
       "unverified": [
         {
+          "id": "openlibrary|OL893415W",
           "field": "year",
           "value": "1965",
           "source_url": "https://example.test/dune",

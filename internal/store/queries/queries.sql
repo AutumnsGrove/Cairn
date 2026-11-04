@@ -216,3 +216,40 @@ WHERE id = ? AND status = 'draft';
 UPDATE work_sources
 SET trust = 'accepted', accepted_at = ?
 WHERE work_id = ? AND provider = ? AND provider_id = ? AND trust = 'unverified';
+
+-- name: ListSessions :many
+-- Every session, newest first, with an optional state and kind and an opaque (updated_at, id) cursor. The cursor is
+-- compared as one string because both parts are fixed-width; a row-value comparison would need the pair twice.
+SELECT * FROM sessions
+WHERE (sqlc.narg(state) IS NULL OR state = sqlc.narg(state))
+  AND (sqlc.narg(kind) IS NULL OR kind = sqlc.narg(kind))
+  AND (sqlc.narg(before) IS NULL OR (updated_at || '|' || id) < sqlc.narg(before))
+ORDER BY updated_at DESC, id DESC
+LIMIT sqlc.arg(row_limit);
+
+-- name: ListRevisionsPage :many
+-- One page of an entry's history. Revisions are numbered from 1 and only ever added, so the number is the cursor.
+SELECT * FROM entry_revisions
+WHERE entry_id = sqlc.arg(entry_id)
+  AND (sqlc.narg(before) IS NULL OR revision < sqlc.narg(before))
+ORDER BY revision DESC
+LIMIT sqlc.arg(row_limit);
+
+-- name: ListLibraryPage :many
+-- The library with its two filters: medium (on the work) and favourite. Cursor pagination on
+-- (finished_on, id), the same order as ListLibrary.
+SELECT entries.* FROM entries JOIN works ON works.id = entries.work_id
+WHERE entries.status = 'saved' AND entries.deleted_at IS NULL
+  AND (sqlc.narg(medium) IS NULL OR works.medium = sqlc.narg(medium))
+  AND (sqlc.narg(favourite) IS NULL OR entries.favourite = sqlc.narg(favourite))
+  AND (sqlc.narg(before_finished_on) IS NULL
+       OR (entries.finished_on, entries.id) < (sqlc.narg(before_finished_on), sqlc.narg(before_id)))
+ORDER BY entries.finished_on DESC, entries.id DESC
+LIMIT sqlc.arg(row_limit);
+
+-- name: ListDecisionCalls :many
+-- A session's decisions calls, oldest first, for the "why" sheet. The ledger holds odds and costs, never her text.
+SELECT * FROM decision_calls
+WHERE session_id = sqlc.narg(session_id)
+ORDER BY created_at, id
+LIMIT sqlc.arg(row_limit);

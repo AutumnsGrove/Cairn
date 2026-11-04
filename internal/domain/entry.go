@@ -73,6 +73,10 @@ type Entry struct {
 	FinishedOn   string     `json:"finished_on,omitempty"`
 	Status       Status     `json:"status"`
 	Deleted      bool       `json:"deleted,omitempty"`
+	// CreatedAt and UpdatedAt are the store's, not the operator's. The API sends them as RFC 3339 in UTC and the
+	// browser formats them, so nothing here is a display time (docs/STANDARDS.md 4).
+	CreatedAt time.Time `json:"created_at"`
+	UpdatedAt time.Time `json:"updated_at"`
 }
 
 // GuardError is a refusal with a stable code the UI maps to its own copy.

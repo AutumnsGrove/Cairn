@@ -236,7 +236,7 @@ func TestConfirmProvesAnExtractedBody(t *testing.T) {
 func TestDiscardClosesAndKeepsTheDraft(t *testing.T) {
 	e, db, sess := draftSession(t)
 	ctx := context.Background()
-	if err := e.Discard(ctx, sess.ID); err != nil {
+	if err := e.Discard(ctx, sess.ID, "m-discard"); err != nil {
 		t.Fatalf("Discard: %v", err)
 	}
 	closed, err := db.Session(ctx, sess.ID)
@@ -250,7 +250,7 @@ func TestDiscardClosesAndKeepsTheDraft(t *testing.T) {
 	if _, err := db.Entry(ctx, "e-"+sess.ID); err != nil {
 		t.Errorf("the discarded draft is gone: %v", err)
 	}
-	if err := e.Discard(ctx, sess.ID); !errors.Is(err, ErrClosed) {
+	if err := e.Discard(ctx, sess.ID, "m-discard-2"); !errors.Is(err, ErrClosed) {
 		t.Errorf("second discard = %v, want ErrClosed", err)
 	}
 }

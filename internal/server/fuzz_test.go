@@ -41,7 +41,7 @@ func FuzzRequestGuard(f *testing.F) {
 
 	cfg := testConfig()
 	srv := &Server{cfg: cfg, log: slog.New(slog.NewTextHandler(io.Discard, nil)), assets: assets()}
-	h := New(cfg, srv.log, assets())
+	h := New(cfg, Deps{}, srv.log, assets())
 
 	methods := []string{
 		http.MethodGet, http.MethodHead, http.MethodPost, http.MethodPut,

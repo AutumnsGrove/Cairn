@@ -165,6 +165,21 @@ func SpansContained(source string, spans []Span) bool {
 	return true
 }
 
+// Complement returns the passages of source that the kept spans leave out, with whitespace-only gaps dropped.
+// The spans must be in source order and inside the source; a stored body is re-checked before it is shown, so a
+// caller that passes a damaged span gets no left-out text rather than a panic (docs/ENTRY_CARD.md 2).
+func Complement(source string, spans []Span) []Segment {
+	if source == "" || len(source) > MaxSpanSource {
+		return nil
+	}
+	for _, span := range spans {
+		if span.Start < 0 || span.End > len(source) || span.Start > span.End {
+			return nil
+		}
+	}
+	return complement(source, spans)
+}
+
 // normaliseForMatching lowers case, collapses whitespace, and drops punctuation and symbols. Accents are kept,
 // because "café" and "cafe" are different words; the locator must not quietly change what someone wrote.
 func normaliseForMatching(s string) string {

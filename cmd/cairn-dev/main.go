@@ -1,11 +1,14 @@
 // Command cairn-dev runs the real service against the in-process world, with no network and no keys.
 //
-// It is the way to look at a screen or reproduce a bug without touching a provider: the server, the database
-// and the agent are all the real ones, and only the outside services are fake. This command is never shipped
+// It is the way to look at a screen or reproduce a bug without touching a provider: the server, the database and the
+// agent are all the real ones, and only the outside services are fake. This command is never shipped
 // (docs/BUILD.md 4).
 //
-// S00 boots the service and one trivial fake, which is enough to prove the wiring. Later slices point the
-// providers at the world's URLs here.
+// The script is written for one sentence, so the whole logging flow finishes without a key:
+//
+//	finished the lantern keeper last night, 4.5, the ending landed but it was too long
+//
+// Type that, or let the end-to-end suite type it, and a card appears (docs/slices/S09-server.md S09.5).
 package main
 
 import (
@@ -16,11 +19,19 @@ import (
 	"log/slog"
 	"os"
 	"os/signal"
+	"path/filepath"
 	"syscall"
 	"time"
 
+	"github.com/AutumnsGrove/cairn/internal/agent"
+	"github.com/AutumnsGrove/cairn/internal/banks"
 	"github.com/AutumnsGrove/cairn/internal/config"
+	"github.com/AutumnsGrove/cairn/internal/decisions"
+	"github.com/AutumnsGrove/cairn/internal/providers"
 	"github.com/AutumnsGrove/cairn/internal/server"
+	"github.com/AutumnsGrove/cairn/internal/session"
+	"github.com/AutumnsGrove/cairn/internal/store"
+	"github.com/AutumnsGrove/cairn/internal/version"
 	"github.com/AutumnsGrove/cairn/internal/webui"
 	"github.com/AutumnsGrove/cairn/internal/world"
 )
@@ -40,22 +51,81 @@ func run(ctx context.Context, environ []string, stderr io.Writer) error {
 	if err != nil {
 		return err
 	}
-	// Development is explicitly on: the friendly error body and the dev origin are allowed, and the Host
-	// check is not relaxed, because a bug in it must show up here rather than on the potato.
+	// Development is explicitly on: the friendly error body and the dev origin are allowed, and the Host check is
+	// not relaxed, because a bug in it must show up here rather than on the potato.
 	cfg.Dev = true
 
 	log := slog.New(slog.NewTextHandler(stderr, &slog.HandlerOptions{Level: slog.LevelInfo}))
+	clock := world.RealClock{}
 
-	// The world's clock is the real one here; a test passes a fixed clock to the fakes it builds itself.
-	fake := world.Start("cairn-dev", world.RealClock{})
-	defer fake.Close()
-	log.Info("world ready", "service", fake.Name(), "url", fake.URL())
+	chat := world.StartChat("openrouter", clock)
+	defer chat.Close()
+	chat.Script(world.SampleChatScript()...)
 
-	// One line so a failure has a time, not a guess.
+	tmdb := world.Start("tmdb", clock)
+	defer tmdb.Close()
+	tmdb.LoadBodies(world.SampleTMDB())
+
+	ol := world.Start("openlibrary", clock)
+	defer ol.Close()
+	ol.LoadBodies(world.SampleOpenLibrary())
+
+	reading := world.NewDecisions(clock)
+	world.ScriptSampleDecisions(reading)
+
+	log.Info("world ready", "chat", chat.URL(), "tmdb", tmdb.URL(), "openlibrary", ol.URL())
+
+	db, err := store.Open(ctx, store.Options{Path: filepath.Join(cfg.DataDir, "cairn-dev.db")})
+	if err != nil {
+		return err
+	}
+	defer func() { _ = db.Close() }()
+	if err = db.VerifyTriggers(ctx); err != nil {
+		return err
+	}
+	engine := session.New(session.Config{
+		Store: db, Now: db.Now, NewID: db.NewID, ServerVersion: version.Version,
+	})
+
+	finder := providers.NewFinder(providers.Config{
+		TMDBKey: "dev-key", TMDBBaseURL: tmdb.URL(), TMDBCoverBase: tmdb.URL() + "/t/p/w342",
+		OpenLibraryBaseURL: ol.URL(), OpenLibraryCoverBase: ol.URL() + "/covers",
+		DataDir: cfg.DataDir, Clock: clock, UserAgent: "cairn-dev (offline)",
+	})
+
+	// The shipped config is read from the checkout; a broken file is a logged warning, not a dead dev stack.
+	set, err := banks.LoadDir(filepath.Join(cfg.ConfigDir, "questions"))
+	if err != nil {
+		log.Warn("question banks are not usable; the card will not ask questions", "err", err.Error())
+		set = nil
+	}
+	registry, err := decisions.Load(filepath.Join(cfg.ConfigDir, "decisions"))
+	if err != nil {
+		log.Warn("decisions config is not usable; the pre-read is off", "err", err.Error())
+		registry = nil
+	}
+	pre := decisions.New(decisions.Config{Registry: registry, Decider: reading})
+
+	responder := server.NewResponder()
+	live := server.NewLiveBus()
+	a, err := agent.New(agent.Config{
+		Store: db, Session: engine, Finder: finder, Banks: set, Decisions: pre,
+		Model: cfg.Model, BaseURL: chat.URL(), APIKey: "dev", Responder: responder, Live: live.Publish,
+		Logger: log, Now: db.Now, NewID: db.NewID,
+	})
+	if err != nil {
+		return err
+	}
+
 	log.Info("dev stack up", "addr", cfg.Addr, "note", "offline: every outside service is a fake")
+	log.Info("dev sentence", "type", world.SampleMessage)
 
 	errCh := make(chan error, 1)
-	go func() { errCh <- server.Run(ctx, cfg, log, webui.FS()) }()
+	go func() {
+		errCh <- server.Run(ctx, cfg, server.Deps{
+			Engine: engine, Agent: a, Responder: responder, Live: live, Now: db.Now,
+		}, log, webui.FS())
+	}()
 
 	select {
 	case err := <-errCh:

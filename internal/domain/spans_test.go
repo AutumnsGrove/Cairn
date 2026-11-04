@@ -326,3 +326,28 @@ func TestNormaliseForMatching(t *testing.T) {
 		}
 	}
 }
+
+func TestComplementIsTheRestOfTheSource(t *testing.T) {
+	source := "hey so i finished dune last night, the world felt lived in, the middle dragged a bit"
+	start := strings.Index(source, "the world")
+	spans := []Span{{Start: start, End: start + len("the world felt lived in"), Text: source[start : start+len("the world felt lived in")]}}
+
+	left := Complement(source, spans)
+	if len(left) != 2 {
+		t.Fatalf("left out = %v, want the framing before and after", left)
+	}
+	for _, seg := range left {
+		if strings.TrimSpace(seg.Text) == "" {
+			t.Errorf("a whitespace-only gap was kept: %+v", seg)
+		}
+	}
+	if got := source[left[0].Start:left[0].End]; got != left[0].Text {
+		t.Errorf("segment text is not the source: %q", got)
+	}
+	if len(Complement(source, nil)) != 1 {
+		t.Error("with no spans the whole source is left out")
+	}
+	if len(Complement(source, []Span{{Start: -1, End: 2, Text: "he"}})) != 0 {
+		t.Error("a damaged span should yield no left-out text")
+	}
+}

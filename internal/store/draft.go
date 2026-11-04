@@ -54,6 +54,7 @@ func (s *Store) UpdateDraft(ctx context.Context, u UpdateDraft) (domain.Entry, i
 		}
 		entry = entryFromRow(row)
 		u.Mutate(&entry)
+		entry.UpdatedAt = now
 
 		spans, err := json.Marshal(entry.BodySpans)
 		if err != nil {
@@ -114,6 +115,7 @@ func (s *Store) ConfirmDraft(ctx context.Context, c Confirm) (domain.Entry, int,
 		version = next
 		entry = c.Entry
 		entry.Status = domain.StatusSaved
+		entry.UpdatedAt = now
 
 		target := entry.ID
 		if c.Revises != "" {
@@ -198,16 +200,22 @@ func (s *Store) ConfirmDraft(ctx context.Context, c Confirm) (domain.Entry, int,
 	return entry, version, events, err
 }
 
-// DiscardDraft appends the closing event and marks the session, in one transaction.
-func (s *Store) DiscardDraft(ctx context.Context, sessionID string) error {
+// DiscardDraft appends the closing event and marks the session, in one transaction. The client message id is
+// remembered in the same transaction, so a discard retried after a reconnect cannot close a second thing or be
+// answered twice (docs/PROTOCOL.md 6).
+func (s *Store) DiscardDraft(ctx context.Context, sessionID, clientMsgID string) error {
 	now := s.Now().UTC()
 	return s.InTx(ctx, func(q *db.Queries) error {
-		if _, err := s.appendEvent(ctx, q, sessionID, EventDiscarded, json.RawMessage("{}")); err != nil {
+		appended, err := s.appendEvent(ctx, q, sessionID, EventDiscarded, json.RawMessage("{}"))
+		if err != nil {
 			return err
 		}
-		return q.SetSessionState(ctx, db.SetSessionStateParams{
+		if err := q.SetSessionState(ctx, db.SetSessionStateParams{
 			State: string(domain.SessionDiscarded), UpdatedAt: now.Format(timeLayout), ID: sessionID,
-		})
+		}); err != nil {
+			return err
+		}
+		return s.rememberClient(ctx, q, sessionID, clientMsgID, appended.Seq, acceptedStatus, "")
 	})
 }
 
@@ -288,6 +296,7 @@ func (s *Store) AcceptDraftSources(ctx context.Context, a AcceptSources) (domain
 			return fmt.Errorf("store: read draft: %w", err)
 		}
 		entry = entryFromRow(row)
+		entry.UpdatedAt = now
 
 		payload, err := json.Marshal(map[string]any{"version": version, "draft": entry})
 		if err != nil {

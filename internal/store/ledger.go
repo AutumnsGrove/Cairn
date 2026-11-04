@@ -10,6 +10,10 @@ import (
 	"github.com/AutumnsGrove/cairn/internal/store/db"
 )
 
+// maxDecisionCalls bounds the "why" sheet's read. A session asks at most a handful of questions per turn and the
+// pre-read runs once per message, so this is generous; a session with more is still readable, just cut off.
+const maxDecisionCalls = 200
+
 // The cost ledgers. Both are append-only records of what a turn spent: a decisions pre-read in decision_calls, a
 // chat turn in turn_calls. Neither holds text, so a ledger can be read while debugging without becoming a second
 // copy of a review (docs/BUILD.md invariant 5).
@@ -63,6 +67,27 @@ func (s *Store) RecordTurn(ctx context.Context, turn domain.TurnCall) error {
 			CreatedAt: turn.CreatedAt.UTC().Format(timeLayout),
 		})
 	})
+}
+
+// DecisionCalls reads a session's decisions ledger, oldest first, for the "why" sheet.
+func (s *Store) DecisionCalls(ctx context.Context, sessionID string) ([]domain.DecisionCall, error) {
+	rows, err := s.ReadQueries().ListDecisionCalls(ctx, db.ListDecisionCallsParams{
+		SessionID: nullableString(sessionID), RowLimit: maxDecisionCalls,
+	})
+	if err != nil {
+		return nil, fmt.Errorf("store: list decision calls: %w", err)
+	}
+	out := make([]domain.DecisionCall, 0, len(rows))
+	for _, row := range rows {
+		call := domain.DecisionCall{
+			ID: row.ID, SessionID: derefString(row.SessionID), MessageIndex: int(row.MessageIndex),
+			Backend: row.Backend, Model: row.Model, Odds: json.RawMessage(row.OddsJson),
+			CostUSD: row.CostUsd, LatencyMS: int(row.LatencyMs), CreatedAt: parseTime(row.CreatedAt),
+		}
+		_ = json.Unmarshal([]byte(row.FiredJson), &call.Fired)
+		out = append(out, call)
+	}
+	return out, nil
 }
 
 // TurnCalls reads a session's turn ledger, oldest first. It is for the "why" sheet and for tests.

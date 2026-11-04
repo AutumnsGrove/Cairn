@@ -111,6 +111,8 @@ in the commit that introduces it, with its outcome above the limit.
 | Client messages | 10 per second and 60 per minute per session | Refused with `rate_limited`; five refusals in 10 s closes the socket with a stable code |
 | WebSocket frame | 64 KiB | The connection is closed with a stable code |
 | Polaris ask | 2,000 characters in, 90 s | Refused or timed out, offered as a retry |
+| JSON request body | 64 KiB | Refused with `payload_too_large` |
+| WebSocket outbound queue | 256 frames per connection | A persisted event that cannot be queued closes the socket so the client replays from its `last_seq`; live-only events are shed oldest first |
 | List page size | 50 default, 100 max | Capped |
 | Search query | 200 characters | Refused |
 

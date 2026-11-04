@@ -243,19 +243,32 @@ func (s *Store) RestoreEntry(ctx context.Context, id string) error {
 // Library returns a page of saved entries, newest finished first, and the cursor for the next page. An empty next
 // cursor means the list ended.
 func (s *Store) Library(ctx context.Context, cursor domain.Cursor, limit int) ([]domain.Entry, domain.Cursor, error) {
+	return s.LibraryPage(ctx, "", nil, cursor, limit)
+}
+
+// LibraryPage is the library with its two filters. medium is a provider's medium name and favourite is nil when the
+// list is not filtered by it; both are applied in SQL so a filtered page is still one indexed read.
+func (s *Store) LibraryPage(ctx context.Context, medium string, favourite *bool, cursor domain.Cursor,
+	limit int,
+) ([]domain.Entry, domain.Cursor, error) {
 	limit = clampLimit(limit)
-	var before interface{}
-	if !cursor.Empty() {
-		before = cursor.FinishedOn
+	var mediumArg, favouriteArg, beforeArg interface{}
+	if medium != "" {
+		mediumArg = medium
 	}
-	rows, err := s.ReadQueries().ListLibrary(ctx, db.ListLibraryParams{
-		Column1: before, FinishedOn: nullableString(cursor.FinishedOn), FinishedOn_2: nullableString(cursor.ID),
-		Limit: int64(limit + 1),
+	if favourite != nil {
+		favouriteArg = boolToInt(*favourite)
+	}
+	if !cursor.Empty() {
+		beforeArg = cursor.FinishedOn
+	}
+	rows, err := s.ReadQueries().ListLibraryPage(ctx, db.ListLibraryPageParams{
+		Medium: mediumArg, Favourite: favouriteArg, BeforeFinishedOn: beforeArg,
+		BeforeID: nullableString(cursor.ID), RowLimit: int64(limit + 1),
 	})
 	if err != nil {
 		return nil, domain.Cursor{}, fmt.Errorf("store: list library: %w", err)
 	}
-
 	var next domain.Cursor
 	if len(rows) > limit {
 		rows = rows[:limit]
@@ -297,20 +310,58 @@ func (s *Store) EntriesOnWork(ctx context.Context, workID string) ([]domain.Entr
 
 // Revisions returns an entry's history, newest first. It is append-only, so this is the whole truth.
 func (s *Store) Revisions(ctx context.Context, entryID string) ([]domain.Revision, error) {
-	rows, err := s.ReadQueries().ListRevisions(ctx, entryID)
+	all, _, err := s.RevisionsPage(ctx, entryID, 0, 0)
 	if err != nil {
-		return nil, fmt.Errorf("store: list revisions: %w", err)
+		return nil, err
+	}
+	return all, nil
+}
+
+// RevisionsPage returns one page of an entry's history, newest first, and a cursor for the next page. A zero
+// before means the first page; a zero limit means every revision, which is what the library screen asks for.
+func (s *Store) RevisionsPage(ctx context.Context, entryID string, before, limit int) ([]domain.Revision, int, error) {
+	var beforeArg interface{}
+	if before > 0 {
+		beforeArg = int64(before)
+	}
+	rowLimit := int64(clampLimit(limit))
+	if limit <= 0 {
+		rowLimit = 1 << 31
+	}
+	rows, err := s.ReadQueries().ListRevisionsPage(ctx, db.ListRevisionsPageParams{
+		EntryID: entryID, Before: beforeArg, RowLimit: rowLimit + 1,
+	})
+	if err != nil {
+		return nil, 0, fmt.Errorf("store: list revisions: %w", err)
+	}
+	var next int
+	if limit > 0 && len(rows) > limit {
+		rows = rows[:limit]
+		next = int(rows[len(rows)-1].Revision)
 	}
 	out := make([]domain.Revision, 0, len(rows))
 	for _, row := range rows {
 		var snapshot domain.Entry
 		if err := json.Unmarshal([]byte(row.SnapshotJson), &snapshot); err != nil {
-			return nil, fmt.Errorf("store: decode revision: %w", err)
+			return nil, 0, fmt.Errorf("store: decode revision: %w", err)
 		}
 		created, _ := time.Parse(timeLayout, row.CreatedAt)
 		out = append(out, domain.Revision{
 			ID: row.ID, EntryID: row.EntryID, Number: int(row.Revision), Snapshot: snapshot, CreatedAt: created,
 		})
+	}
+	return out, next, nil
+}
+
+// EntryTags reads the genres and her own tags on an entry, in name order.
+func (s *Store) EntryTags(ctx context.Context, entryID string) ([]domain.Tag, error) {
+	rows, err := s.ReadQueries().ListEntryTags(ctx, entryID)
+	if err != nil {
+		return nil, fmt.Errorf("store: list entry tags: %w", err)
+	}
+	out := make([]domain.Tag, 0, len(rows))
+	for _, row := range rows {
+		out = append(out, domain.Tag{Name: row.Name, Source: row.Source})
 	}
 	return out, nil
 }
@@ -400,9 +451,32 @@ func (s *Store) SetSessionState(ctx context.Context, id string, state domain.Ses
 
 // ActiveSessions is the Drafts list of sessions that can be resumed.
 func (s *Store) ActiveSessions(ctx context.Context, limit int) ([]domain.Session, error) {
-	rows, err := s.ReadQueries().ListActiveSessions(ctx, int64(clampLimit(limit)))
+	return s.Sessions(ctx, domain.SessionActive, "", "", limit)
+}
+
+// GeneralSessions is the past library chats, newest first.
+func (s *Store) GeneralSessions(ctx context.Context, limit int) ([]domain.Session, error) {
+	return s.Sessions(ctx, "", domain.SessionGeneral, "", limit)
+}
+
+// Sessions lists sessions newest first, with an optional state and kind. before is the opaque cursor from the
+// previous page (see domain.SessionKey), empty on the first page.
+func (s *Store) Sessions(ctx context.Context, state domain.SessionState, kind domain.SessionKind, before string, limit int) ([]domain.Session, error) {
+	var stateArg, kindArg, beforeArg interface{}
+	if state != "" {
+		stateArg = string(state)
+	}
+	if kind != "" {
+		kindArg = string(kind)
+	}
+	if before != "" {
+		beforeArg = before
+	}
+	rows, err := s.ReadQueries().ListSessions(ctx, db.ListSessionsParams{
+		State: stateArg, Kind: kindArg, Before: beforeArg, RowLimit: int64(clampLimit(limit)),
+	})
 	if err != nil {
-		return nil, fmt.Errorf("store: list active sessions: %w", err)
+		return nil, fmt.Errorf("store: list sessions: %w", err)
 	}
 	out := make([]domain.Session, 0, len(rows))
 	for _, row := range rows {
@@ -519,16 +593,21 @@ func entryFromRow(row db.Entry) domain.Entry {
 		Deleted: row.DeletedAt != nil,
 	}
 	_ = json.Unmarshal([]byte(row.BodySpansJson), &e.BodySpans)
+	e.CreatedAt, _ = time.Parse(timeLayout, row.CreatedAt)
+	e.UpdatedAt, _ = time.Parse(timeLayout, row.UpdatedAt)
 	return e
 }
 
 func sessionFromRow(row db.Session) domain.Session {
-	return domain.Session{
+	out := domain.Session{
 		ID: row.ID, Kind: domain.SessionKind(row.Kind), Title: row.Title,
 		EntryID: derefString(row.EntryID), State: domain.SessionState(row.State),
 		DraftVersion: int(row.DraftVersion),
 		Messages:     json.RawMessage(row.MessagesJson),
 	}
+	out.CreatedAt, _ = time.Parse(timeLayout, row.CreatedAt)
+	out.UpdatedAt, _ = time.Parse(timeLayout, row.UpdatedAt)
+	return out
 }
 
 func boolToInt(b bool) int64 {

@@ -292,6 +292,9 @@ const eventsSchema = `{
         "value"
       ],
       "properties": {
+        "id": {
+          "$ref": "#/$defs/id"
+        },
         "field": {
           "type": "string",
           "minLength": 1,
@@ -313,7 +316,8 @@ const eventsSchema = `{
           "type": "boolean"
         }
       },
-      "additionalProperties": false
+      "additionalProperties": false,
+      "description": "One web or image field she has not accepted. id is the provider|id the accept_unverified message names; field is the name a person sees."
     },
     "whyCheck": {
       "type": "object",
@@ -1566,8 +1570,13 @@ const eventsSchema = `{
                     },
                     "set": {
                       "type": "object",
+                      "maxProperties": 10,
                       "additionalProperties": {
-                        "type": "string",
+                        "type": [
+                          "integer",
+                          "boolean",
+                          "string"
+                        ],
                         "maxLength": 8000
                       }
                     }

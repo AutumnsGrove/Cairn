@@ -267,6 +267,9 @@ func (a *Agent) HandleMessage(ctx context.Context, in TurnInput) (Outcome, error
 		code, text := "model_unavailable",
 			"The model did not finish. Your words are kept; you can try again or fill in the card by hand."
 		switch {
+		case errors.Is(runErr, context.Canceled):
+			// An explicit stop, or the server shutting a turn down. Nothing is wrong with the review.
+			code, text = "stopped", "Stopped. Your words are kept."
 		case errors.Is(runErr, errBudget):
 			code, text = "turn_budget", "This turn got long, so I stopped. Your words are kept."
 		case errors.Is(runErr, context.DeadlineExceeded) || errors.Is(ctx.Err(), context.DeadlineExceeded):

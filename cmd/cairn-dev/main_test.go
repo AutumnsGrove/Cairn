@@ -33,9 +33,11 @@ func TestDevStackBootsAndStops(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
-	go func() {
-		done <- run(ctx, []string{"CAIRN_ADDR=" + addr, "CAIRN_ALLOWED_HOSTS=" + addr}, &stderr)
-	}()
+	environ := []string{
+		"CAIRN_ADDR=" + addr, "CAIRN_ALLOWED_HOSTS=" + addr,
+		"CAIRN_DATA_DIR=" + t.TempDir(), "CAIRN_CONFIG_DIR=../../config",
+	}
+	go func() { done <- run(ctx, environ, &stderr) }()
 
 	// Wait for the port rather than sleeping a guessed amount.
 	deadline := time.Now().Add(10 * time.Second)

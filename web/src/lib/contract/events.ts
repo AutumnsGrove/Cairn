@@ -338,7 +338,7 @@ export type ClientMessage =
       data?: {
         base_version: Version;
         set: {
-          [k: string]: string;
+          [k: string]: number | boolean | string;
         };
       };
     })
@@ -496,7 +496,11 @@ export interface Tag {
   name: string;
   source: 'genre' | 'mine';
 }
+/**
+ * One web or image field she has not accepted. id is the provider|id the accept_unverified message names; field is the name a person sees.
+ */
 export interface UnverifiedField {
+  id?: Id;
   field: string;
   value: string;
   source_url?: string;

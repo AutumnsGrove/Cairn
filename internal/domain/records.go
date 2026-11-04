@@ -34,6 +34,13 @@ type Answer struct {
 	CreatedAt  time.Time  `json:"created_at"`
 }
 
+// Tag is a genre from a provider or a tag she added herself. The descriptor chips she picked are answers, not tags
+// (docs/ENTRY_CARD.md 1).
+type Tag struct {
+	Name   string `json:"name"`
+	Source string `json:"source"`
+}
+
 // Revision is one previous version of an entry, kept forever and never changed.
 type Revision struct {
 	ID        string    `json:"id"`

@@ -22,6 +22,9 @@ const DefaultDataDir = "./data"
 // in, and the tailnet is the whole security boundary (docs/STANDARDS.md 6).
 const DefaultAddr = "127.0.0.1:8893"
 
+// DefaultConfigDir is where the shipped question banks and decisions registry live. S13 mounts the same tree.
+const DefaultConfigDir = "config"
+
 // DefaultModel is the pinned chat model (docs/BUILD.md 2). The pin is the point: an alias such as -latest or ~
 // moves under us, and then every recorded cost and eval measures a different model.
 const DefaultModel = "deepseek/deepseek-v4.1-flash-1017"
@@ -55,13 +58,16 @@ type Config struct {
 	Model string
 	// DataDir holds covers and, later, exports and backups. It is the directory S13 mounts.
 	DataDir string
+	// ConfigDir holds the question banks and the decisions wording and policy. It is read at startup; a broken
+	// file degrades one feature with a logged warning and the service still starts (docs/BUILD.md invariant 13).
+	ConfigDir string
 }
 
 // knownKeys is the closed set of environment keys this package reads. Anything else that starts with
 // CAIRN_ is a typo.
 var knownKeys = []string{
-	"CAIRN_ADDR", "CAIRN_ALLOWED_HOSTS", "CAIRN_DEV", "CAIRN_DATA_DIR", "CAIRN_TMDB_API_KEY",
-	"CAIRN_OPENROUTER_API_KEY", "CAIRN_MODEL",
+	"CAIRN_ADDR", "CAIRN_ALLOWED_HOSTS", "CAIRN_DEV", "CAIRN_DATA_DIR", "CAIRN_CONFIG_DIR",
+	"CAIRN_TMDB_API_KEY", "CAIRN_OPENROUTER_API_KEY", "CAIRN_MODEL",
 }
 
 // Load reads settings from environ, in os.Environ() form. Passing the environment in rather than calling
@@ -69,7 +75,7 @@ var knownKeys = []string{
 func Load(environ []string) (Config, error) {
 	cfg := Config{
 		Addr: DefaultAddr, AllowedHosts: slices.Clone(defaultHosts), DataDir: DefaultDataDir,
-		Model: DefaultModel,
+		ConfigDir: DefaultConfigDir, Model: DefaultModel,
 	}
 
 	seen := make(map[string]bool, len(environ))
@@ -115,6 +121,16 @@ func Load(environ []string) (Config, error) {
 			return Config{}, err
 		}
 		cfg.DataDir = v
+	}
+
+	if v, ok := values["CAIRN_CONFIG_DIR"]; ok {
+		if strings.TrimSpace(v) == "" {
+			return Config{}, errors.New("config: CAIRN_CONFIG_DIR is empty; omit it to use " + DefaultConfigDir)
+		}
+		if strings.ContainsRune(v, 0) {
+			return Config{}, errors.New("config: CAIRN_CONFIG_DIR contains a NUL byte")
+		}
+		cfg.ConfigDir = v
 	}
 
 	if v, ok := values["CAIRN_TMDB_API_KEY"]; ok {

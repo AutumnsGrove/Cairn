@@ -16,7 +16,6 @@ import (
 	"syscall"
 
 	"github.com/AutumnsGrove/cairn/internal/config"
-	"github.com/AutumnsGrove/cairn/internal/server"
 	"github.com/AutumnsGrove/cairn/internal/version"
 	"github.com/AutumnsGrove/cairn/internal/webui"
 )
@@ -52,7 +51,7 @@ func run(ctx context.Context, args []string, environ []string, stdout, stderr io
 			return 1
 		}
 		log := slog.New(slog.NewTextHandler(stderr, &slog.HandlerOptions{Level: slog.LevelInfo}))
-		if err := server.Run(ctx, cfg, log, webui.FS()); err != nil {
+		if err := serve(ctx, cfg, log, webui.FS()); err != nil {
 			fmt.Fprintf(stderr, "cairn: %v\n", err)
 			return 1
 		}

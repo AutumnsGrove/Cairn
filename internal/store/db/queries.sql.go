@@ -750,6 +750,53 @@ func (q *Queries) ListAnswers(ctx context.Context, entryID string) ([]Answer, er
 	return items, nil
 }
 
+const listDecisionCalls = `-- name: ListDecisionCalls :many
+SELECT id, session_id, message_index, backend, model, odds_json, fired_json, cost_usd, latency_ms, created_at FROM decision_calls
+WHERE session_id = ?1
+ORDER BY created_at, id
+LIMIT ?2
+`
+
+type ListDecisionCallsParams struct {
+	SessionID *string `json:"session_id"`
+	RowLimit  int64   `json:"row_limit"`
+}
+
+// A session's decisions calls, oldest first, for the "why" sheet. The ledger holds odds and costs, never her text.
+func (q *Queries) ListDecisionCalls(ctx context.Context, arg ListDecisionCallsParams) ([]DecisionCall, error) {
+	rows, err := q.db.QueryContext(ctx, listDecisionCalls, arg.SessionID, arg.RowLimit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []DecisionCall{}
+	for rows.Next() {
+		var i DecisionCall
+		if err := rows.Scan(
+			&i.ID,
+			&i.SessionID,
+			&i.MessageIndex,
+			&i.Backend,
+			&i.Model,
+			&i.OddsJson,
+			&i.FiredJson,
+			&i.CostUsd,
+			&i.LatencyMs,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listDrafts = `-- name: ListDrafts :many
 SELECT id, work_id, rating_q, rating_scale, favourite, season, verdict, body, body_origin, imported_from, body_spans_json, format, finished_on, status, deleted_at, created_at, updated_at FROM entries WHERE status = 'draft' AND deleted_at IS NULL ORDER BY updated_at DESC, id DESC LIMIT ?
 `
@@ -1013,6 +1060,74 @@ func (q *Queries) ListLibrary(ctx context.Context, arg ListLibraryParams) ([]Ent
 	return items, nil
 }
 
+const listLibraryPage = `-- name: ListLibraryPage :many
+SELECT entries.id, entries.work_id, entries.rating_q, entries.rating_scale, entries.favourite, entries.season, entries.verdict, entries.body, entries.body_origin, entries.imported_from, entries.body_spans_json, entries.format, entries.finished_on, entries.status, entries.deleted_at, entries.created_at, entries.updated_at FROM entries JOIN works ON works.id = entries.work_id
+WHERE entries.status = 'saved' AND entries.deleted_at IS NULL
+  AND (?1 IS NULL OR works.medium = ?1)
+  AND (?2 IS NULL OR entries.favourite = ?2)
+  AND (?3 IS NULL
+       OR (entries.finished_on, entries.id) < (?3, ?4))
+ORDER BY entries.finished_on DESC, entries.id DESC
+LIMIT ?5
+`
+
+type ListLibraryPageParams struct {
+	Medium           interface{} `json:"medium"`
+	Favourite        interface{} `json:"favourite"`
+	BeforeFinishedOn interface{} `json:"before_finished_on"`
+	BeforeID         *string     `json:"before_id"`
+	RowLimit         int64       `json:"row_limit"`
+}
+
+// The library with its two filters: medium (on the work) and favourite. Cursor pagination on
+// (finished_on, id), the same order as ListLibrary.
+func (q *Queries) ListLibraryPage(ctx context.Context, arg ListLibraryPageParams) ([]Entry, error) {
+	rows, err := q.db.QueryContext(ctx, listLibraryPage,
+		arg.Medium,
+		arg.Favourite,
+		arg.BeforeFinishedOn,
+		arg.BeforeID,
+		arg.RowLimit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Entry{}
+	for rows.Next() {
+		var i Entry
+		if err := rows.Scan(
+			&i.ID,
+			&i.WorkID,
+			&i.RatingQ,
+			&i.RatingScale,
+			&i.Favourite,
+			&i.Season,
+			&i.Verdict,
+			&i.Body,
+			&i.BodyOrigin,
+			&i.ImportedFrom,
+			&i.BodySpansJson,
+			&i.Format,
+			&i.FinishedOn,
+			&i.Status,
+			&i.DeletedAt,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listMediaForEntry = `-- name: ListMediaForEntry :many
 SELECT id, entry_id, session_id, path, kind, transcript_json, created_at FROM media WHERE entry_id = ? ORDER BY created_at
 `
@@ -1152,6 +1267,50 @@ func (q *Queries) ListRevisions(ctx context.Context, entryID string) ([]EntryRev
 	return items, nil
 }
 
+const listRevisionsPage = `-- name: ListRevisionsPage :many
+SELECT id, entry_id, revision, snapshot_json, created_at FROM entry_revisions
+WHERE entry_id = ?1
+  AND (?2 IS NULL OR revision < ?2)
+ORDER BY revision DESC
+LIMIT ?3
+`
+
+type ListRevisionsPageParams struct {
+	EntryID  string      `json:"entry_id"`
+	Before   interface{} `json:"before"`
+	RowLimit int64       `json:"row_limit"`
+}
+
+// One page of an entry's history. Revisions are numbered from 1 and only ever added, so the number is the cursor.
+func (q *Queries) ListRevisionsPage(ctx context.Context, arg ListRevisionsPageParams) ([]EntryRevision, error) {
+	rows, err := q.db.QueryContext(ctx, listRevisionsPage, arg.EntryID, arg.Before, arg.RowLimit)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []EntryRevision{}
+	for rows.Next() {
+		var i EntryRevision
+		if err := rows.Scan(
+			&i.ID,
+			&i.EntryID,
+			&i.Revision,
+			&i.SnapshotJson,
+			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
 const listSessionEventsSince = `-- name: ListSessionEventsSince :many
 SELECT id, session_id, seq, kind, payload_json, created_at FROM session_events WHERE session_id = ? AND seq > ? ORDER BY seq
 `
@@ -1177,6 +1336,62 @@ func (q *Queries) ListSessionEventsSince(ctx context.Context, arg ListSessionEve
 			&i.Kind,
 			&i.PayloadJson,
 			&i.CreatedAt,
+		); err != nil {
+			return nil, err
+		}
+		items = append(items, i)
+	}
+	if err := rows.Close(); err != nil {
+		return nil, err
+	}
+	if err := rows.Err(); err != nil {
+		return nil, err
+	}
+	return items, nil
+}
+
+const listSessions = `-- name: ListSessions :many
+SELECT id, kind, title, entry_id, messages_json, state, created_at, updated_at, draft_version FROM sessions
+WHERE (?1 IS NULL OR state = ?1)
+  AND (?2 IS NULL OR kind = ?2)
+  AND (?3 IS NULL OR (updated_at || '|' || id) < ?3)
+ORDER BY updated_at DESC, id DESC
+LIMIT ?4
+`
+
+type ListSessionsParams struct {
+	State    interface{} `json:"state"`
+	Kind     interface{} `json:"kind"`
+	Before   interface{} `json:"before"`
+	RowLimit int64       `json:"row_limit"`
+}
+
+// Every session, newest first, with an optional state and kind and an opaque (updated_at, id) cursor. The cursor is
+// compared as one string because both parts are fixed-width; a row-value comparison would need the pair twice.
+func (q *Queries) ListSessions(ctx context.Context, arg ListSessionsParams) ([]Session, error) {
+	rows, err := q.db.QueryContext(ctx, listSessions,
+		arg.State,
+		arg.Kind,
+		arg.Before,
+		arg.RowLimit,
+	)
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+	items := []Session{}
+	for rows.Next() {
+		var i Session
+		if err := rows.Scan(
+			&i.ID,
+			&i.Kind,
+			&i.Title,
+			&i.EntryID,
+			&i.MessagesJson,
+			&i.State,
+			&i.CreatedAt,
+			&i.UpdatedAt,
+			&i.DraftVersion,
 		); err != nil {
 			return nil, err
 		}

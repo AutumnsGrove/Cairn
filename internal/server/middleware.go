@@ -162,6 +162,8 @@ func (s *Server) recover(next http.Handler) http.Handler {
 func (s *Server) accessLog(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		start := time.Now()
+		id := requestID()
+		w.Header().Set("X-Request-Id", id)
 		rec := &statusRecorder{ResponseWriter: w, status: http.StatusOK}
 		next.ServeHTTP(rec, r)
 		s.log.Info("request",
@@ -170,6 +172,7 @@ func (s *Server) accessLog(next http.Handler) http.Handler {
 			"status", rec.status,
 			"bytes", rec.written,
 			"ms", time.Since(start).Milliseconds(),
+			"request_id", id,
 		)
 	})
 }

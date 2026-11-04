@@ -52,7 +52,7 @@ func assets() fstest.MapFS {
 func newTestServer(t *testing.T, cfg config.Config, fsys fstest.MapFS) http.Handler {
 	t.Helper()
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
-	return New(cfg, log, fsys)
+	return New(cfg, Deps{}, log, fsys)
 }
 
 // do builds a request by hand so a test can set a Host or an Origin that a real client would never send.
@@ -398,7 +398,7 @@ func TestRunReportsAddressInUse(t *testing.T) {
 	log := slog.New(slog.NewTextHandler(io.Discard, nil))
 
 	errCh := make(chan error, 1)
-	go func() { errCh <- Run(context.Background(), cfg, log, assets()) }()
+	go func() { errCh <- Run(context.Background(), cfg, Deps{}, log, assets()) }()
 
 	select {
 	case err := <-errCh:
@@ -421,7 +421,7 @@ func TestRunStopsOnCancel(t *testing.T) {
 
 	ctx, cancel := context.WithCancel(context.Background())
 	errCh := make(chan error, 1)
-	go func() { errCh <- Run(ctx, cfg, log, assets()) }()
+	go func() { errCh <- Run(ctx, cfg, Deps{}, log, assets()) }()
 
 	time.Sleep(50 * time.Millisecond)
 	cancel()
@@ -505,7 +505,7 @@ func TestNilLoggerAndAssetsDoNotPanic(t *testing.T) {
 			t.Fatalf("New panicked with an empty world: %v", r)
 		}
 	}()
-	h := New(testConfig(), slog.New(slog.NewTextHandler(io.Discard, nil)), fstest.MapFS{})
+	h := New(testConfig(), Deps{}, slog.New(slog.NewTextHandler(io.Discard, nil)), fstest.MapFS{})
 	if rec := do(t, h, http.MethodGet, "/healthz", "localhost:8893", "", nil); rec.Code != http.StatusOK {
 		t.Fatalf("status = %d", rec.Code)
 	}

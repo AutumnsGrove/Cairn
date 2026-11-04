@@ -198,7 +198,7 @@ func TestDirectoryPathServesIndex(t *testing.T) {
 	fsys := fstest.MapFS{
 		"docs/index.html": {Data: []byte("<!doctype html><p>docs</p>")},
 	}
-	h := New(testConfig(), slog.New(slog.DiscardHandler), fsys)
+	h := New(testConfig(), Deps{}, slog.New(slog.DiscardHandler), fsys)
 	rec := do(t, h, http.MethodGet, "/docs/", "localhost:8893", "", nil)
 	if rec.Code != http.StatusOK || !strings.Contains(rec.Body.String(), "docs") {
 		t.Fatalf("status = %d, body = %q", rec.Code, rec.Body)
@@ -206,7 +206,7 @@ func TestDirectoryPathServesIndex(t *testing.T) {
 }
 
 func TestNilAssetsAndLogger(t *testing.T) {
-	h := New(testConfig(), nil, nil)
+	h := New(testConfig(), Deps{}, nil, nil)
 	rec := do(t, h, http.MethodGet, "/", "localhost:8893", "", nil)
 	if rec.Code != http.StatusOK {
 		t.Fatalf("status = %d, want the placeholder", rec.Code)

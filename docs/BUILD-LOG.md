@@ -433,3 +433,26 @@ is the code-decides rule working as intended.
 **What remains.** The 30-case invented corpus is the CI suite; its invented titles cannot be found by the real
 providers. `make eval` now runs the four-case real-title live corpus instead. The operator still needs to label the
 corpus and decide the thresholds at G4; no threshold was tuned.
+
+## 2026-11-04, S09 built (lifecycle tests still to write)
+
+**The network face is real.** `cairn serve` now opens the database, reads the shipped question banks and decisions
+registry, builds the providers, the agent and the server, and drains on SIGTERM; `cairn-dev` runs the same stack
+against the in-process world with one scripted review, so a frontend can drive a whole session offline. The socket
+speaks RFC 6455 from this repository, not a library, because the frame reader is one of the things this slice has to
+prove and fuzz. A scripted session over a real socket goes from her message to `saved`, including the candidate tap:
+`TestScriptedSessionFromMessageToSaved`.
+
+**What the contract tests found.** Five bugs in `api/`, all fixed in this commit: `draft_edit.set` described every
+value as a string while the engine stores an integer rating and boolean flags; `unverifiedField` had no id for the
+accept message to name; `Entry.status` was required but missing from `properties`, so no valid entry could exist;
+`WorkDetail` could never carry `sources` because `allOf` merged it into a closed `Work`; and `waiting_reason` listed
+four names the S07 engine never emits. The card also now carries its why sheet, fidelity status and tags, built from
+the ledgers and the tool events.
+
+**Two S07 bugs surfaced.** `Greet(0)` replayed nothing, so a fresh connection to a resumed draft had no conversation;
+the protocol says everything after `last_seq`, so it now replays from zero as well. `Discard` did not remember its
+`client_msg_id` in the same transaction, so a retried discard could not be told apart from a new one.
+
+**Not finished.** The slow-client shed, a reconnect storm, a restart mid-turn, a database failure mid-request and
+the bounded soak have no tests yet; they are the reason the slice says in progress, not done.

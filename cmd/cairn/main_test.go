@@ -80,6 +80,7 @@ func TestServePortInUse(t *testing.T) {
 	code := run(ctx, []string{"serve"}, []string{
 		"CAIRN_ADDR=" + addr,
 		"CAIRN_ALLOWED_HOSTS=" + addr,
+		"CAIRN_DATA_DIR=" + t.TempDir(),
 	}, &out, &errOut)
 
 	if code != 1 {
@@ -101,6 +102,7 @@ func TestServeStopsOnContextCancel(t *testing.T) {
 		done <- run(ctx, []string{"serve"}, []string{
 			"CAIRN_ADDR=" + addr,
 			"CAIRN_ALLOWED_HOSTS=" + addr,
+			"CAIRN_DATA_DIR=" + t.TempDir(),
 		}, &out, &errOut)
 	}()
 
@@ -129,6 +131,7 @@ func TestBinaryHandlesSIGTERM(t *testing.T) {
 	cmd.Env = append(os.Environ(),
 		"CAIRN_ADDR="+addr,
 		"CAIRN_ALLOWED_HOSTS="+addr,
+		"CAIRN_DATA_DIR="+t.TempDir(),
 	)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr

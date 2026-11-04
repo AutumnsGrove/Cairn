@@ -156,8 +156,8 @@ func TestGreetReplaysAndResumes(t *testing.T) {
 	if err != nil {
 		t.Fatalf("Greet: %v", err)
 	}
-	if fresh.HeadSeq != 3 || len(fresh.Events) != 0 || fresh.FullState || fresh.ServerVersion != "test" {
-		t.Errorf("fresh hello = %+v", fresh)
+	if fresh.HeadSeq != 3 || len(fresh.Events) != 3 || fresh.FullState || fresh.ServerVersion != "test" {
+		t.Errorf("fresh hello = %+v (a fresh connection replays the log)", fresh)
 	}
 
 	resumed, err := e.Greet(ctx, sess.ID, 1)

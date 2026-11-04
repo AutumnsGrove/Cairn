@@ -7,6 +7,8 @@ type ErrorCode string
 
 // Every error code Cairn can answer with.
 const (
+	CodeAlreadyAccepted     ErrorCode = "already_accepted"
+	CodeBadContentType      ErrorCode = "bad_content_type"
 	CodeBadHost             ErrorCode = "bad_host"
 	CodeBadOrigin           ErrorCode = "bad_origin"
 	CodeBodyNotYourWords    ErrorCode = "body_not_your_words"
@@ -17,18 +19,25 @@ const (
 	CodeDuplicateMessage    ErrorCode = "duplicate_message"
 	CodeExportInProgress    ErrorCode = "export_in_progress"
 	CodeImagesTooMany       ErrorCode = "images_too_many"
+	CodeInteractionClosed   ErrorCode = "interaction_closed"
 	CodeInternal            ErrorCode = "internal"
+	CodeInvalidValue        ErrorCode = "invalid_value"
 	CodeMessageTooLong      ErrorCode = "message_too_long"
 	CodeMethodNotAllowed    ErrorCode = "method_not_allowed"
+	CodeNotADraft           ErrorCode = "not_a_draft"
+	CodeNotExtracted        ErrorCode = "not_extracted"
 	CodeNotFound            ErrorCode = "not_found"
+	CodeNotImplemented      ErrorCode = "not_implemented"
 	CodePayloadTooLarge     ErrorCode = "payload_too_large"
 	CodeQueueFull           ErrorCode = "queue_full"
 	CodeRateLimited         ErrorCode = "rate_limited"
 	CodeRatingRequired      ErrorCode = "rating_required"
 	CodeReplyInProgress     ErrorCode = "reply_in_progress"
+	CodeSessionClosed       ErrorCode = "session_closed"
 	CodeSessionTooLong      ErrorCode = "session_too_long"
 	CodeStaleVersion        ErrorCode = "stale_version"
 	CodeUnavailable         ErrorCode = "unavailable"
+	CodeUnknownField        ErrorCode = "unknown_field"
 	CodeUpdateInProgress    ErrorCode = "update_in_progress"
 	CodeVerdictNotYourWords ErrorCode = "verdict_not_your_words"
 	CodeVerdictTooLong      ErrorCode = "verdict_too_long"
@@ -39,6 +48,8 @@ var errorInfo = map[ErrorCode]struct {
 	Status int
 	Copy   string
 }{
+	CodeAlreadyAccepted:     {Status: 409, Copy: "That field was already accepted."},
+	CodeBadContentType:      {Status: 415, Copy: "Send that as JSON."},
 	CodeBadHost:             {Status: 400, Copy: "This address is not Cairn."},
 	CodeBadOrigin:           {Status: 403, Copy: "That request did not come from Cairn."},
 	CodeBodyNotYourWords:    {Status: 422, Copy: "The body has to come from what you wrote."},
@@ -49,18 +60,25 @@ var errorInfo = map[ErrorCode]struct {
 	CodeDuplicateMessage:    {Status: 200, Copy: "That message already went through."},
 	CodeExportInProgress:    {Status: 409, Copy: "An export is already being written."},
 	CodeImagesTooMany:       {Status: 413, Copy: "That is more images than one message can carry."},
+	CodeInteractionClosed:   {Status: 409, Copy: "That question was already answered."},
 	CodeInternal:            {Status: 500, Copy: "Something went wrong. Try again."},
+	CodeInvalidValue:        {Status: 400, Copy: "That is not a value Cairn can use."},
 	CodeMessageTooLong:      {Status: 413, Copy: "That message is too long. Split it into two."},
 	CodeMethodNotAllowed:    {Status: 405, Copy: "That is not something this page can do."},
+	CodeNotADraft:           {Status: 409, Copy: "There is no card to change yet."},
+	CodeNotExtracted:        {Status: 409, Copy: "That body was typed, so there is nothing left out of it."},
 	CodeNotFound:            {Status: 404, Copy: "There is nothing here."},
+	CodeNotImplemented:      {Status: 501, Copy: "This part of Cairn is not built yet."},
 	CodePayloadTooLarge:     {Status: 413, Copy: "That is too big to send."},
 	CodeQueueFull:           {Status: 429, Copy: "One message at a time. This one will wait until the reply is done."},
 	CodeRateLimited:         {Status: 429, Copy: "Slow down a moment."},
 	CodeRatingRequired:      {Status: 422, Copy: "Add a rating before saving."},
 	CodeReplyInProgress:     {Status: 409, Copy: "Finish the reply first."},
+	CodeSessionClosed:       {Status: 409, Copy: "This conversation is finished. Start a new one."},
 	CodeSessionTooLong:      {Status: 409, Copy: "This conversation is long enough. Save what you have and start a new entry."},
 	CodeStaleVersion:        {Status: 409, Copy: "The card changed while you were editing. Here it is again."},
 	CodeUnavailable:         {Status: 503, Copy: "Cairn cannot reach that right now."},
+	CodeUnknownField:        {Status: 400, Copy: "The card has no field with that name."},
 	CodeUpdateInProgress:    {Status: 409, Copy: "An update is already running."},
 	CodeVerdictNotYourWords: {Status: 422, Copy: "The verdict has to come from what you wrote."},
 	CodeVerdictTooLong:      {Status: 422, Copy: "A verdict is one short line."},

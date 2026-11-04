@@ -27,6 +27,9 @@ var ErrClosed = errors.New("session: this session is closed")
 // ErrNoDraft means the session has no entry to build yet: the work has not been picked.
 var ErrNoDraft = errors.New("session: this session has no draft")
 
+// ErrBadResume means last_seq is not a point in this session's log: negative, or past the head.
+var ErrBadResume = errors.New("session: that resume point is not in the log")
+
 // MaxMessagesPerSession is the length limit from docs/STANDARDS.md 4a.
 const MaxMessagesPerSession = 200
 
@@ -140,22 +143,21 @@ func (e *Engine) Greet(ctx context.Context, sessionID string, lastSeq int) (Hell
 		return Hello{}, err
 	}
 	if lastSeq < 0 || lastSeq > head {
-		return Hello{}, fmt.Errorf("session: last_seq %d is outside the log (head %d)", lastSeq, head)
+		return Hello{}, fmt.Errorf("%w: last_seq %d, head %d", ErrBadResume, lastSeq, head)
 	}
 
 	hello := Hello{Session: sess, HeadSeq: head, ServerVersion: e.version}
-	if lastSeq > 0 {
-		events, replayErr := e.store.EventsSince(ctx, sessionID, lastSeq)
-		if replayErr != nil {
-			return Hello{}, replayErr
-		}
-		// A gap means events after lastSeq are gone, so replay cannot rebuild the conversation.
-		if len(events) > 0 && events[0].Seq > lastSeq+1 {
-			hello.FullState = true
-		}
-		if !hello.FullState {
-			hello.Events = events
-		}
+	// Every event after the point the client names is replayed, including from zero: a fresh connection to an
+	// existing draft needs the conversation the card was built in (docs/PROTOCOL.md 6). A gap means events after
+	// lastSeq are gone, so replay cannot rebuild the conversation and hello says so instead.
+	events, replayErr := e.store.EventsSince(ctx, sessionID, lastSeq)
+	if replayErr != nil {
+		return Hello{}, replayErr
+	}
+	if len(events) > 0 && events[0].Seq > lastSeq+1 {
+		hello.FullState = true
+	} else {
+		hello.Events = events
 	}
 
 	open, err := e.store.OpenInteractions(ctx, sessionID)
@@ -337,6 +339,36 @@ func (e *Engine) Drafts(ctx context.Context, limit int) ([]DraftSummary, error) 
 		out = append(out, summary)
 	}
 	return out, nil
+}
+
+// Waiting reports the first thing a session's card is waiting on, using the same order as the Drafts list. It is
+// what GET /api/sessions/{id} shows beside a resumed draft.
+func (e *Engine) Waiting(ctx context.Context, sessionID string) (WaitingReason, error) {
+	sess, err := e.store.Session(ctx, sessionID)
+	if err != nil {
+		return "", err
+	}
+	if sess.Kind != domain.SessionEntry || sess.EntryID == "" {
+		return WaitingPickWork, nil
+	}
+	entry, err := e.store.Entry(ctx, sess.EntryID)
+	if err != nil {
+		return "", err
+	}
+	unverified := false
+	if entry.WorkID != "" {
+		sources, err := e.store.Sources(ctx, entry.WorkID)
+		if err != nil {
+			return "", err
+		}
+		for _, source := range sources {
+			if source.Trust == domain.TrustUnverified {
+				unverified = true
+				break
+			}
+		}
+	}
+	return waitingReason(entry, unverified), nil
 }
 
 // waitingReason applies the order above. Only a rating and a body block a save (docs/ENTRY_CARD.md 2); the others
@@ -547,8 +579,9 @@ func (e *Engine) Confirm(ctx context.Context, sessionID string, in ConfirmReques
 	return entry, version, events, err
 }
 
-// Discard throws the draft away: the session closes, the draft stays in the database, and nothing is deleted.
-func (e *Engine) Discard(ctx context.Context, sessionID string) error {
+// Discard throws the draft away: the session closes, the draft stays in the database, and nothing is deleted. The
+// client message id is remembered with it, so a retried discard is a duplicate rather than a second close.
+func (e *Engine) Discard(ctx context.Context, sessionID, clientMsgID string) error {
 	sess, err := e.store.Session(ctx, sessionID)
 	if err != nil {
 		return err
@@ -556,7 +589,7 @@ func (e *Engine) Discard(ctx context.Context, sessionID string) error {
 	if sess.State != domain.SessionActive {
 		return ErrClosed
 	}
-	return e.store.DiscardDraft(ctx, sessionID)
+	return e.store.DiscardDraft(ctx, sessionID, clientMsgID)
 }
 
 // AppendUserMessage stores what she typed, enforcing the message and session limits, and records the ledger row.

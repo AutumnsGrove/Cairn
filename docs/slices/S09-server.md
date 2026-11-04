@@ -72,6 +72,46 @@ None. The rate limit was answered by Autumn on 2026-11-04 and is recorded below.
 3. **A rate-limited message changes nothing.** It gets no `draft_snapshot`, no event and no ledger row; the client
    can retry later with the same `client_msg_id`.
 
+## Decisions (recorded 2026-11-04, while building)
+
+1. **The WebSocket is ours, not a library.** RFC 6455 is implemented in `internal/server/ws.go`: the handshake, one
+   frame reader, one frame writer and the close handshake, with no extensions, no subprotocols and no compression.
+   The plan asks for the frame reader to be fuzzed, and STACK.md prefers the standard library, so a dependency would
+   have hidden the part this slice must prove. Close codes are stable: 1009 too big, 1007 not UTF-8, 1002 protocol,
+   1001 the service is restarting, 4004 no such session, 4008 rate limited or not keeping up.
+2. **Persisted events are tailed, never pushed by the writer.** Each socket polls `EventsSince` every 50 ms and a
+   live bus carries `activity` and `cost_update`. A turn can therefore be written from any transaction without the
+   engine or the agent knowing a socket exists, and a restart loses no event. Persisted events wait in a 256-deep
+   queue and a client that cannot drain it is closed so it can replay; live-only events are shed oldest-first.
+3. **The wire layer is explicit.** `internal/server/wire.go` turns stored records into the contract's shapes (the
+   card with its blocks, left-out segments, unverified fields, tags, fidelity and why sheet). The OpenAPI and event
+   schema are validated by tests against real output, which found and fixed five contract bugs: `draft_edit.set`
+   said every value is a string (the engine stores ints and bools), `unverifiedField` had no id to accept,
+   `Entry.status` was required but not declared, `WorkDetail` used `allOf` on a closed `Work`, and
+   `waiting_reason` listed four names the engine never emits.
+4. **Turns and the one-deep queue live in memory with the hub**, not in a socket and not in the database. A turn
+   survives the connection that asked for it; a queued message is retried by the client's outbox with the same
+   `client_msg_id`, which is what the ledger remembers. A stop cancels the turn and writes a `stopped` notice.
+5. **Two S07 bugs surfaced and were fixed here:** `Greet(0)` replayed nothing (the protocol says everything after
+   `last_seq`, and a fresh connection to a resumed draft needs the conversation), and `discard` did not remember its
+   `client_msg_id`, so a retry could not be a duplicate.
+6. **The card's why sheet is read from the receipts**: decisions odds and costs from `decision_calls`, turn cost
+   from `turn_calls`, tool summaries and sources from the `tool_end` events, tags from `entry_tags`. No text is
+   added to a ledger to make the sheet possible.
+
+## What is built, and what is left
+
+Built: the HTTP chain with request ids; the socket with hello, replay from zero or from `last_seq`, full-state
+fallback, heartbeat, framing, rate limit, duplicate detection, every client message and its ack, stop and the
+one-deep queue; the REST routes for sessions, entries, revisions, soft delete, works, covers, version and services,
+with search, upload, export and update as stable `not_implemented` stubs; the wire mapping and its contract tests;
+`cairn serve` and the offline `cairn-dev` stack with one scripted review; graceful drain that closes sockets and
+waits for a turn.
+
+Left before the slice is done: the slow-client shed and reconnect-storm tests, a restart in the middle of a turn, a
+database failure mid-request, and the bounded soak. The happy, bad and sad routes that are written are green,
+including a real-socket session from message to `saved`.
+
 ## Done when
 
 A frontend agent can open the dev stack and drive the whole logging flow through a real socket, every

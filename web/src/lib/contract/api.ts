@@ -340,8 +340,11 @@ export interface components {
             title?: string;
             entry_id?: string | null;
             draft_version?: number | null;
-            /** @enum {string|null} */
-            waiting_reason?: "needs_a_rating" | "web_fields_to_accept" | "waiting_for_you_to_pick" | "ready_to_save" | null;
+            /**
+             * @description The first thing the draft is waiting on, in the order the Drafts list checks them.
+             * @enum {string|null}
+             */
+            waiting_reason?: "pick_work" | "needs_rating" | "needs_body" | "accept_fields" | "needs_date" | "ready" | null;
             /** Format: date-time */
             created_at: string;
             /** Format: date-time */
@@ -370,7 +373,17 @@ export interface components {
             primary_provider?: string;
             primary_id?: string;
         };
-        WorkDetail: components["schemas"]["Work"] & {
+        WorkDetail: {
+            id: string;
+            medium: components["schemas"]["Medium"];
+            title: string;
+            original_title?: string;
+            year?: number;
+            creators?: components["schemas"]["Creator"][];
+            cover_url?: string | null;
+            verified: boolean;
+            primary_provider?: string;
+            primary_id?: string;
             sources: {
                 provider: string;
                 provider_id?: string;
@@ -395,6 +408,8 @@ export interface components {
             body: string;
             /** @enum {unknown} */
             body_origin: "extracted" | "typed" | "mixed" | "imported";
+            /** @enum {unknown} */
+            status: "draft" | "saved";
             format?: string | null;
             /** Format: date */
             finished_on?: string | null;

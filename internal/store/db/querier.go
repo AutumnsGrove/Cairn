@@ -48,6 +48,8 @@ type Querier interface {
 	LinkSessionEntry(ctx context.Context, arg LinkSessionEntryParams) error
 	ListActiveSessions(ctx context.Context, limit int64) ([]Session, error)
 	ListAnswers(ctx context.Context, entryID string) ([]Answer, error)
+	// A session's decisions calls, oldest first, for the "why" sheet. The ledger holds odds and costs, never her text.
+	ListDecisionCalls(ctx context.Context, arg ListDecisionCallsParams) ([]DecisionCall, error)
 	ListDrafts(ctx context.Context, limit int64) ([]Entry, error)
 	ListEntriesOnWork(ctx context.Context, workID string) ([]Entry, error)
 	ListEntryTags(ctx context.Context, entryID string) ([]ListEntryTagsRow, error)
@@ -58,11 +60,19 @@ type Querier interface {
 	// positional because a repeated named argument makes sqlc emit fewer struct fields than the driver has "?".
 	// A row-value comparison is used so SQLite can walk the (finished_on, id) index instead of sorting.
 	ListLibrary(ctx context.Context, arg ListLibraryParams) ([]Entry, error)
+	// The library with its two filters: medium (on the work) and favourite. Cursor pagination on
+	// (finished_on, id), the same order as ListLibrary.
+	ListLibraryPage(ctx context.Context, arg ListLibraryPageParams) ([]Entry, error)
 	ListMediaForEntry(ctx context.Context, entryID *string) ([]Medium, error)
 	ListMirrors(ctx context.Context, limit int64) ([]Mirror, error)
 	ListOpenInteractions(ctx context.Context, sessionID string) ([]Interaction, error)
 	ListRevisions(ctx context.Context, entryID string) ([]EntryRevision, error)
+	// One page of an entry's history. Revisions are numbered from 1 and only ever added, so the number is the cursor.
+	ListRevisionsPage(ctx context.Context, arg ListRevisionsPageParams) ([]EntryRevision, error)
 	ListSessionEventsSince(ctx context.Context, arg ListSessionEventsSinceParams) ([]SessionEvent, error)
+	// Every session, newest first, with an optional state and kind and an opaque (updated_at, id) cursor. The cursor is
+	// compared as one string because both parts are fixed-width; a row-value comparison would need the pair twice.
+	ListSessions(ctx context.Context, arg ListSessionsParams) ([]Session, error)
 	ListTurnCalls(ctx context.Context, sessionID *string) ([]TurnCall, error)
 	ListWorkSources(ctx context.Context, workID string) ([]WorkSource, error)
 	RecordMirror(ctx context.Context, arg RecordMirrorParams) error

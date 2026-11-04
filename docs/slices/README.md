@@ -64,7 +64,7 @@ S09 needs S02, S07 and S08. S13 needs a working app (S09 and S12).
 | S06 | [Providers](S06-providers.md) | 1 | done |
 | S07 | [Session engine](S07-session-engine.md) | 1 | done |
 | S08 | [Agent pipeline](S08-agent-pipeline.md) | 1 | done |
-| S09 | [Server and protocol](S09-server.md) | 1 | planned |
+| S09 | [Server and protocol](S09-server.md) | 1 | in progress (lifecycle tests left) |
 | S10 | [Frontend foundation](S10-frontend-foundation.md) | 1 | planned |
 | S11 | [Logging flow UI](S11-logging-ui.md) | 1 | planned |
 | S12 | [Reading UI](S12-reading-ui.md) | 1 | planned |
@@ -89,10 +89,11 @@ S09 needs S02, S07 and S08. S13 needs a working app (S09 and S12).
 
 ## What is real and what is mocked today
 
-S00 and S02 through S08 are built: the service skeleton and its Host and Origin checks, the contract and its
+S00 and S02 through S09 are built: the service skeleton and its Host and Origin checks, the contract and its
 generators, the pure domain core, the database with its triggers and repositories, the question banks and
 decisions layer that reads [`../../config/`](../../config/), the TMDB and Open Library clients with their covers,
-the session engine, and the agent pipeline with its tools, guards, corpus and fake-model runner. G4 is decided and S08 is done. Everything from S09 on is still plan, spec and
-mockup. The decisions backend, the two metadata providers, Polaris and R2 are reachable only through the fakes in
+the session engine, the agent pipeline with its tools, guards, corpus and fake-model runner, and the HTTP and
+WebSocket server that drives the whole logging flow. G4 is decided and S08 is done; S09 is built with its lifecycle
+tests still to write. Everything from S10 on is still plan, spec and mockup. The decisions backend, the two metadata providers, Polaris and R2 are reachable only through the fakes in
 `internal/world`; `cairn-dev` runs the real service against them, offline, with no keys. The live calls against
 the real providers are the operator's.

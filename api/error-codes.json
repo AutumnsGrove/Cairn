@@ -2,6 +2,16 @@
   "$comment": "Every stable error code Cairn can answer with, its HTTP status, and the plain words the UI shows. Code decides the meaning; the copy is short, has no em dashes, and never blames the operator. Generated into Go and TypeScript by `make gen`.",
   "codes": [
     {
+      "code": "already_accepted",
+      "status": 409,
+      "copy": "That field was already accepted."
+    },
+    {
+      "code": "bad_content_type",
+      "status": 415,
+      "copy": "Send that as JSON."
+    },
+    {
       "code": "bad_host",
       "status": 400,
       "copy": "This address is not Cairn."
@@ -10,96 +20,6 @@
       "code": "bad_origin",
       "status": 403,
       "copy": "That request did not come from Cairn."
-    },
-    {
-      "code": "not_found",
-      "status": 404,
-      "copy": "There is nothing here."
-    },
-    {
-      "code": "method_not_allowed",
-      "status": 405,
-      "copy": "That is not something this page can do."
-    },
-    {
-      "code": "payload_too_large",
-      "status": 413,
-      "copy": "That is too big to send."
-    },
-    {
-      "code": "unavailable",
-      "status": 503,
-      "copy": "Cairn cannot reach that right now."
-    },
-    {
-      "code": "internal",
-      "status": 500,
-      "copy": "Something went wrong. Try again."
-    },
-    {
-      "code": "message_too_long",
-      "status": 413,
-      "copy": "That message is too long. Split it into two."
-    },
-    {
-      "code": "images_too_many",
-      "status": 413,
-      "copy": "That is more images than one message can carry."
-    },
-    {
-      "code": "session_too_long",
-      "status": 409,
-      "copy": "This conversation is long enough. Save what you have and start a new entry."
-    },
-    {
-      "code": "stale_version",
-      "status": 409,
-      "copy": "The card changed while you were editing. Here it is again."
-    },
-    {
-      "code": "duplicate_message",
-      "status": 200,
-      "copy": "That message already went through."
-    },
-    {
-      "code": "queue_full",
-      "status": 429,
-      "copy": "One message at a time. This one will wait until the reply is done."
-    },
-    {
-      "code": "rate_limited",
-      "status": 429,
-      "copy": "Slow down a moment."
-    },
-    {
-      "code": "reply_in_progress",
-      "status": 409,
-      "copy": "Finish the reply first."
-    },
-    {
-      "code": "update_in_progress",
-      "status": 409,
-      "copy": "An update is already running."
-    },
-    {
-      "code": "export_in_progress",
-      "status": 409,
-      "copy": "An export is already being written."
-    },
-    {
-      "code": "rating_required",
-      "status": 422,
-      "copy": "Add a rating before saving."
-    },
-    {
-      "code": "body_required",
-      "status": 422,
-      "copy": "Add a few words of your own before saving."
-    },
-    {
-      "code": "body_too_long",
-      "status": 422,
-      "copy": "That is longer than a review can be."
     },
     {
       "code": "body_not_your_words",
@@ -112,9 +32,134 @@
       "copy": "The card does not say where the body came from."
     },
     {
-      "code": "verdict_too_long",
+      "code": "body_required",
       "status": 422,
-      "copy": "A verdict is one short line."
+      "copy": "Add a few words of your own before saving."
+    },
+    {
+      "code": "body_too_long",
+      "status": 422,
+      "copy": "That is longer than a review can be."
+    },
+    {
+      "code": "date_invalid",
+      "status": 422,
+      "copy": "That is not a date."
+    },
+    {
+      "code": "duplicate_message",
+      "status": 200,
+      "copy": "That message already went through."
+    },
+    {
+      "code": "export_in_progress",
+      "status": 409,
+      "copy": "An export is already being written."
+    },
+    {
+      "code": "images_too_many",
+      "status": 413,
+      "copy": "That is more images than one message can carry."
+    },
+    {
+      "code": "interaction_closed",
+      "status": 409,
+      "copy": "That question was already answered."
+    },
+    {
+      "code": "internal",
+      "status": 500,
+      "copy": "Something went wrong. Try again."
+    },
+    {
+      "code": "invalid_value",
+      "status": 400,
+      "copy": "That is not a value Cairn can use."
+    },
+    {
+      "code": "message_too_long",
+      "status": 413,
+      "copy": "That message is too long. Split it into two."
+    },
+    {
+      "code": "method_not_allowed",
+      "status": 405,
+      "copy": "That is not something this page can do."
+    },
+    {
+      "code": "not_a_draft",
+      "status": 409,
+      "copy": "There is no card to change yet."
+    },
+    {
+      "code": "not_extracted",
+      "status": 409,
+      "copy": "That body was typed, so there is nothing left out of it."
+    },
+    {
+      "code": "not_found",
+      "status": 404,
+      "copy": "There is nothing here."
+    },
+    {
+      "code": "not_implemented",
+      "status": 501,
+      "copy": "This part of Cairn is not built yet."
+    },
+    {
+      "code": "payload_too_large",
+      "status": 413,
+      "copy": "That is too big to send."
+    },
+    {
+      "code": "queue_full",
+      "status": 429,
+      "copy": "One message at a time. This one will wait until the reply is done."
+    },
+    {
+      "code": "rate_limited",
+      "status": 429,
+      "copy": "Slow down a moment."
+    },
+    {
+      "code": "rating_required",
+      "status": 422,
+      "copy": "Add a rating before saving."
+    },
+    {
+      "code": "reply_in_progress",
+      "status": 409,
+      "copy": "Finish the reply first."
+    },
+    {
+      "code": "session_closed",
+      "status": 409,
+      "copy": "This conversation is finished. Start a new one."
+    },
+    {
+      "code": "session_too_long",
+      "status": 409,
+      "copy": "This conversation is long enough. Save what you have and start a new entry."
+    },
+    {
+      "code": "stale_version",
+      "status": 409,
+      "copy": "The card changed while you were editing. Here it is again."
+    },
+    {
+      "code": "unavailable",
+      "status": 503,
+      "copy": "Cairn cannot reach that right now."
+    },
+    {
+      "code": "unknown_field",
+      "status": 400,
+      "copy": "The card has no field with that name."
+    },
+    {
+      "code": "update_in_progress",
+      "status": 409,
+      "copy": "An update is already running."
     },
     {
       "code": "verdict_not_your_words",
@@ -122,9 +167,9 @@
       "copy": "The verdict has to come from what you wrote."
     },
     {
-      "code": "date_invalid",
+      "code": "verdict_too_long",
       "status": 422,
-      "copy": "That is not a date."
+      "copy": "A verdict is one short line."
     }
   ],
   "notices": [
