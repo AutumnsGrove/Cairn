@@ -11,7 +11,7 @@ import (
 )
 
 // The dev stack is the only place the real server and the world meet before CI, so it is booted here once: if
-// this test passes, `go run ./cmd/cairn-dev` gives a working offline app.
+// this test passes, `go run ./cmd/sepia-dev` gives a working offline app.
 
 func freeAddr(t *testing.T) string {
 	t.Helper()
@@ -34,8 +34,8 @@ func TestDevStackBootsAndStops(t *testing.T) {
 	ctx, cancel := context.WithCancel(context.Background())
 	done := make(chan error, 1)
 	environ := []string{
-		"CAIRN_ADDR=" + addr, "CAIRN_ALLOWED_HOSTS=" + addr,
-		"CAIRN_DATA_DIR=" + t.TempDir(), "CAIRN_CONFIG_DIR=../../config",
+		"SEPIA_ADDR=" + addr, "SEPIA_ALLOWED_HOSTS=" + addr,
+		"SEPIA_DATA_DIR=" + t.TempDir(), "SEPIA_CONFIG_DIR=../../config",
 	}
 	go func() { done <- run(ctx, environ, &stderr) }()
 
@@ -84,7 +84,7 @@ func TestDevStackBootsAndStops(t *testing.T) {
 
 func TestDevStackRefusesBadConfig(t *testing.T) {
 	var stderr bytes.Buffer
-	err := run(context.Background(), []string{"CAIRN_ADDR=0.0.0.0:8893"}, &stderr)
+	err := run(context.Background(), []string{"SEPIA_ADDR=0.0.0.0:8893"}, &stderr)
 	if err == nil {
 		t.Fatal("run accepted a public address")
 	}

@@ -1,5 +1,5 @@
 # Shared descriptor vocabularies, used by every medium that lists them in `include`.
-# For Autumn to cut, reword and add to. Written fresh for Cairn, not copied from any other app.
+# For Autumn to cut, reword and add to. Written fresh for Sepia, not copied from any other app.
 #
 # How a category works (rules live in code and in docs/STANDARDS.md, not here):
 #   - A category is one tab in the "Describe it" step. It offers a closed list of chips; any number can be

@@ -3,7 +3,7 @@
 /**
  * Every server event and client message on a session socket. The prose is docs/PROTOCOL.md; this file is the contract the code is generated from. Persisted events carry a seq and are replayed on resume; live-only events carry seq null and are never replayed.
  */
-export type CairnSessionProtocol = ServerEvent | ClientMessage;
+export type SepiaSessionProtocol = ServerEvent | ClientMessage;
 /**
  * Any server event on a session socket.
  */

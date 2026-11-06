@@ -8,7 +8,7 @@ the fake-model suite is green, and four real-title live runs reached valid cards
 providers. Autumn delegated the labelling and threshold decisions; they are recorded under "Decisions" below. One
 model-behaviour finding is open (see Risks), and it is not a threshold question.
 
-**Do this first: rotate the temporary keys.** They appeared in the chat transcript and in `~/Cairn/.env`. They were
+**Do this first: rotate the temporary keys.** They appeared in the chat transcript and in `~/Sepia/.env`. They were
 used again for the 2026-11-04 runs below. After the last run the key returned 401 from OpenRouter, so it looks
 rotated or revoked already; confirm that and clear the file. A key must never be committed, logged or pasted into a fixture.
 
@@ -45,9 +45,9 @@ its titles cannot be found by the real providers, so `make eval` runs the real-t
   rating) for the operator's live smoke run. The review text is invented; only the titles are real metadata.
 - `internal/agent/corpus_test.go`: the CI runner against the fake model; it passes 30/30, and the live corpus is
   loaded but never run in CI.
-- `cmd/cairn-eval`: the operator's runner against the real model and decisions backend; `make eval` runs the live
+- `cmd/sepia-eval`: the operator's runner against the real model and decisions backend; `make eval` runs the live
   corpus.
-- Migration 0005 (`turn_calls`), the `CAIRN_OPENROUTER_API_KEY` and `CAIRN_MODEL` settings (pinned, no aliases),
+- Migration 0005 (`turn_calls`), the `SEPIA_OPENROUTER_API_KEY` and `SEPIA_MODEL` settings (pinned, no aliases),
   and the fixed interaction-request event payload (`interaction_id`, `kind`, `payload`).
 
 The corpus is ten book, ten film/TV and ten cross-cutting cases:
@@ -114,7 +114,7 @@ made.
 - **Everything else unchanged:** `intent` 0.65, `format` 0.75, `revisit` 0.80, `extract_fidelity` 0.60,
   `mentions_*` 0.75, session override 0.80. No reading came near them, so nothing here could justify a move.
 - **A verdict is allowed in the live run.** The agent may pick a verdict if it is an exact span of her own message
-  (`cmd/cairn-eval`). An invented verdict, or any change to a stated expectation, still fails. This is the "my
+  (`cmd/sepia-eval`). An invented verdict, or any change to a stated expectation, still fails. This is the "my
   words are mine" rule, and the CI corpus is unchanged.
 - **Split Dune read asks "which one?".** For "finished dune" the pre-read reads film or unknown, not book. Asking
   is the right outcome: the fallback is `choose_medium`, as designed.

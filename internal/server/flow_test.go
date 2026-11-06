@@ -12,15 +12,15 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AutumnsGrove/cairn/internal/agent"
-	"github.com/AutumnsGrove/cairn/internal/banks"
-	"github.com/AutumnsGrove/cairn/internal/config"
-	"github.com/AutumnsGrove/cairn/internal/decisions"
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/providers"
-	"github.com/AutumnsGrove/cairn/internal/session"
-	"github.com/AutumnsGrove/cairn/internal/store"
-	"github.com/AutumnsGrove/cairn/internal/world"
+	"github.com/AutumnsGrove/sepia/internal/agent"
+	"github.com/AutumnsGrove/sepia/internal/banks"
+	"github.com/AutumnsGrove/sepia/internal/config"
+	"github.com/AutumnsGrove/sepia/internal/decisions"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/providers"
+	"github.com/AutumnsGrove/sepia/internal/session"
+	"github.com/AutumnsGrove/sepia/internal/store"
+	"github.com/AutumnsGrove/sepia/internal/world"
 )
 
 // The happy route from the slice plan, end to end: a scripted model, the real pipeline, a real socket, and her
@@ -31,7 +31,7 @@ func newFlowRig(t *testing.T) *socketRig {
 	ctx := context.Background()
 	clock := world.NewFixedClock(time.Date(2026, 11, 2, 12, 0, 0, 0, time.UTC))
 
-	db, err := store.Open(ctx, store.Options{Path: filepath.Join(t.TempDir(), "cairn.db"), Now: clock.Now})
+	db, err := store.Open(ctx, store.Options{Path: filepath.Join(t.TempDir(), "sepia.db"), Now: clock.Now})
 	if err != nil {
 		t.Fatal(err)
 	}

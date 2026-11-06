@@ -8,7 +8,7 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/domain"
 )
 
 // OpenLibrary is the book client. A work is the abstract book, not an edition: a translation or a reprint is the

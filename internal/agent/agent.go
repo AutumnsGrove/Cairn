@@ -1,10 +1,10 @@
-// Package agent wires the model into Cairn, safely: nova's loop, Cairn's tools, the pipeline that turns a message
+// Package agent wires the model into Sepia, safely: nova's loop, Sepia's tools, the pipeline that turns a message
 // into a draft card, and the guardrails that are enforced in code rather than in a prompt
 // (docs/slices/S08-agent-pipeline.md).
 //
-// The shape is the one docs/INTEGRATION.md calls the embedding. Nova owns the loop; Cairn owns the tools, the
+// The shape is the one docs/INTEGRATION.md calls the embedding. Nova owns the loop; Sepia owns the tools, the
 // session, the draft and the event vocabulary. Every tool reads its dependency bundle out of tool.Context.Data,
-// and the model never sees a type of Cairn's.
+// and the model never sees a type of Sepia's.
 package agent
 
 import (
@@ -22,12 +22,12 @@ import (
 	"github.com/AutumnsGrove/nova/provider/openrouter"
 	"github.com/AutumnsGrove/nova/tool"
 
-	"github.com/AutumnsGrove/cairn/internal/banks"
-	"github.com/AutumnsGrove/cairn/internal/decisions"
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/providers"
-	"github.com/AutumnsGrove/cairn/internal/session"
-	"github.com/AutumnsGrove/cairn/internal/store"
+	"github.com/AutumnsGrove/sepia/internal/banks"
+	"github.com/AutumnsGrove/sepia/internal/decisions"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/providers"
+	"github.com/AutumnsGrove/sepia/internal/session"
+	"github.com/AutumnsGrove/sepia/internal/store"
 )
 
 // PinnedModel is the chat model from docs/BUILD.md 2. It is pinned: an alias moves, and then every recorded cost
@@ -436,7 +436,7 @@ func (a *Agent) notice(ctx context.Context, sessionID, level, code, text string)
 }
 
 // validatePin refuses an empty id, a role name and the alias spellings. It is the same rule config applies to
-// CAIRN_MODEL, repeated here because an embedding caller can bypass the environment.
+// SEPIA_MODEL, repeated here because an embedding caller can bypass the environment.
 func validatePin(model string) error {
 	if model == "" {
 		return errors.New("agent: the model is required")

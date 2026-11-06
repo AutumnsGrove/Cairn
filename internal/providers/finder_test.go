@@ -9,9 +9,9 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/store"
-	"github.com/AutumnsGrove/cairn/internal/world"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/store"
+	"github.com/AutumnsGrove/sepia/internal/world"
 )
 
 // finderRig wires both clients to one world and a finder over them, with pacing off and a movable clock.
@@ -246,7 +246,7 @@ func TestFetchThenStoreTheSnapshot(t *testing.T) {
 	}
 
 	db, err := store.Open(ctx, store.Options{
-		Path:  filepath.Join(t.TempDir(), "cairn.db"),
+		Path:  filepath.Join(t.TempDir(), "sepia.db"),
 		Now:   rig.clock.Now,
 		NewID: world.NewSeqIDs("w").New,
 	})

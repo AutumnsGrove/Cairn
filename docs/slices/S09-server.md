@@ -36,7 +36,7 @@ and the agent exist, nothing connects them.
    error codes, and the same guard applied.
 4. **S09.4 Contract tests.** Every response and every event is validated against the schema; every golden
    example can be produced.
-5. **S09.5 The dev stack.** `cmd/cairn-dev` runs the real service against the world with scripted scenarios, so
+5. **S09.5 The dev stack.** `cmd/sepia-dev` runs the real service against the world with scripted scenarios, so
    the frontend stream and the end-to-end tests have a stable backend.
 6. **S09.6 Lifecycle.** Graceful shutdown that lets a turn finish or hands it to a draft, restart behaviour, and
    readiness.
@@ -105,7 +105,7 @@ Built: the HTTP chain with request ids; the socket with hello, replay from zero 
 fallback, heartbeat, framing, rate limit, duplicate detection, every client message and its ack, stop and the
 one-deep queue; the REST routes for sessions, entries, revisions, soft delete, works, covers, version and services,
 with search, upload, export and update as stable `not_implemented` stubs; the wire mapping and its contract tests;
-`cairn serve` and the offline `cairn-dev` stack with one scripted review; graceful drain that closes sockets and
+`sepia serve` and the offline `sepia-dev` stack with one scripted review; graceful drain that closes sockets and
 waits for a turn.
 
 Left before the slice is done: the slow-client shed and reconnect-storm tests, a restart in the middle of a turn, a

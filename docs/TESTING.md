@@ -2,7 +2,7 @@
 
 Operator requirement: **build it strong from the first line.** Test first, test every route, fuzz what
 parses untrusted input, and make untested code hard to merge. This follows the standards already set in
-Ivy (`ivy/docs/TESTING.md`) and Polaris's live-verification culture, adapted to Cairn. Status: DRAFT
+Ivy (`ivy/docs/TESTING.md`) and Polaris's live-verification culture, adapted to Sepia. Status: DRAFT
 (2026-10-31).
 
 ## 0. Principles

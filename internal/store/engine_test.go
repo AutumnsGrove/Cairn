@@ -7,7 +7,7 @@ import (
 	"errors"
 	"testing"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/domain"
 )
 
 // newSession opens a store and an active entry session, which is the fixture every engine test starts from.

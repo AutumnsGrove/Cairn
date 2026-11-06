@@ -1,7 +1,7 @@
-// Package world is the in-process fake world: every outside service Cairn talks to, with fault injection, so
-// tests and `cairn-dev` can drive the real service offline.
+// Package world is the in-process fake world: every outside service Sepia talks to, with fault injection, so
+// tests and `sepia-dev` can drive the real service offline.
 //
-// It is imported only from `_test.go` files and `cmd/cairn-dev`; the architecture test fails the build if
+// It is imported only from `_test.go` files and `cmd/sepia-dev`; the architecture test fails the build if
 // shipped code reaches for it (docs/BUILD.md 4). S00 builds the pattern once, with one trivial service; S05
 // adds the decisions backend (decisions.go, over nova's decide contract); S06, S15 and S16 add the metadata
 // providers, Polaris and R2.
@@ -17,7 +17,7 @@ import (
 	"time"
 )
 
-// Clock is the injected time source. Nothing in Cairn calls time.Now directly, so a test can decide what
+// Clock is the injected time source. Nothing in Sepia calls time.Now directly, so a test can decide what
 // "last night" or "three days ago" means (docs/STANDARDS.md 2).
 type Clock interface {
 	Now() time.Time
@@ -335,7 +335,7 @@ func dropConnection(w http.ResponseWriter) {
 	_ = conn.Close()
 }
 
-// Server is a Service mounted on a real loopback listener, for a test or for cairn-dev.
+// Server is a Service mounted on a real loopback listener, for a test or for sepia-dev.
 type Server struct {
 	*Service
 	http *httptest.Server

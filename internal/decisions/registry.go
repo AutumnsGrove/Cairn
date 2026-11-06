@@ -35,8 +35,8 @@ const (
 // The role names the app asks for. Naming them here keeps a typo in the config from silently disabling the
 // pre-read: a registry without both roles fails to load.
 const (
-	RolePreread  = "cairn_preread"
-	RoleFidelity = "cairn_fidelity"
+	RolePreread  = "sepia_preread"
+	RoleFidelity = "sepia_fidelity"
 )
 
 // The phases a check can run in. An empty phase is the first call, before the agent turn; post_extract runs in a
@@ -57,7 +57,7 @@ const (
 	MaxTimeout           = 30 * time.Second
 )
 
-// providers is the closed set of decision backends. Cairn speaks to nova's OpenRouter client only; a second
+// providers is the closed set of decision backends. Sepia speaks to nova's OpenRouter client only; a second
 // backend arrives behind its own adapter, not behind a new string nobody validated.
 var providers = []string{"openrouter"}
 
@@ -497,7 +497,7 @@ func isMentions(name string) bool {
 
 // TopicForCheck maps a mentions_* check to the bank topic it fills. It checks the prefix only: the topic
 // vocabulary belongs to the banks, and the shipped config's agreement with it is asserted where both packages
-// are known (cmd/cairn/config_test.go).
+// are known (cmd/sepia/config_test.go).
 func TopicForCheck(name string) (string, bool) {
 	topic, ok := strings.CutPrefix(name, "mentions_")
 	if !ok || topic == "" {

@@ -5,7 +5,7 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/domain"
 )
 
 func TestCardCarriesTheWorkTheAnswersAndWhatWasLeftOut(t *testing.T) {

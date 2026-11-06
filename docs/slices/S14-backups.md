@@ -8,16 +8,16 @@ Local-first: R2 is a mirror, never the source of truth, and a failed mirror is a
 
 ## Depends on
 
-S13 (it runs where Cairn runs) and S04 (the `mirrors` table). It is the last slice of Phase 1.
+S13 (it runs where Sepia runs) and S04 (the `mirrors` table). It is the last slice of Phase 1.
 
 ## Where we start
 
 The `rclone` remote `r2:` is configured for Vaultwarden (`vaultwarden-setup/vaultwarden-backup.sh` is the
-precedent). The bucket `r2:cairn-backups` does not exist yet.
+precedent). The bucket `r2:sepia-backups` does not exist yet.
 
 ## Settled
 
-- Nightly at 03:30: a SQLite snapshot into `data/backups/` (rotating), then `rclone sync` to `r2:cairn-backups/`.
+- Nightly at 03:30: a SQLite snapshot into `data/backups/` (rotating), then `rclone sync` to `r2:sepia-backups/`.
 - Covers and media are mirrored too; receipts go in `mirrors`; failures show as a warning in the app.
 - Soft delete means every backup holds every copy; there is no purge.
 - A restore is an offline command, never an HTTP endpoint (a database file cannot safely be swapped under a
@@ -33,7 +33,7 @@ precedent). The bucket `r2:cairn-backups` does not exist yet.
    timer, the Vaultwarden precedent, so a stuck container cannot silently stop backups.
 4. **S14.4 The screen.** The Backups part of "Backups and export": the last run, the size, any error, and a
    Back up now button.
-5. **S14.5 Restore.** `cairn restore` into a scratch location, with a verification that the restored library
+5. **S14.5 Restore.** `sepia restore` into a scratch location, with a verification that the restored library
    equals the source, and a documented drill.
 
 ## Tests and exit

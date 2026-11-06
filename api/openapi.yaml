@@ -1,9 +1,9 @@
 openapi: 3.1.0
 info:
-  title: Cairn REST API
+  title: Sepia REST API
   version: 0.1.0
   description: >
-    The plain-request half of Cairn. Sessions and the entry card travel over the WebSocket
+    The plain-request half of Sepia. Sessions and the entry card travel over the WebSocket
     (api/events.schema.json); everything here is a page that refreshes, a list, or an action that must survive a
     reload. All of it sits behind the same Host and Origin checks as the socket, and every reply carries
     Cache-Control: no-store and the deny-all CSP (docs/STANDARDS.md 4, 6).

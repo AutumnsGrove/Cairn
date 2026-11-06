@@ -7,7 +7,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/domain"
 )
 
 // The repository tests drive the real store against the real schema. They cover the happy route (a review saved and

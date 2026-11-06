@@ -13,7 +13,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AutumnsGrove/cairn/internal/world"
+	"github.com/AutumnsGrove/sepia/internal/world"
 )
 
 // pngBytes builds a real image of the given size, so the cover checks run against the decoder they will run

@@ -12,7 +12,7 @@ import (
 	"github.com/AutumnsGrove/nova/decide"
 	"github.com/AutumnsGrove/nova/provider"
 
-	"github.com/AutumnsGrove/cairn/internal/world"
+	"github.com/AutumnsGrove/sepia/internal/world"
 )
 
 // fireClock fires a role's timer at once, so a timeout is tested without sleeping.
@@ -123,7 +123,7 @@ func TestRunRequestShape(t *testing.T) {
 	if len(sources) != 1 || sources[0].Source != SourceMessage {
 		t.Errorf("sources = %+v, want only the message", sources)
 	}
-	// Roles resolves the role name to the pinned model before the backend sees it; a bare "cairn_preread"
+	// Roles resolves the role name to the pinned model before the backend sees it; a bare "sepia_preread"
 	// reaching the wire would mean the decorator was skipped.
 	if req.Model != "jev-1.14" {
 		t.Errorf("model = %q, want the role's pinned model", req.Model)

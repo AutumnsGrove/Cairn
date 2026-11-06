@@ -10,22 +10,22 @@ import (
 	"github.com/AutumnsGrove/nova/decide"
 	decideor "github.com/AutumnsGrove/nova/decide/openrouter"
 
-	"github.com/AutumnsGrove/cairn/internal/agent"
-	"github.com/AutumnsGrove/cairn/internal/banks"
-	"github.com/AutumnsGrove/cairn/internal/config"
-	"github.com/AutumnsGrove/cairn/internal/decisions"
-	"github.com/AutumnsGrove/cairn/internal/providers"
-	"github.com/AutumnsGrove/cairn/internal/server"
-	"github.com/AutumnsGrove/cairn/internal/session"
-	"github.com/AutumnsGrove/cairn/internal/store"
-	"github.com/AutumnsGrove/cairn/internal/version"
+	"github.com/AutumnsGrove/sepia/internal/agent"
+	"github.com/AutumnsGrove/sepia/internal/banks"
+	"github.com/AutumnsGrove/sepia/internal/config"
+	"github.com/AutumnsGrove/sepia/internal/decisions"
+	"github.com/AutumnsGrove/sepia/internal/providers"
+	"github.com/AutumnsGrove/sepia/internal/server"
+	"github.com/AutumnsGrove/sepia/internal/session"
+	"github.com/AutumnsGrove/sepia/internal/store"
+	"github.com/AutumnsGrove/sepia/internal/version"
 )
 
 // serve is the composition root: it opens the database, loads the shipped config, builds the agent and hands the
 // whole thing to the server. A missing key or a broken YAML file degrades one feature with a logged warning and
 // the service still starts (docs/BUILD.md invariant 13).
 func serve(ctx context.Context, cfg config.Config, log *slog.Logger, assets fs.FS) error {
-	db, err := store.Open(ctx, store.Options{Path: filepath.Join(cfg.DataDir, "cairn.db")})
+	db, err := store.Open(ctx, store.Options{Path: filepath.Join(cfg.DataDir, "sepia.db")})
 	if err != nil {
 		return err
 	}
@@ -38,7 +38,7 @@ func serve(ctx context.Context, cfg config.Config, log *slog.Logger, assets fs.F
 
 	finder := providers.NewFinder(providers.Config{
 		TMDBKey: cfg.TMDBKey, DataDir: cfg.DataDir, Clock: clockFunc(db.Now),
-		UserAgent: "cairn (Cairn, a private review journal)",
+		UserAgent: "sepia (Sepia, a private review journal)",
 	})
 
 	set, err := banks.LoadDir(filepath.Join(cfg.ConfigDir, "questions"))

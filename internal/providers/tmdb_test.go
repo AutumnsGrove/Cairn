@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AutumnsGrove/cairn/internal/world"
+	"github.com/AutumnsGrove/sepia/internal/world"
 )
 
 // The fixtures are invented: no real film, series or person appears in the repository (docs/BUILD.md invariant

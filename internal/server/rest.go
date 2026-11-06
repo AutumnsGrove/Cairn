@@ -9,9 +9,9 @@ import (
 	"strconv"
 	"strings"
 
-	"github.com/AutumnsGrove/cairn/internal/contract"
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/session"
+	"github.com/AutumnsGrove/sepia/internal/contract"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/session"
 )
 
 // The REST half from api/openapi.yaml: the pages that refresh, the lists, and the actions that must survive a
@@ -42,7 +42,7 @@ func writeJSON(w http.ResponseWriter, status int, value any) {
 // needEngine answers the "the service is still starting" state without a panic.
 func (s *Server) needEngine(w http.ResponseWriter) bool {
 	if s.engine == nil {
-		writeError(w, http.StatusServiceUnavailable, "unavailable", "Cairn is still starting. Try again in a moment.")
+		writeError(w, http.StatusServiceUnavailable, "unavailable", "Sepia is still starting. Try again in a moment.")
 		return false
 	}
 	return true
@@ -206,7 +206,7 @@ func (s *Server) listSessions(w http.ResponseWriter, r *http.Request) {
 	}
 	parts, ok := decodeCursor(query.Get("cursor"))
 	if !ok {
-		writeError(w, http.StatusBadRequest, "invalid_value", "That is not a cursor Cairn gave you.")
+		writeError(w, http.StatusBadRequest, "invalid_value", "That is not a cursor Sepia gave you.")
 		return
 	}
 	before := ""
@@ -288,7 +288,7 @@ func (s *Server) listEntries(w http.ResponseWriter, r *http.Request) {
 		switch medium {
 		case "film", "tv", "book", "game", "album", "podcast", "theatre", "other":
 		default:
-			writeError(w, http.StatusBadRequest, "invalid_value", "That is not a medium Cairn knows.")
+			writeError(w, http.StatusBadRequest, "invalid_value", "That is not a medium Sepia knows.")
 			return
 		}
 	}
@@ -308,7 +308,7 @@ func (s *Server) listEntries(w http.ResponseWriter, r *http.Request) {
 	}
 	parts, ok := decodeCursor(query.Get("cursor"))
 	if !ok || len(parts) > 2 {
-		writeError(w, http.StatusBadRequest, "invalid_value", "That is not a cursor Cairn gave you.")
+		writeError(w, http.StatusBadRequest, "invalid_value", "That is not a cursor Sepia gave you.")
 		return
 	}
 	cursor := domain.Cursor{}
@@ -368,7 +368,7 @@ func (s *Server) listRevisions(w http.ResponseWriter, r *http.Request) {
 	}
 	parts, ok := decodeCursor(r.URL.Query().Get("cursor"))
 	if !ok || len(parts) > 1 {
-		writeError(w, http.StatusBadRequest, "invalid_value", "That is not a cursor Cairn gave you.")
+		writeError(w, http.StatusBadRequest, "invalid_value", "That is not a cursor Sepia gave you.")
 		return
 	}
 	before := 0

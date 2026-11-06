@@ -10,10 +10,10 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AutumnsGrove/cairn/internal/decisions"
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/store"
-	"github.com/AutumnsGrove/cairn/internal/world"
+	"github.com/AutumnsGrove/sepia/internal/decisions"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/store"
+	"github.com/AutumnsGrove/sepia/internal/world"
 )
 
 // The corpus runner. CI drives the fake model over every invented case; the operator's live run uses the same

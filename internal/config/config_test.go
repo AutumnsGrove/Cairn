@@ -29,9 +29,9 @@ func TestLoadDefaults(t *testing.T) {
 func TestLoadOverrides(t *testing.T) {
 	got, err := Load([]string{
 		"PATH=/usr/bin",
-		"CAIRN_ADDR=127.0.0.1:9000",
-		"CAIRN_ALLOWED_HOSTS=localhost:9000, box.lan:9000",
-		"CAIRN_DEV=1",
+		"SEPIA_ADDR=127.0.0.1:9000",
+		"SEPIA_ALLOWED_HOSTS=localhost:9000, box.lan:9000",
+		"SEPIA_DEV=1",
 	})
 	if err != nil {
 		t.Fatalf("Load: %v", err)
@@ -49,11 +49,11 @@ func TestLoadOverrides(t *testing.T) {
 
 // Bad: a typo in a key must not be ignored, because the operator would then believe a setting took effect.
 func TestLoadRejectsUnknownKey(t *testing.T) {
-	_, err := Load([]string{"CAIRN_ADDRX=127.0.0.1:8893"})
+	_, err := Load([]string{"SEPIA_ADDRX=127.0.0.1:8893"})
 	if err == nil {
-		t.Fatal("Load accepted an unknown CAIRN_ key")
+		t.Fatal("Load accepted an unknown SEPIA_ key")
 	}
-	if !strings.Contains(err.Error(), "CAIRN_ADDRX") {
+	if !strings.Contains(err.Error(), "SEPIA_ADDRX") {
 		t.Errorf("error %q does not name the key", err)
 	}
 }
@@ -61,14 +61,14 @@ func TestLoadRejectsUnknownKey(t *testing.T) {
 // Bad: a value that cannot be used must be refused at load, not at the first request.
 func TestLoadRejectsUnusableValues(t *testing.T) {
 	cases := map[string][]string{
-		"empty addr":        {"CAIRN_ADDR="},
-		"no port":           {"CAIRN_ADDR=localhost"},
-		"public interface":  {"CAIRN_ADDR=0.0.0.0:8893"},
-		"empty host list":   {"CAIRN_ALLOWED_HOSTS="},
-		"blank host entry":  {"CAIRN_ALLOWED_HOSTS=localhost:8893, ,box:1"},
-		"not a bool":        {"CAIRN_DEV=yes"},
-		"host with a path":  {"CAIRN_ALLOWED_HOSTS=http://localhost:8893"},
-		"host with a slash": {"CAIRN_ALLOWED_HOSTS=localhost:8893/path"},
+		"empty addr":        {"SEPIA_ADDR="},
+		"no port":           {"SEPIA_ADDR=localhost"},
+		"public interface":  {"SEPIA_ADDR=0.0.0.0:8893"},
+		"empty host list":   {"SEPIA_ALLOWED_HOSTS="},
+		"blank host entry":  {"SEPIA_ALLOWED_HOSTS=localhost:8893, ,box:1"},
+		"not a bool":        {"SEPIA_DEV=yes"},
+		"host with a path":  {"SEPIA_ALLOWED_HOSTS=http://localhost:8893"},
+		"host with a slash": {"SEPIA_ALLOWED_HOSTS=localhost:8893/path"},
 	}
 	for name, env := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -81,7 +81,7 @@ func TestLoadRejectsUnusableValues(t *testing.T) {
 
 // Bad: 0.0.0.0 is refused outright, because the tailnet is the whole security boundary.
 func TestLoadRefusesWildcard(t *testing.T) {
-	_, err := Load([]string{"CAIRN_ADDR=0.0.0.0:8893"})
+	_, err := Load([]string{"SEPIA_ADDR=0.0.0.0:8893"})
 	if err == nil || !strings.Contains(err.Error(), "loopback") {
 		t.Fatalf("err = %v, want a refusal that mentions loopback", err)
 	}
@@ -89,7 +89,7 @@ func TestLoadRefusesWildcard(t *testing.T) {
 
 // Bad: duplicate keys are ambiguous, so they are refused rather than last-one-wins.
 func TestLoadRejectsDuplicateKey(t *testing.T) {
-	_, err := Load([]string{"CAIRN_DEV=0", "CAIRN_DEV=1"})
+	_, err := Load([]string{"SEPIA_DEV=0", "SEPIA_DEV=1"})
 	if err == nil {
 		t.Fatal("Load accepted a duplicate key")
 	}
@@ -120,7 +120,7 @@ func TestOriginHostsDeriveFromAllowedHosts(t *testing.T) {
 }
 
 func TestLoadAcceptsLocalhostAsAHostname(t *testing.T) {
-	cfg, err := Load([]string{"CAIRN_ADDR=localhost:9001", "CAIRN_ALLOWED_HOSTS=localhost:9001"})
+	cfg, err := Load([]string{"SEPIA_ADDR=localhost:9001", "SEPIA_ALLOWED_HOSTS=localhost:9001"})
 	if err != nil {
 		t.Fatalf("Load: %v", err)
 	}
@@ -131,7 +131,7 @@ func TestLoadAcceptsLocalhostAsAHostname(t *testing.T) {
 
 func TestLoadRejectsHostsWithoutTheListenPort(t *testing.T) {
 	// A health probe would be refused by our own guard, so this is a startup error, not a surprise later.
-	_, err := Load([]string{"CAIRN_ADDR=127.0.0.1:9001", "CAIRN_ALLOWED_HOSTS=box.lan:9000"})
+	_, err := Load([]string{"SEPIA_ADDR=127.0.0.1:9001", "SEPIA_ALLOWED_HOSTS=box.lan:9000"})
 	if err == nil || !strings.Contains(err.Error(), "9001") {
 		t.Fatalf("err = %v, want a refusal naming the listen port", err)
 	}
@@ -139,8 +139,8 @@ func TestLoadRejectsHostsWithoutTheListenPort(t *testing.T) {
 
 func TestLoadAcceptsHostnamesAndIPv6(t *testing.T) {
 	cfg, err := Load([]string{
-		"CAIRN_ADDR=[::1]:8893",
-		"CAIRN_ALLOWED_HOSTS=[::1]:8893, localhost:8893",
+		"SEPIA_ADDR=[::1]:8893",
+		"SEPIA_ALLOWED_HOSTS=[::1]:8893, localhost:8893",
 	})
 	if err != nil {
 		t.Fatalf("Load: %v", err)
@@ -154,8 +154,8 @@ func TestLoadRejectsMalformedEnvironment(t *testing.T) {
 	if _, err := Load([]string{"NO_EQUALS_SIGN"}); err == nil {
 		t.Fatal("Load accepted a malformed entry")
 	}
-	// A non-CAIRN_ entry that is malformed is still a malformed entry: the environment is not ours to trust.
-	if _, err := Load([]string{"CAIRN_ADDR"}); err == nil {
+	// A non-SEPIA_ entry that is malformed is still a malformed entry: the environment is not ours to trust.
+	if _, err := Load([]string{"SEPIA_ADDR"}); err == nil {
 		t.Fatal("Load accepted a key with no value")
 	}
 }
@@ -164,8 +164,8 @@ func TestLoadRejectsMalformedEnvironment(t *testing.T) {
 // "off" rather than "broken" (docs/BUILD.md invariant 13).
 func TestLoadProviderSettings(t *testing.T) {
 	got, err := Load([]string{
-		"CAIRN_TMDB_API_KEY=test-key", "CAIRN_DATA_DIR=/srv/cairn/data",
-		"CAIRN_OPENROUTER_API_KEY=test-or-key", "CAIRN_MODEL=vendor/model-pinned",
+		"SEPIA_TMDB_API_KEY=test-key", "SEPIA_DATA_DIR=/srv/sepia/data",
+		"SEPIA_OPENROUTER_API_KEY=test-or-key", "SEPIA_MODEL=vendor/model-pinned",
 	})
 	if err != nil {
 		t.Fatalf("Load: %v", err)
@@ -173,7 +173,7 @@ func TestLoadProviderSettings(t *testing.T) {
 	if got.TMDBKey != "test-key" {
 		t.Errorf("TMDBKey = %q", got.TMDBKey)
 	}
-	if got.DataDir != "/srv/cairn/data" {
+	if got.DataDir != "/srv/sepia/data" {
 		t.Errorf("DataDir = %q", got.DataDir)
 	}
 	if got.OpenRouterKey != "test-or-key" {
@@ -205,11 +205,11 @@ func TestLoadProviderSettings(t *testing.T) {
 // it cannot name a provider's model.
 func TestLoadRejectsAMovingModel(t *testing.T) {
 	cases := map[string]string{
-		"latest alias":     "CAIRN_MODEL=vendor/model-latest",
-		"tilde alias":      "CAIRN_MODEL=~vendor/model",
-		"no provider part": "CAIRN_MODEL=model",
-		"empty":            "CAIRN_MODEL=",
-		"with a space":     "CAIRN_MODEL=vendor/model name",
+		"latest alias":     "SEPIA_MODEL=vendor/model-latest",
+		"tilde alias":      "SEPIA_MODEL=~vendor/model",
+		"no provider part": "SEPIA_MODEL=model",
+		"empty":            "SEPIA_MODEL=",
+		"with a space":     "SEPIA_MODEL=vendor/model name",
 	}
 	for name, entry := range cases {
 		t.Run(name, func(t *testing.T) {
@@ -222,11 +222,11 @@ func TestLoadRejectsAMovingModel(t *testing.T) {
 
 func TestLoadRejectsUnusableProviderSettings(t *testing.T) {
 	cases := map[string]string{
-		"empty data dir":            "CAIRN_DATA_DIR=",
-		"key with newline":          "CAIRN_TMDB_API_KEY=abc\ndef",
-		"key with space":            "CAIRN_TMDB_API_KEY=abc def",
-		"openrouter key newline":    "CAIRN_OPENROUTER_API_KEY=sk-or-abc\ndef",
-		"openrouter key with space": "CAIRN_OPENROUTER_API_KEY=sk-or-abc def",
+		"empty data dir":            "SEPIA_DATA_DIR=",
+		"key with newline":          "SEPIA_TMDB_API_KEY=abc\ndef",
+		"key with space":            "SEPIA_TMDB_API_KEY=abc def",
+		"openrouter key newline":    "SEPIA_OPENROUTER_API_KEY=sk-or-abc\ndef",
+		"openrouter key with space": "SEPIA_OPENROUTER_API_KEY=sk-or-abc def",
 	}
 	for name, entry := range cases {
 		t.Run(name, func(t *testing.T) {

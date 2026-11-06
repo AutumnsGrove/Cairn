@@ -6,8 +6,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/store/db"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/store/db"
 )
 
 // maxDecisionCalls bounds the "why" sheet's read. A session asks at most a handful of questions per turn and the

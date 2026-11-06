@@ -1,4 +1,4 @@
-/* Cairn mockups: just enough behaviour to feel the interactions. No framework, no network. */
+/* Sepia mockups: just enough behaviour to feel the interactions. No framework, no network. */
 
 const STAR = '<svg aria-hidden="true"><use href="#i-star"/></svg>';
 

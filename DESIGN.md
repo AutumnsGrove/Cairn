@@ -1,19 +1,19 @@
 ---
-name: Cairn
+name: Sepia
 description: A quiet, warm, hand-placed journal for everything you finish.
 ---
 
 <!-- SEED: re-run /impeccable document once there is code, to capture the actual tokens and components. -->
 
-# Design System: Cairn
+# Design System: Sepia
 
 ## 1. Overview
 
-**Creative North Star: "The Trail Marker"**
+**Creative North Star: "Ink in a Dim Room"**
 
-A cairn is a small stack of stones, hand-placed, durable, saying only that someone passed this way.
-The interface follows that: modest, tactile, unshowy, and built to last. It is designed first for
-the moment right after finishing something, in a dim room, one thumb on a phone, and then for the
+Sepia is cuttlefish ink, and the warm tone a print was given so it would keep. The interface follows
+that: dark and warm-neutral, modest, tactile, unshowy, built to last, and never a filter or a tint. It
+is designed first for the moment right after finishing something, in a dim room, one thumb on a phone, and then for the
 calm of flicking back through the library. Restraint always beats decoration.
 
 The system is warm-neutral and flat at rest, with a single low-chroma lichen-green accent used for

@@ -1,6 +1,6 @@
 package world
 
-// The sample world `cairn-dev` runs against. The fixtures are invented and deliberately dull so that a frontend test
+// The sample world `sepia-dev` runs against. The fixtures are invented and deliberately dull so that a frontend test
 // can type a fixed sentence and get a card, without a key, a network or a real review (docs/BUILD.md invariant 10).
 //
 // The chat script quotes one sentence of that message, so the same words must appear in what the frontend types:

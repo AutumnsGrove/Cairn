@@ -10,9 +10,9 @@ import (
 	"time"
 	"unicode/utf8"
 
-	"github.com/AutumnsGrove/cairn/internal/contract"
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/session"
+	"github.com/AutumnsGrove/sepia/internal/contract"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/session"
 )
 
 // The session socket: hello, replay, live and replayable events, heartbeat, client messages and their acks. One
@@ -69,17 +69,17 @@ type socket struct {
 // id is an ordinary 404 rather than a socket that closes immediately.
 func (s *Server) socket(w http.ResponseWriter, r *http.Request) {
 	if s.engine == nil {
-		writeError(w, http.StatusServiceUnavailable, "unavailable", "Cairn is still starting. Try again in a moment.")
+		writeError(w, http.StatusServiceUnavailable, "unavailable", "Sepia is still starting. Try again in a moment.")
 		return
 	}
 	sessionID := r.PathValue("id")
 	if len(sessionID) == 0 || len(sessionID) > 128 {
-		writeError(w, http.StatusBadRequest, "invalid_value", "That is not a session Cairn knows.")
+		writeError(w, http.StatusBadRequest, "invalid_value", "That is not a session Sepia knows.")
 		return
 	}
 	lastSeq, err := lastSeqOf(r)
 	if err != nil {
-		writeError(w, http.StatusBadRequest, "invalid_value", "That is not a resume point Cairn can use.")
+		writeError(w, http.StatusBadRequest, "invalid_value", "That is not a resume point Sepia can use.")
 		return
 	}
 	hello, err := s.engine.Greet(r.Context(), sessionID, lastSeq)
@@ -89,7 +89,7 @@ func (s *Server) socket(w http.ResponseWriter, r *http.Request) {
 			return
 		}
 		if errors.Is(err, session.ErrBadResume) {
-			writeError(w, http.StatusBadRequest, "invalid_value", "That is not a resume point Cairn can use.")
+			writeError(w, http.StatusBadRequest, "invalid_value", "That is not a resume point Sepia can use.")
 			return
 		}
 		writeError(w, http.StatusInternalServerError, "internal", "Something went wrong.")

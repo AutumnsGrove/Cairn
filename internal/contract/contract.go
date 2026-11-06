@@ -16,7 +16,7 @@ import (
 )
 
 // schemaURL is the identifier the schema declares for itself.
-const schemaURL = "https://cairn.invalid/api/events.schema.json"
+const schemaURL = "https://sepia.invalid/api/events.schema.json"
 
 // Validator checks one message against the contract. It is safe for concurrent use once built.
 type Validator struct {

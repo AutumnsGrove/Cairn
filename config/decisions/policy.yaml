@@ -9,11 +9,11 @@
 backend:
   provider: openrouter          # nova/decide/openrouter, POST {base}/systemone
   roles:
-    cairn_preread:
+    sepia_preread:
       model: jev-1.14           # pinned, like the main model
       timeout_ms: 2500          # slower than this and the turn runs without a pre-read
       fallback: ""              # another model id could be named here later
-    cairn_fidelity:
+    sepia_fidelity:
       model: jev-1.14
       timeout_ms: 2500
       fallback: ""

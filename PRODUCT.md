@@ -6,7 +6,7 @@ product
 
 ## Users
 
-One person, the operator, using Cairn from a phone (primary) or a laptop over their own Tailscale
+One person, the operator, using Sepia from a phone (primary) or a laptop over their own Tailscale
 network. No signup, no other users. The typical moment is the evening, in a dim room, right after
 finishing a film, a book, an episode or a game: still full of opinion, one hand on the phone, wanting
 to get the thought down before it fades. The other moment is calm and unhurried: flicking through the
@@ -14,7 +14,7 @@ library to remember what something was like, or to find what was watched in Marc
 
 ## Product Purpose
 
-Cairn is a private review journal for every medium. The user types or pastes what they think the way
+Sepia is a private review journal for every medium. The user types or pastes what they think the way
 they would say it out loud, and an agent does the data entry: identifies the work, pulls verified
 metadata, extracts their own words, and asks a few short questions as tappable cards. They check one
 entry card, fix anything by tapping it, and confirm. Success looks like a review that was easy enough
@@ -26,8 +26,10 @@ that machine except an encrypted backup.
 
 ## Brand Personality
 
-Quiet, warm, considered. Named for the stack of stones left on a trail to say someone passed this way:
-small, hand-placed, durable, a record that does not shout. A personal journal with the care of a good
+Quiet, warm, considered. Named for cuttlefish ink, and for the warm tone a print was given so that it
+would last: a record that keeps, and that does not shout. The name is not a photo filter and nothing in
+the interface may pretend it is one: no sepia tint, no grain, no nostalgia, no imitation of old paper.
+A personal journal with the care of a good
 reading surface, not a dashboard and not a chat toy. Covers and posters carry the colour; the
 interface around them stays restrained and tactile, closer to paper and stone than to glass and neon.
 Warmth is welcome because it is a private tool, but restraint always wins over decoration.

@@ -1,6 +1,6 @@
-// Command cairn-eval runs the fixture corpus against the real model and the real decisions backend.
+// Command sepia-eval runs the fixture corpus against the real model and the real decisions backend.
 //
-// It is the operator's live check at G4, never CI: it needs CAIRN_OPENROUTER_API_KEY and spends money. The CI
+// It is the operator's live check at G4, never CI: it needs SEPIA_OPENROUTER_API_KEY and spends money. The CI
 // runner is the same corpus against the fake model (internal/agent/corpus_test.go), so the only difference here is
 // where the answers come from.
 //
@@ -21,21 +21,21 @@ import (
 
 	decideor "github.com/AutumnsGrove/nova/decide/openrouter"
 
-	"github.com/AutumnsGrove/cairn/internal/agent"
-	"github.com/AutumnsGrove/cairn/internal/banks"
-	"github.com/AutumnsGrove/cairn/internal/config"
-	"github.com/AutumnsGrove/cairn/internal/decisions"
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/providers"
-	"github.com/AutumnsGrove/cairn/internal/session"
-	"github.com/AutumnsGrove/cairn/internal/store"
+	"github.com/AutumnsGrove/sepia/internal/agent"
+	"github.com/AutumnsGrove/sepia/internal/banks"
+	"github.com/AutumnsGrove/sepia/internal/config"
+	"github.com/AutumnsGrove/sepia/internal/decisions"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/providers"
+	"github.com/AutumnsGrove/sepia/internal/session"
+	"github.com/AutumnsGrove/sepia/internal/store"
 )
 
-const usage = `cairn-eval: run the S08 corpus against the real model.
+const usage = `sepia-eval: run the S08 corpus against the real model.
 
-  cairn-eval [corpus.json]     default: internal/agent/testdata/corpus-live.json
+  sepia-eval [corpus.json]     default: internal/agent/testdata/corpus-live.json
 
-Needs CAIRN_OPENROUTER_API_KEY. A TMDB key enables the film and TV cases; without one those cases report the
+Needs SEPIA_OPENROUTER_API_KEY. A TMDB key enables the film and TV cases; without one those cases report the
 provider as off. The report goes to stdout as JSON.
 `
 
@@ -50,11 +50,11 @@ func run(args []string, environ []string, stdout, stderr io.Writer) int {
 	}
 	cfg, err := config.Load(environ)
 	if err != nil {
-		fmt.Fprintf(stderr, "cairn-eval: %v\n", err)
+		fmt.Fprintf(stderr, "sepia-eval: %v\n", err)
 		return 1
 	}
 	if cfg.OpenRouterKey == "" {
-		fmt.Fprintln(stderr, "cairn-eval: CAIRN_OPENROUTER_API_KEY is not set; this command spends money and is yours to run")
+		fmt.Fprintln(stderr, "sepia-eval: SEPIA_OPENROUTER_API_KEY is not set; this command spends money and is yours to run")
 		return 2
 	}
 	corpusPath := "internal/agent/testdata/corpus-live.json"
@@ -63,30 +63,30 @@ func run(args []string, environ []string, stdout, stderr io.Writer) int {
 	}
 	cases, err := agent.LoadCorpus(corpusPath)
 	if err != nil {
-		fmt.Fprintf(stderr, "cairn-eval: %v\n", err)
+		fmt.Fprintf(stderr, "sepia-eval: %v\n", err)
 		return 1
 	}
 	set, err := banks.LoadDir("config/questions")
 	if err != nil {
-		fmt.Fprintf(stderr, "cairn-eval: %v\n", err)
+		fmt.Fprintf(stderr, "sepia-eval: %v\n", err)
 		return 1
 	}
 	reg, err := decisions.Load("config/decisions")
 	if err != nil {
-		fmt.Fprintf(stderr, "cairn-eval: %v\n", err)
+		fmt.Fprintf(stderr, "sepia-eval: %v\n", err)
 		return 1
 	}
 	pre := decisions.New(decisions.Config{
 		Registry: reg, Decider: decideor.New(decideor.Config{APIKey: cfg.OpenRouterKey}),
 	})
-	temp, err := os.MkdirTemp("", "cairn-eval-*")
+	temp, err := os.MkdirTemp("", "sepia-eval-*")
 	if err != nil {
-		fmt.Fprintf(stderr, "cairn-eval: %v\n", err)
+		fmt.Fprintf(stderr, "sepia-eval: %v\n", err)
 		return 1
 	}
 	defer func() { _ = os.RemoveAll(temp) }()
 	finder := providers.NewFinder(providers.Config{
-		TMDBKey: cfg.TMDBKey, DataDir: temp, UserAgent: "cairn-eval (Cairn's S08 corpus)",
+		TMDBKey: cfg.TMDBKey, DataDir: temp, UserAgent: "sepia-eval (Sepia's S08 corpus)",
 	})
 
 	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Minute)
@@ -107,7 +107,7 @@ func run(args []string, environ []string, stdout, stderr io.Writer) int {
 	encoder := json.NewEncoder(stdout)
 	encoder.SetIndent("", "  ")
 	if err := encoder.Encode(out); err != nil {
-		fmt.Fprintf(stderr, "cairn-eval: %v\n", err)
+		fmt.Fprintf(stderr, "sepia-eval: %v\n", err)
 		return 1
 	}
 	if len(report.Failed) > 0 {

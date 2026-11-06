@@ -2,7 +2,7 @@
 
 ## Purpose
 
-The pure heart of Cairn: the functions that guarantee "my words are mine". Rating parsing, date resolution, the
+The pure heart of Sepia: the functions that guarantee "my words are mine". Rating parsing, date resolution, the
 span locator, title matching, work merging and the save-time guards. No I/O, no clocks, no globals. This is the
 most heavily tested code in the project, because it is what stops a model from putting words in the user's mouth
 and a merge from silently rewriting history.

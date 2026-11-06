@@ -1,4 +1,4 @@
-// Package archtest holds the build-time check that Cairn's dependency rule holds.
+// Package archtest holds the build-time check that Sepia's dependency rule holds.
 //
 // The rule is in docs/BUILD.md section 4: domain is pure, the adapters import it and nothing else of ours,
 // the layers above may reach only downwards, world is a test double, and nova is named in one place. The
@@ -23,14 +23,14 @@ import (
 )
 
 // module is the module path, which is also the prefix of every import of our own code.
-const module = "github.com/AutumnsGrove/cairn"
+const module = "github.com/AutumnsGrove/sepia"
 
 // novaModule is the only outside module our rules name.
 const novaModule = "github.com/AutumnsGrove/nova"
 
 // novaPackages lists, per layer, the nova subtrees that layer may import. A layer that is absent may not
 // import nova at all. nova's agent shell (mode, config, session, tui, bundled) is never importable from
-// Cairn: only internal/agent takes the embedding, internal/decisions adapts the decide contract, and
+// Sepia: only internal/agent takes the embedding, internal/decisions adapts the decide contract, and
 // internal/world fakes that contract.
 var novaPackages = map[string][]string{
 	"agent":     nil, // the embedding: any nova package
@@ -99,7 +99,7 @@ func check(pkgs []pkg) []string {
 		}
 
 		// world is a test double: it may appear in a test file (which `go list` reports separately, in
-		// TestImports) or in cmd/cairn-dev, never in shipped code.
+		// TestImports) or in cmd/sepia-dev, never in shipped code.
 		if !isCmdDev(p.ImportPath) {
 			for _, imp := range p.Imports {
 				if imp == module+"/internal/world" {
@@ -243,7 +243,7 @@ func layer(importPath string) string {
 }
 
 func isCmdDev(importPath string) bool {
-	return importPath == module+"/cmd/cairn-dev"
+	return importPath == module+"/cmd/sepia-dev"
 }
 
 // TestCheckRejects proves the checker has teeth, on synthetic graphs, so a broken checker cannot make the
@@ -358,7 +358,7 @@ func TestCheckAllows(t *testing.T) {
 		{ImportPath: module + "/internal/decisions/pre-read", Dir: t.TempDir(), Imports: []string{novaModule + "/decide"}},
 		{ImportPath: module + "/internal/providers/tmdb", Dir: t.TempDir(), Imports: []string{module + "/internal/domain"}},
 		{ImportPath: module + "/internal/world", Dir: t.TempDir(), Imports: []string{module + "/internal/domain", module + "/internal/providers/tmdb"}},
-		{ImportPath: module + "/cmd/cairn-dev", Dir: t.TempDir(), GoFiles: []string{"main.go"}, Imports: []string{module + "/internal/world"}},
+		{ImportPath: module + "/cmd/sepia-dev", Dir: t.TempDir(), GoFiles: []string{"main.go"}, Imports: []string{module + "/internal/world"}},
 	}
 	if got := check(ok); len(got) != 0 {
 		t.Fatalf("checker rejected legitimate code:\n%s", strings.Join(got, "\n"))

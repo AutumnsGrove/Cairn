@@ -5,7 +5,7 @@ import (
 	"encoding/json"
 	"testing"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/domain"
 )
 
 // The two ledgers are the answer to "why did this turn cost that". They hold odds, counts and money, never text.

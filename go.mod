@@ -1,4 +1,4 @@
-module github.com/AutumnsGrove/cairn
+module github.com/AutumnsGrove/sepia
 
 go 1.27.3
 

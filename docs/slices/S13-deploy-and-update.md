@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Put Cairn on the potato the way every other app of yours lives there, and make it update itself. The image is
+Put Sepia on the potato the way every other app of yours lives there, and make it update itself. The image is
 published to GHCR by digest, a host-side watcher pulls and recreates it, a failed health check rolls back, and
 Settings shows every state of that flow. After this slice, every later change reaches the potato by pressing a
 button.
@@ -20,14 +20,14 @@ mockups are page 05.
 
 ## Settled
 
-- The container never touches Docker; the watcher is a host systemd path unit (`cairn-update.path`) reacting to a
+- The container never touches Docker; the watcher is a host systemd path unit (`sepia-update.path`) reacting to a
   signal file, with a heartbeat. It resolves the latest digest, fast-forwards the host checkout, pins the digest
   in `.env`, recreates the container, health-checks `/healthz`, and rolls back on failure.
 - REST: `GET /api/version`, `POST /api/update/check`, `GET /api/update/available`, `POST /api/update/start`,
   `GET /api/update/status`, `POST /api/restart`, `GET /api/services`.
 - The panel's eight states derive from a pure function; Update is refused while a reply is being written; the
   new frontend is picked up by the `hello` version check.
-- Compose project at `~/Cairn`, published `127.0.0.1:8893` only, non-root, read-only root filesystem, port 8893
+- Compose project at `~/Sepia`, published `127.0.0.1:8893` only, non-root, read-only root filesystem, port 8893
   (verified free), `tailscale serve`, `/healthz` with two fields, a Meridian tile, and one line in
   `service-healthcheck.sh`.
 
@@ -64,11 +64,11 @@ scratch container, and the secrets plan.
 
 - **Host networking or a published port?** (opened by S00). The service refuses any bind that is not loopback,
   which is the rule in `STANDARDS.md` 6 and is enforced in `config.Load`; the container proved it by refusing
-  `CAIRN_ADDR=0.0.0.0:8893` and exiting 1. That leaves two coherent shapes:
+  `SEPIA_ADDR=0.0.0.0:8893` and exiting 1. That leaves two coherent shapes:
   - **Host networking** (`network_mode: host`): the container's `127.0.0.1` is the potato's, so the loopback
-    rule stays literally true, a compose mistake cannot publish the port, and the Cairn container can reach
+    rule stays literally true, a compose mistake cannot publish the port, and the Sepia container can reach
     Polaris on `127.0.0.1:8899` directly, which closes `PLAN.md` open question 3. Cost: no port mapping, no
-    per-container health isolation, and it only behaves on Linux, so `cairn-dev` stays the macOS story.
+    per-container health isolation, and it only behaves on Linux, so `sepia-dev` stays the macOS story.
   - **Published loopback port** (`127.0.0.1:8893:8893`, the Warbler pattern): the process must bind all
     interfaces *inside* its own namespace, so the loopback-only rule in `config.Load` needs an explicit,
     narrowly named exception. The safety then rests on the compose line and the Host check.

@@ -16,7 +16,7 @@ import (
 	"testing/fstest"
 	"time"
 
-	"github.com/AutumnsGrove/cairn/internal/config"
+	"github.com/AutumnsGrove/sepia/internal/config"
 )
 
 // These tests drive the S00 boundary end to end: the Host and Origin checks, the error envelope, the
@@ -40,7 +40,7 @@ func assets() fstest.MapFS {
 	_ = zw.Close()
 
 	return fstest.MapFS{
-		"index.html":      {Data: []byte("<!doctype html><html lang=\"en\"><title>Cairn</title><p>placeholder</p></html>")},
+		"index.html":      {Data: []byte("<!doctype html><html lang=\"en\"><title>Sepia</title><p>placeholder</p></html>")},
 		"index.html.gz":   {Data: gz.Bytes()},
 		"_app/app.css":    {Data: []byte(":root{--bg:black}")},
 		"_app/app.css.gz": {Data: gz.Bytes()},
@@ -266,7 +266,7 @@ func TestOriginAllowedOnStateChange(t *testing.T) {
 
 // websocketKey is the base64 nonce a client sends in Sec-WebSocket-Key.
 func websocketKey() string {
-	return base64.StdEncoding.EncodeToString([]byte("cairn-test-nonce"))
+	return base64.StdEncoding.EncodeToString([]byte("sepia-test-nonce"))
 }
 
 func TestWebSocketUpgradeRequiresOrigin(t *testing.T) {

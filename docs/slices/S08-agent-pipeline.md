@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Wire the model in, safely. Embed nova, expose Cairn's tools, and orchestrate the review flow from the first
+Wire the model in, safely. Embed nova, expose Sepia's tools, and orchestrate the review flow from the first
 message to a draft card, with every guardrail enforced in code. Deliver the **fixture corpus** and the runner
 that judge the pipeline, first against a fake model in CI and then against the real one as the operator's eval.
 
@@ -72,8 +72,8 @@ stays inside the caps.
 
 ## Built (2026-11-02)
 
-- **The embedding.** `internal/agent` builds nova's OpenRouter provider from `CAIRN_OPENROUTER_API_KEY` and
-  `CAIRN_MODEL` (pinned, no aliases), runs `agent.New(cfg).Run`, and translates nova's events into the session
+- **The embedding.** `internal/agent` builds nova's OpenRouter provider from `SEPIA_OPENROUTER_API_KEY` and
+  `SEPIA_MODEL` (pinned, no aliases), runs `agent.New(cfg).Run`, and translates nova's events into the session
   events the protocol names. The arch test already proves no other layer imports nova.
 - **The tools.** `media_lookup`, `merge_candidates`, `ask_reviewer`, `save_entry` and `search_library`, each with a
   strict decoder (`DisallowUnknownFields`, no trailing value, an 8 KiB cap, fuzzed), a bounded result and the
@@ -92,7 +92,7 @@ stays inside the caps.
   `internal/agent/testdata/corpus.json`, with the expected parse, pre-read outcome, tool order and card. The CI
   runner is `TestCorpusAgainstTheFakeModel`. A separate four-case real-title corpus
   (`internal/agent/testdata/corpus-live.json`) is the operator's live smoke run: the invented titles cannot be
-  found by the real providers, so the live run needs real works. `make eval` (`cmd/cairn-eval`) runs the live
+  found by the real providers, so the live run needs real works. `make eval` (`cmd/sepia-eval`) runs the live
   corpus; the invented one stays the fake/CI suite.
 - **The hostile paths.** A title or message that addresses the model, an invented body or verdict, a rating passed
   as an argument, a huge title, malformed tool JSON, a provider outage, a decisions outage, a model error, a model
@@ -139,7 +139,7 @@ None. The two below were answered by Autumn on 2026-11-02 and are recorded as de
 3. **`save_entry` builds the draft card; it never commits.** The tool validates the rating and the body and writes
    the draft through the session engine, then says the card is waiting for her confirm. Only the confirm tap
    commits (docs/BUILD.md invariant 2). The tool keeps its plan name so the model's vocabulary is unchanged.
-4. **Provider config is explicit.** `CAIRN_OPENROUTER_API_KEY` enables the model; `CAIRN_MODEL` defaults to the
+4. **Provider config is explicit.** `SEPIA_OPENROUTER_API_KEY` enables the model; `SEPIA_MODEL` defaults to the
    pinned `deepseek/deepseek-v4.1-flash-1017`. A `-latest` or `~` alias is refused at startup, because a model
    that moves silently makes every recorded cost and eval meaningless.
 5. **The user is an interface, not a socket.** `agent.Responder` opens an interaction through the session engine

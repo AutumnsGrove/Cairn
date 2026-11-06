@@ -27,7 +27,7 @@ An empty Go module. The repo has docs and mockups only, and `LICENSE` (MIT).
 1. **S00.1 Repo and tooling.** `go.mod` (module path to confirm), `Makefile` (`check`, `test`, `fuzz-smoke`,
    `web`, `gen`), `.golangci.yml`, `.editorconfig`, `STACK.md` seeded, `SECURITY.md`, `CODEOWNERS`, a
    `CLAUDE.md` for agents, an **architecture test** that fails on any import that breaks the dependency rule.
-2. **S00.2 Server skeleton.** `cmd/cairn serve` on **127.0.0.1:8893** (reserved for Cairn; loopback only), `GET /healthz` returning exactly `{"status":"ok","version":"r…"}`,
+2. **S00.2 Server skeleton.** `cmd/sepia serve` on **127.0.0.1:8893** (reserved for Sepia; loopback only), `GET /healthz` returning exactly `{"status":"ok","version":"r…"}`,
    structured logging, graceful shutdown, security headers, the **Host and Origin middleware** with its table
    of hostile cases, the error envelope for unknown paths and wrong methods.
 3. **S00.3 Web shell.** A SvelteKit app that renders a placeholder page in the real fonts and tokens, built in a
@@ -35,7 +35,7 @@ An empty Go module. The repo has docs and mockups only, and `LICENSE` (MIT).
    check enforces it.
 4. **S00.4 The world, core.** `internal/world` with the injected `Clock` and ID source, the fault-injection
    primitives (slow, error, malformed, huge, drop, sticky), a request recorder, and one trivial fake HTTP
-   service to prove the pattern. A tiny `cmd/cairn-dev` that boots the service against it.
+   service to prove the pattern. A tiny `cmd/sepia-dev` that boots the service against it.
 5. **S00.5 CI.** `ci.yml` with every job in [`../CI.md`](../CI.md) that can run now (`go`, `nocgo`, `web`, `guard`,
    `deps`, `codeql`, `coverage`), `nightly.yml` with a fuzz smoke, Dependabot, actions pinned by SHA, least
    privilege permissions. The operator applies the repository settings (branch ruleset, secret scanning,
@@ -59,7 +59,7 @@ None. The operator's action is applying the repository settings listed in S00.5.
 
 ## Decisions (answered 2026-10-31, before starting)
 
-- **Module path** is `github.com/AutumnsGrove/cairn`, capitalised like Warbler, Ivy and Coffer. Meridian's
+- **Module path** is `github.com/AutumnsGrove/sepia`, capitalised like Warbler, Ivy and Coffer. Meridian's
   lowercase path is not the house style; it is left as it is.
 - **Go is pinned in `go.mod` and CI reads it from there** (`go-version-file`), so the local toolchain and the
   runner cannot drift apart. The pin is now an exact patch (`go 1.27.3`), not the minor, because adding a

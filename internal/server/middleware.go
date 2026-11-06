@@ -46,12 +46,12 @@ func (s *Server) guard(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if !s.hostAllowed(r.Host) {
 			s.log.Warn("refused: host", "host", r.Host, "path", r.URL.Path)
-			writeError(w, http.StatusBadRequest, "bad_host", "This address is not Cairn.")
+			writeError(w, http.StatusBadRequest, "bad_host", "This address is not Sepia.")
 			return
 		}
 		if isStateChanging(r) && !s.originAllowed(r.Header.Get("Origin")) {
 			s.log.Warn("refused: origin", "origin", r.Header.Get("Origin"), "path", r.URL.Path)
-			writeError(w, http.StatusForbidden, "bad_origin", "This request did not come from Cairn.")
+			writeError(w, http.StatusForbidden, "bad_origin", "This request did not come from Sepia.")
 			return
 		}
 		next.ServeHTTP(w, r)

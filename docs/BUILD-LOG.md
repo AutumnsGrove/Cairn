@@ -17,10 +17,10 @@ written. Nothing is built. The next step is S00, the walking skeleton.
 
 ## 2026-10-31, S00.1-S00.4, the walking skeleton
 
-**Built.** `go.mod` (module `github.com/AutumnsGrove/cairn`, `go 1.26`), the Makefile (`check`, `test`,
+**Built.** `go.mod` (module `github.com/AutumnsGrove/sepia`, `go 1.26`), the Makefile (`check`, `test`,
 `e2e`, `gen`, `web`, `web-check`, `guard`, `nocgo`, `fuzz-smoke`), `.golangci.yml`, `.editorconfig`,
 `STACK.md`, `SECURITY.md`, `CODEOWNERS`, the architecture test, the server skeleton, the embedded frontend,
-the world harness and `cmd/cairn-dev`.
+the world harness and `cmd/sepia-dev`.
 
 **What is true now.** `GET /healthz` answers exactly `{"status":"ok","version":"dev"}`; the Host check refuses
 anything off the allow-list on every route; a state-changing request or a socket upgrade without our own
@@ -203,7 +203,7 @@ notice. `adds_content` is logged as a bug and never shown as a warning.
   `KnownFields` only applies through a `Decoder`, never through `Unmarshal`.
 
 **Not wired yet, by design.** `Store.Watch` is built and tested but nothing starts it: the server that would
-surface a reload notice and serve a form arrives in S09. S09 wires both stores, `cairn-dev` loads them offline,
+surface a reload notice and serve a form arrives in S09. S09 wires both stores, `sepia-dev` loads them offline,
 and S13 bind-mounts `config/`.
 
 **Live checks left for Autumn:** none for this slice. The thresholds are the draft's and G4 replaces them.
@@ -230,7 +230,7 @@ and S13 bind-mounts `config/`.
 normalisation into `domain.Source` and `domain.Work`, the in-memory answer cache, candidate ranking, cover
 download and storage, and typed errors for every failure. `internal/world` gained real fixtures per route, a
 429 with and without `Retry-After`, a 404, a stalled reply, and a recorded query string. `internal/config` reads
-`CAIRN_TMDB_API_KEY` and `CAIRN_DATA_DIR`.
+`SEPIA_TMDB_API_KEY` and `SEPIA_DATA_DIR`.
 
 **What is true now.** A title returns ranked candidates and at most five; a fetch returns a verified source with
 the provider's own document alongside it, and a stored cover under `data/covers/{provider}-{id}.{ext}` that is
@@ -375,8 +375,8 @@ and treating a `revises` id as trusted only after checking it names the same wor
 
 **Built.** `internal/agent`: the nova embedding, the five tools, the pipeline from a message to a draft card, the
 versioned prompts, the budgets and their ledgers, the translation of nova's events into the session's, the
-thirty-case invented corpus and its fake-model runner, and `cmd/cairn-eval` for the operator's real-model run.
-`CAIRN_OPENROUTER_API_KEY` and `CAIRN_MODEL` (default `deepseek/deepseek-v4.1-flash-1017`, aliases refused) are
+thirty-case invented corpus and its fake-model runner, and `cmd/sepia-eval` for the operator's real-model run.
+`SEPIA_OPENROUTER_API_KEY` and `SEPIA_MODEL` (default `deepseek/deepseek-v4.1-flash-1017`, aliases refused) are
 the new settings. The fidelity check runs after an extract and can only add a warning; a second message in a
 session sees the stored transcript rather than only her words. `internal/world` gained a scripted OpenRouter chat fake that speaks the real SSE stream, so the
 agent tests run nova's real provider. Migration 0005 adds `turn_calls`, the turn half of the cost ledger.
@@ -436,8 +436,8 @@ corpus and decide the thresholds at G4; no threshold was tuned.
 
 ## 2026-11-04, S09 built (lifecycle tests still to write)
 
-**The network face is real.** `cairn serve` now opens the database, reads the shipped question banks and decisions
-registry, builds the providers, the agent and the server, and drains on SIGTERM; `cairn-dev` runs the same stack
+**The network face is real.** `sepia serve` now opens the database, reads the shipped question banks and decisions
+registry, builds the providers, the agent and the server, and drains on SIGTERM; `sepia-dev` runs the same stack
 against the in-process world with one scripted review, so a frontend can drive a whole session offline. The socket
 speaks RFC 6455 from this repository, not a library, because the frame reader is one of the things this slice has to
 prove and fuzz. A scripted session over a real socket goes from her message to `saved`, including the candidate tap:
@@ -456,3 +456,29 @@ the protocol says everything after `last_seq`, so it now replays from zero as we
 
 **Not finished.** The slow-client shed, a reconnect storm, a restart mid-turn, a database failure mid-request and
 the bounded soak have no tests yet; they are the reason the slice says in progress, not done.
+
+## 2026-11-06, rename, the project is now Sepia
+
+**What changed.** Every place the old name lived, in one commit, with no behaviour change: the module path
+`github.com/AutumnsGrove/sepia` (so every internal import), `cmd/sepia` with `sepia-dev` and `sepia-eval` beside
+it, the `SEPIA_*` environment variables, the binaries, the image names, the systemd unit and watcher,
+`sepia.invalid` as the fake host in the contract, `sepia.db`, the decision roles `sepia_preread` and
+`sepia_fidelity`, the mockup stylesheet and script, and 135 tracked files of prose and comments. The generated
+contract was rebuilt with the generators, not hand-edited, so `SepiaEvents` and `SepiaSessionProtocol` are their
+output and `make gen` has nothing left to diff.
+
+**Why.** A name has one test that matters: say it once, in the dark, one thumb on a phone, then spell it from
+memory. Cairn failed both halves. Nobody knows the word, it sits close to "Karen" out loud, and stone is cold
+next to the warm evening this is actually used in. It also put a trail word into a family that already has
+Polaris, Meridian, Warbler and Harbor, and every tree in Lattice. Sepia is the ink, and the tone a print was given
+so it would outlast the paper, which is the promise the app makes about her words.
+
+**The rule that came with it.** Sepia is the ink and the print, never a photo filter. No tint, no grain, no
+nostalgia, no imitation of old paper; the interface stays dark and warm-neutral. That is written into the Name
+row of `PLAN.md`, the Brand Personality in `PRODUCT.md` and the north star in `DESIGN.md`, so a later slice cannot
+drift into decorating the name.
+
+**What is left for Autumn.** The GitHub repository and the GHCR package still carry the old name, because
+renaming the remote is a web action rather than a commit. Nothing else in this repo does: `go test -race ./...`,
+`make web-check`, `make fmt-check` and `make guard` all pass, and no path, identifier or document uses the old
+name except where the history of the rename is recorded on purpose.

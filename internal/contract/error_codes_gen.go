@@ -5,7 +5,7 @@ package contract
 // ErrorCode is a stable refusal code. The UI maps it to its own copy.
 type ErrorCode string
 
-// Every error code Cairn can answer with.
+// Every error code Sepia can answer with.
 const (
 	CodeAlreadyAccepted     ErrorCode = "already_accepted"
 	CodeBadContentType      ErrorCode = "bad_content_type"
@@ -50,8 +50,8 @@ var errorInfo = map[ErrorCode]struct {
 }{
 	CodeAlreadyAccepted:     {Status: 409, Copy: "That field was already accepted."},
 	CodeBadContentType:      {Status: 415, Copy: "Send that as JSON."},
-	CodeBadHost:             {Status: 400, Copy: "This address is not Cairn."},
-	CodeBadOrigin:           {Status: 403, Copy: "That request did not come from Cairn."},
+	CodeBadHost:             {Status: 400, Copy: "This address is not Sepia."},
+	CodeBadOrigin:           {Status: 403, Copy: "That request did not come from Sepia."},
 	CodeBodyNotYourWords:    {Status: 422, Copy: "The body has to come from what you wrote."},
 	CodeBodyOriginInvalid:   {Status: 422, Copy: "The card does not say where the body came from."},
 	CodeBodyRequired:        {Status: 422, Copy: "Add a few words of your own before saving."},
@@ -62,13 +62,13 @@ var errorInfo = map[ErrorCode]struct {
 	CodeImagesTooMany:       {Status: 413, Copy: "That is more images than one message can carry."},
 	CodeInteractionClosed:   {Status: 409, Copy: "That question was already answered."},
 	CodeInternal:            {Status: 500, Copy: "Something went wrong. Try again."},
-	CodeInvalidValue:        {Status: 400, Copy: "That is not a value Cairn can use."},
+	CodeInvalidValue:        {Status: 400, Copy: "That is not a value Sepia can use."},
 	CodeMessageTooLong:      {Status: 413, Copy: "That message is too long. Split it into two."},
 	CodeMethodNotAllowed:    {Status: 405, Copy: "That is not something this page can do."},
 	CodeNotADraft:           {Status: 409, Copy: "There is no card to change yet."},
 	CodeNotExtracted:        {Status: 409, Copy: "That body was typed, so there is nothing left out of it."},
 	CodeNotFound:            {Status: 404, Copy: "There is nothing here."},
-	CodeNotImplemented:      {Status: 501, Copy: "This part of Cairn is not built yet."},
+	CodeNotImplemented:      {Status: 501, Copy: "This part of Sepia is not built yet."},
 	CodePayloadTooLarge:     {Status: 413, Copy: "That is too big to send."},
 	CodeQueueFull:           {Status: 429, Copy: "One message at a time. This one will wait until the reply is done."},
 	CodeRateLimited:         {Status: 429, Copy: "Slow down a moment."},
@@ -77,7 +77,7 @@ var errorInfo = map[ErrorCode]struct {
 	CodeSessionClosed:       {Status: 409, Copy: "This conversation is finished. Start a new one."},
 	CodeSessionTooLong:      {Status: 409, Copy: "This conversation is long enough. Save what you have and start a new entry."},
 	CodeStaleVersion:        {Status: 409, Copy: "The card changed while you were editing. Here it is again."},
-	CodeUnavailable:         {Status: 503, Copy: "Cairn cannot reach that right now."},
+	CodeUnavailable:         {Status: 503, Copy: "Sepia cannot reach that right now."},
 	CodeUnknownField:        {Status: 400, Copy: "The card has no field with that name."},
 	CodeUpdateInProgress:    {Status: 409, Copy: "An update is already running."},
 	CodeVerdictNotYourWords: {Status: 422, Copy: "The verdict has to come from what you wrote."},
@@ -87,7 +87,7 @@ var errorInfo = map[ErrorCode]struct {
 // NoticeCode is a stable notice code, for things that are not failures.
 type NoticeCode string
 
-// Every notice code Cairn can send.
+// Every notice code Sepia can send.
 const (
 	NoticeFidelityAddsContent  NoticeCode = "fidelity_adds_content"
 	NoticeFidelityDropsOpinion NoticeCode = "fidelity_drops_opinion"

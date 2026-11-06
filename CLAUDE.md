@@ -5,12 +5,12 @@ generic instructions for work done here.
 
 ## What this is
 
-Cairn is a private, single-user review journal for every medium (films, TV, books, games, albums and more). The
+Sepia is a private, single-user review journal for every medium (films, TV, books, games, albums and more). The
 user types what she thought, an agent finds the work, extracts her own words, asks a few light questions, and she
 confirms one entry card. It is a Go service with an embedded SvelteKit frontend, run on a Le Potato board over
 Tailscale, and it is a sibling of Polaris, Ivy, Warbler and Meridian in `~/Documents/Projects/`.
 
-**Cairn listens on port 8893**, loopback only (`127.0.0.1:8893`) — `tailscale serve` is the only way in,
+**Sepia listens on port 8893**, loopback only (`127.0.0.1:8893`) — `tailscale serve` is the only way in,
 and the public-to-her address is `https://lepotato.taild95077.ts.net:8893`. The port is reserved and was
 verified free on 2026-10-30; 8892 belongs to Warbler and 8894 to Coffer. Any probe, health check or
 Meridian tile uses `http://localhost:8893/healthz`.
@@ -28,7 +28,7 @@ plan. Code starts at slice S00.
 4. Your slice in `docs/slices/`, then only the specs it links.
 5. For any UI, open the matching page in [`mockups/`](mockups/index.html). The mockups are the UI spec.
 
-`PLAN.md` is the source of truth for what Cairn is. If two docs disagree, stop and ask (trigger T11).
+`PLAN.md` is the source of truth for what Sepia is. If two docs disagree, stop and ask (trigger T11).
 
 ## About the user
 
@@ -63,7 +63,7 @@ make e2e        # Playwright against the real binary and the world, on a phone v
 make gen        # regenerate types from api/ (nothing to generate until S02)
 make web        # build the frontend into a scratch directory and into internal/webui/dist
 make dev        # the real service against the in-process world, offline
-make eval       # the S08 live corpus against the real model (operator's check; needs CAIRN_OPENROUTER_API_KEY)
+make eval       # the S08 live corpus against the real model (operator's check; needs SEPIA_OPENROUTER_API_KEY)
 make guard      # embed placeholder, fuzz seeds, no live provider in tests, gitleaks
 ```
 

@@ -4,7 +4,7 @@ import (
 	"context"
 	"testing"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/domain"
 )
 
 // The marker is read from the first line only, and an unknown one is a load error rather than a comment: a

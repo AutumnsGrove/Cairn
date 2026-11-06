@@ -22,7 +22,7 @@ await mkdir(out, { recursive: true });
 
 // 1. The session protocol.
 const schema = JSON.parse(await readFile(resolve(repo, 'api/events.schema.json'), 'utf8'));
-const events = await compile(schema, 'CairnEvents', {
+const events = await compile(schema, 'SepiaEvents', {
   bannerComment: banner,
   additionalProperties: false,
   style: { singleQuote: true },

@@ -1,6 +1,6 @@
 # Security
 
-Cairn is a private, single-user review journal. It runs on one machine on a Tailscale tailnet, and it holds
+Sepia is a private, single-user review journal. It runs on one machine on a Tailscale tailnet, and it holds
 the operator's own reviews and the keys that let it talk to model providers. This file says how to report a
 problem and what the security model actually is, so a report lands in the right place.
 
@@ -47,5 +47,5 @@ log, a fixture, a screenshot or a test.
 
 ## Supported versions
 
-Cairn is deployed from `main` and from digest-pinned images. Only the current `main` is supported; there are
+Sepia is deployed from `main` and from digest-pinned images. Only the current `main` is supported; there are
 no maintenance branches.

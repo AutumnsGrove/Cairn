@@ -1,4 +1,4 @@
-// Package session is the state machine at the centre of Cairn: sessions, drafts, interactions, the event log,
+// Package session is the state machine at the centre of Sepia: sessions, drafts, interactions, the event log,
 // resume and the confirm. It has no model and no network, so every guarantee in docs/PROTOCOL.md section 6 is
 // proven here by driving plain method calls (docs/slices/S07-session-engine.md).
 //
@@ -17,8 +17,8 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/store"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/store"
 )
 
 // ErrClosed means the session is no longer active. A saved or discarded session takes no more messages.
@@ -598,7 +598,7 @@ func (e *Engine) AppendUserMessage(ctx context.Context, sessionID, text, clientM
 		return domain.SessionEvent{}, &Refusal{Code: CodeInvalidValue, Message: "There is nothing in that message."}
 	}
 	if len(text) > MaxMessageLength {
-		return domain.SessionEvent{}, &Refusal{Code: CodeMessageLong, Message: "That message is longer than Cairn accepts."}
+		return domain.SessionEvent{}, &Refusal{Code: CodeMessageLong, Message: "That message is longer than Sepia accepts."}
 	}
 	sess, err := e.store.Session(ctx, sessionID)
 	if err != nil {

@@ -27,8 +27,8 @@ checks:
 const basePolicy = `backend:
   provider: openrouter
   roles:
-    cairn_preread: {model: jev-1.14, timeout_ms: 2500, fallback: ""}
-    cairn_fidelity: {model: jev-1.14, timeout_ms: 2500, fallback: ""}
+    sepia_preread: {model: jev-1.14, timeout_ms: 2500, fallback: ""}
+    sepia_fidelity: {model: jev-1.14, timeout_ms: 2500, fallback: ""}
 policy:
   checks:
     intent:
@@ -78,7 +78,7 @@ func TestLoadShippedRegistry(t *testing.T) {
 		t.Errorf("session override = %v", r.SessionOverride)
 	}
 	if got := r.Backend.Roles[RolePreread]; got.Model != "jev-1.14" || got.Timeout != 2500*time.Millisecond {
-		t.Errorf("cairn_preread role = %+v", got)
+		t.Errorf("sepia_preread role = %+v", got)
 	}
 	// Every check in wording is either in the first call or the fidelity call, never both.
 	if len(r.Before())+len(r.Post()) != len(r.Order) {
@@ -194,37 +194,37 @@ func TestRegistryRejectsBadConfig(t *testing.T) {
 		},
 		"missing role": {
 			baseWording,
-			replaceOnce(basePolicy, `    cairn_fidelity: {model: jev-1.14, timeout_ms: 2500, fallback: ""}`+"\n", ""),
-			`no "cairn_fidelity" role`,
+			replaceOnce(basePolicy, `    sepia_fidelity: {model: jev-1.14, timeout_ms: 2500, fallback: ""}`+"\n", ""),
+			`no "sepia_fidelity" role`,
 		},
 		"alias model": {
 			baseWording,
-			replaceOnce(basePolicy, "cairn_preread: {model: jev-1.14,", "cairn_preread: {model: jev-1.14-latest,"),
+			replaceOnce(basePolicy, "sepia_preread: {model: jev-1.14,", "sepia_preread: {model: jev-1.14-latest,"),
 			"is an alias",
 		},
 		"tilde alias": {
 			baseWording,
-			replaceOnce(basePolicy, `cairn_fidelity: {model: jev-1.14,`, `cairn_fidelity: {model: "~jev-1.14",`),
+			replaceOnce(basePolicy, `sepia_fidelity: {model: jev-1.14,`, `sepia_fidelity: {model: "~jev-1.14",`),
 			"is an alias",
 		},
 		"empty model": {
 			baseWording,
-			replaceOnce(basePolicy, `cairn_preread: {model: jev-1.14,`, `cairn_preread: {model: "",`),
+			replaceOnce(basePolicy, `sepia_preread: {model: jev-1.14,`, `sepia_preread: {model: "",`),
 			"has no model",
 		},
 		"timeout too short": {
 			baseWording,
-			replaceOnce(basePolicy, "timeout_ms: 2500, fallback: \"\"}\n    cairn_fidelity", "timeout_ms: 10, fallback: \"\"}\n    cairn_fidelity"),
+			replaceOnce(basePolicy, "timeout_ms: 2500, fallback: \"\"}\n    sepia_fidelity", "timeout_ms: 10, fallback: \"\"}\n    sepia_fidelity"),
 			"outside",
 		},
 		"timeout too long": {
 			baseWording,
-			replaceOnce(basePolicy, `cairn_preread: {model: jev-1.14, timeout_ms: 2500`, `cairn_preread: {model: jev-1.14, timeout_ms: 60000`),
+			replaceOnce(basePolicy, `sepia_preread: {model: jev-1.14, timeout_ms: 2500`, `sepia_preread: {model: jev-1.14, timeout_ms: 60000`),
 			"outside",
 		},
 		"bad role name": {
 			baseWording,
-			replaceOnce(basePolicy, "    cairn_fidelity:", "    Cairn Fidelity:"),
+			replaceOnce(basePolicy, "    sepia_fidelity:", "    Sepia Fidelity:"),
 			"invalid role name",
 		},
 		"bad check name": {

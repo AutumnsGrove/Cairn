@@ -7,7 +7,7 @@ import { describe, expect, it } from 'vitest';
  * copy of the palette from quietly drifting away from the frame a designer or an agent checked by eye.
  */
 const repoRoot = new URL('../../../', import.meta.url);
-const mockupCSS = fileURLToPath(new URL('mockups/cairn.css', repoRoot));
+const mockupCSS = fileURLToPath(new URL('mockups/sepia.css', repoRoot));
 const appCSS = fileURLToPath(new URL('../app.css', import.meta.url));
 
 function rootTokens(css: string): Set<string> {

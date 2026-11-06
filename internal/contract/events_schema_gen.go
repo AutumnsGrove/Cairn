@@ -5,8 +5,8 @@ package contract
 // eventsSchema is the session protocol, exactly as api/events.schema.json has it.
 const eventsSchema = `{
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "https://cairn.invalid/api/events.schema.json",
-  "title": "Cairn session protocol",
+  "$id": "https://sepia.invalid/api/events.schema.json",
+  "title": "Sepia session protocol",
   "description": "Every server event and client message on a session socket. The prose is docs/PROTOCOL.md; this file is the contract the code is generated from. Persisted events carry a seq and are replayed on resume; live-only events carry seq null and are never replayed.",
   "$defs": {
     "seq": {

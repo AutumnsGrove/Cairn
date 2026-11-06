@@ -13,10 +13,10 @@ import (
 	"github.com/AutumnsGrove/nova/message"
 	"github.com/AutumnsGrove/nova/provider"
 
-	"github.com/AutumnsGrove/cairn/internal/decisions"
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/providers"
-	"github.com/AutumnsGrove/cairn/internal/session"
+	"github.com/AutumnsGrove/sepia/internal/decisions"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/providers"
+	"github.com/AutumnsGrove/sepia/internal/session"
 )
 
 // errBudget ends a run that has spent its token budget. It is a defined outcome with a notice, not a crash.

@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/store/db"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/store/db"
 )
 
 // The session engine's transactions live here, beside the SQL, because the guarantees S07 makes are transactional:

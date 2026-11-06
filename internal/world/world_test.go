@@ -9,7 +9,7 @@ import (
 	"time"
 )
 
-// The world is the peer every later test drives Cairn against, so the harness itself is tested on the three
+// The world is the peer every later test drives Sepia against, so the harness itself is tested on the three
 // routes before anything depends on it.
 
 func get(t *testing.T, url string) (*http.Response, error) {

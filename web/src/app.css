@@ -1,4 +1,4 @@
-/* Cairn: the design tokens, taken from mockups/cairn.css, which is the source of truth.
+/* Sepia: the design tokens, taken from mockups/sepia.css, which is the source of truth.
  *
  * A token value or name may not drift from the mockup: src/lib/tokens.test.ts reads both files and fails if
  * this block is missing one of the mockup's tokens, so "it looked fine on my screen" is not the only check.

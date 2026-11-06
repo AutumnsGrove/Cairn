@@ -3,7 +3,7 @@ package server
 import (
 	"sync"
 
-	"github.com/AutumnsGrove/cairn/internal/agent"
+	"github.com/AutumnsGrove/sepia/internal/agent"
 )
 
 // LiveBus carries the agent's live-only events to the sockets. The agent is built before the server (the server

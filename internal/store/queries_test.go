@@ -5,7 +5,7 @@ import (
 	"database/sql"
 	"testing"
 
-	"github.com/AutumnsGrove/cairn/internal/store/db"
+	"github.com/AutumnsGrove/sepia/internal/store/db"
 )
 
 // A smoke test over the generated queries: it proves the SQL, the schema and the generated Go agree, which is what

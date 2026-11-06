@@ -1,6 +1,6 @@
 name: ci
 
-# Every check Cairn's main branch requires. Runs on a push to main and on every pull request; from S13 the
+# Every check Sepia's main branch requires. Runs on a push to main and on every pull request; from S13 the
 # branch ruleset requires pull requests, and until then a push reports here within the run
 # (docs/CI.md 4.6). On a public repository: least privilege, actions pinned by commit, no secrets anywhere.
 
@@ -49,7 +49,7 @@ jobs:
       - name: govulncheck
         run: go run golang.org/x/vuln/cmd/govulncheck@v1.9.0 ./...
       - name: Compile for the potato
-        run: CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o /dev/null ./cmd/cairn
+        run: CGO_ENABLED=0 GOOS=linux GOARCH=arm64 go build -o /dev/null ./cmd/sepia
 
   nocgo:
     name: nocgo
@@ -69,7 +69,7 @@ jobs:
           CGO_ENABLED: '0'
         run: |
           if go list -deps -f '{{if .CgoFiles}}{{.ImportPath}}{{end}}' ./... | grep -v '^$'; then
-            echo "::error::a dependency needs cgo; Cairn is pure Go"
+            echo "::error::a dependency needs cgo; Sepia is pure Go"
             exit 1
           fi
           echo "nocgo: nothing of ours needs cgo"
@@ -101,7 +101,7 @@ jobs:
             # Generated code is excluded: sqlc's package has no tests by design, and averaging it in would
             # punish the schema for being generated rather than hand-written.
             pct=$(go tool cover -func=/tmp/cover.out \
-              | grep "cairn/$pkg/" \
+              | grep "sepia/$pkg/" \
               | grep -v "/db/" \
               | awk '{gsub(/%/,"",$3); s+=$3; n++} END {if (n) printf "%.0f", s/n; else print 0}')
             echo "$pkg coverage: ${pct}% (floor ${floor}%)"

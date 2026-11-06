@@ -13,9 +13,9 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/session"
-	"github.com/AutumnsGrove/cairn/internal/store"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/session"
+	"github.com/AutumnsGrove/sepia/internal/store"
 )
 
 // The REST half: every route on the happy path, every refusal, and the two sad shapes a page can produce (a gone
@@ -335,7 +335,7 @@ func TestCoverIsServedWithoutTraversal(t *testing.T) {
 		t.Errorf("content type = %q", ct)
 	}
 
-	for _, path := range []string{"/covers/../cairn.db", "/covers/%2e%2e%2fcairn.db", "/covers/nope.jpg"} {
+	for _, path := range []string{"/covers/../sepia.db", "/covers/%2e%2e%2fsepia.db", "/covers/nope.jpg"} {
 		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, path, nil)
 		req.Host = "localhost:8893"
 		rec := httptest.NewRecorder()

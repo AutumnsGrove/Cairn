@@ -3,8 +3,8 @@ package main
 import (
 	"testing"
 
-	"github.com/AutumnsGrove/cairn/internal/banks"
-	"github.com/AutumnsGrove/cairn/internal/decisions"
+	"github.com/AutumnsGrove/sepia/internal/banks"
+	"github.com/AutumnsGrove/sepia/internal/decisions"
 )
 
 // The shipped config is two independently edited directories that have to agree at runtime. This is the one

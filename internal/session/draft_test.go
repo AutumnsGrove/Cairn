@@ -7,8 +7,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/store"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/store"
 )
 
 // draftSession makes an active entry session with a draft linked to a saved work, which is the state every draft

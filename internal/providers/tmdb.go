@@ -9,7 +9,7 @@ import (
 	"strings"
 	"sync"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/domain"
 )
 
 // TMDB is the film and TV client, over the v3 API with the key in the query string, the shape Polaris uses.

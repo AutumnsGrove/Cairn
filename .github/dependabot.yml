@@ -1,6 +1,6 @@
 version: 2
 
-# Cairn is a public repository with no secrets at repository level and no self-hosted runners
+# Sepia is a public repository with no secrets at repository level and no self-hosted runners
 # (docs/CI.md 4). Dependabot keeps the three dependency surfaces current, each update going through
 # the same required checks as any other change.
 

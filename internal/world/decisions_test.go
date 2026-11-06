@@ -13,7 +13,7 @@ import (
 // decisionRequest is a two-check call shaped like a real pre-read: separate sources, named questions.
 func decisionRequest() decide.Request {
 	return decide.Request{
-		Model: "cairn_preread",
+		Model: "sepia_preread",
 		State: []decide.Source{
 			{Source: "message", Text: "I finished Dune last night and loved the ending."},
 			{Source: "work", Text: "Dune"},
@@ -60,7 +60,7 @@ func TestDecisionsAnswersAndRecords(t *testing.T) {
 		t.Fatalf("%d calls recorded", len(calls))
 	}
 	call := calls[0]
-	if call.Model != "cairn_preread" {
+	if call.Model != "sepia_preread" {
 		t.Errorf("model = %q", call.Model)
 	}
 	if len(call.Sources) != 2 || call.Sources[0] != "message" || call.Sources[1] != "work" {

@@ -7,7 +7,7 @@ const repoRoot = fileURLToPath(new URL('..', import.meta.url));
 /**
  * End-to-end tests drive the real binary and the world, never a live provider.
  *
- * The server is `cmd/cairn-dev`: the real service against in-process fakes, on a port of its own so a
+ * The server is `cmd/sepia-dev`: the real service against in-process fakes, on a port of its own so a
  * developer's running copy on 8893 is never disturbed. A phone viewport is the first target, because the
  * app is used on a phone and the mockups are frames of one.
  */
@@ -55,15 +55,15 @@ export default defineConfig({
     },
   ],
   webServer: {
-    command: 'go build -o /tmp/cairn-e2e ./cmd/cairn-dev && exec /tmp/cairn-e2e',
+    command: 'go build -o /tmp/sepia-e2e ./cmd/sepia-dev && exec /tmp/sepia-e2e',
     cwd: repoRoot,
     url: `${BASE_URL}/healthz`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {
-      CAIRN_ADDR: `127.0.0.1:${PORT}`,
-      CAIRN_ALLOWED_HOSTS: `localhost:${PORT},127.0.0.1:${PORT}`,
-      CAIRN_DEV: '1',
+      SEPIA_ADDR: `127.0.0.1:${PORT}`,
+      SEPIA_ALLOWED_HOSTS: `localhost:${PORT},127.0.0.1:${PORT}`,
+      SEPIA_DEV: '1',
     },
   },
 });

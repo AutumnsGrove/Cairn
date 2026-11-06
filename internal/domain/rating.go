@@ -1,4 +1,4 @@
-// Package domain is Cairn's pure core: ratings, dates, spans, format cues, titles, merges and the save guards.
+// Package domain is Sepia's pure core: ratings, dates, spans, format cues, titles, merges and the save guards.
 //
 // Nothing here does I/O, reads a clock or touches a global. Every function is a plain transformation of data, so
 // the rules that protect the operator's own words can be tested exhaustively and fuzzed (docs/BUILD.md 4).

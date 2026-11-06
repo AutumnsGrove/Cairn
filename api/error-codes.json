@@ -1,5 +1,5 @@
 {
-  "$comment": "Every stable error code Cairn can answer with, its HTTP status, and the plain words the UI shows. Code decides the meaning; the copy is short, has no em dashes, and never blames the operator. Generated into Go and TypeScript by `make gen`.",
+  "$comment": "Every stable error code Sepia can answer with, its HTTP status, and the plain words the UI shows. Code decides the meaning; the copy is short, has no em dashes, and never blames the operator. Generated into Go and TypeScript by `make gen`.",
   "codes": [
     {
       "code": "already_accepted",
@@ -14,12 +14,12 @@
     {
       "code": "bad_host",
       "status": 400,
-      "copy": "This address is not Cairn."
+      "copy": "This address is not Sepia."
     },
     {
       "code": "bad_origin",
       "status": 403,
-      "copy": "That request did not come from Cairn."
+      "copy": "That request did not come from Sepia."
     },
     {
       "code": "body_not_your_words",
@@ -74,7 +74,7 @@
     {
       "code": "invalid_value",
       "status": 400,
-      "copy": "That is not a value Cairn can use."
+      "copy": "That is not a value Sepia can use."
     },
     {
       "code": "message_too_long",
@@ -104,7 +104,7 @@
     {
       "code": "not_implemented",
       "status": 501,
-      "copy": "This part of Cairn is not built yet."
+      "copy": "This part of Sepia is not built yet."
     },
     {
       "code": "payload_too_large",
@@ -149,7 +149,7 @@
     {
       "code": "unavailable",
       "status": 503,
-      "copy": "Cairn cannot reach that right now."
+      "copy": "Sepia cannot reach that right now."
     },
     {
       "code": "unknown_field",

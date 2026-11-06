@@ -1,6 +1,6 @@
 # CI plan
 
-Extensive, fast and strict, and safe on a **public repository** (Cairn's repo is public). Modelled on
+Extensive, fast and strict, and safe on a **public repository** (Sepia's repo is public). Modelled on
 Ivy's `CI.md` and Polaris's workflows. Status: DRAFT (2026-10-31). Testing strategy is in
 [`TESTING.md`](TESTING.md).
 

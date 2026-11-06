@@ -60,4 +60,4 @@ formatters:
     - gofumpt
   settings:
     gofumpt:
-      module-path: github.com/AutumnsGrove/cairn
+      module-path: github.com/AutumnsGrove/sepia

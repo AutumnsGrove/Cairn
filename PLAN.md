@@ -1,7 +1,8 @@
-# Cairn — Plan
+# Sepia — Plan
 
-> Named **Cairn** on 2026-10-31: a stack of stones left on a trail to say "I passed this way". Formerly
-> the holding name OmniReviewer.
+> Named **Sepia** on 2026-11-06: cuttlefish ink, and the warm tone a print was given so it would outlast the
+> paper. Formerly **Cairn** (2026-10-31), and before that the holding name OmniReviewer. The name is the ink
+> and the print, never a photo filter; the rule is written down in [`PRODUCT.md`](PRODUCT.md).
 
 The source of truth for what gets built. Read this before writing code; update it when a decision
 changes, in the same commit as the change. Anything still unknown belongs in
@@ -83,20 +84,20 @@ That entry is then browsable, searchable and filterable across media in plain vi
 
 | Topic | Decision |
 |---|---|
-| Name | **Cairn** (decided 2026-10-31). Local folder, GitHub repo, image and units all use `cairn` |
+| Name | **Sepia** (decided 2026-11-06, replacing Cairn). Local folder, GitHub repo, image and units all use `sepia`. The name means the ink and the print that lasts, never a filter: the interface stays dark and warm-neutral, with no sepia tint, grain or nostalgia anywhere |
 | Interface | **Chat for input and edits, plain views for reading.** A draft shows as an editable entry card (tap a field to fix it), and typing a correction in the chat also works |
 | Conversation unit | **One short session per entry** (lives until saved or discarded; unfinished drafts are resumable) **plus a general chat** for questions about the library. The general chat may read and edit, with a confirm card for every edit. It can never delete |
 | Agent runtime | **Nova** (`github.com/AutumnsGrove/nova`), embedded as a library in the Go service — not a bespoke loop, not a LangChain-style dependency. Leaning embed over "ship as a nova extension"; Phase 0 confirms it |
 | Main model | **`deepseek/deepseek-v4.1-flash-1017`** through **OpenRouter** (the same key Polaris and Ivy use). A dated pin on purpose, so behaviour can't shift silently. $0.15 per million input tokens and $0.60 per million output, 1M context, tool calling. Phase 0 checks it against the fixture corpus rather than comparing models; nova's provider layer keeps a swap cheap |
-| Decisions | **"Decisions" is the vendor-neutral name** for the class of fast, typed models that take conditions and options (or a yes/no check) and return a probability per option. All code, config and docs say `decisions`. The contract is **nova's own `decide` package** (`decide.Decider`, the typed `Request`, the OpenRouter client, and the `Roles` decorator that maps a role such as `cairn_preread` to a model, a timeout and a fallback), which tools reach through `tool.Context.Decide`, so another model is a config change. Nova refuses `-latest` and `~` aliases by default, which matches pinning the model. The first backend is **Jev** (`jev-1.14` via OpenRouter `/systemone`), named only in config. The **pre-read** is the step that uses it: one batched call per message, in the style of Polaris's Oracle, with a quiet default on every check, a per-check threshold, odds shown on the card, and never blocking a turn (unconfigured, errors or slower than 2.5 s means the turn runs without it). Probabilities are hints, never decisions. Checks live in [`config/decisions/`](config/decisions/) (wording and policy apart) |
+| Decisions | **"Decisions" is the vendor-neutral name** for the class of fast, typed models that take conditions and options (or a yes/no check) and return a probability per option. All code, config and docs say `decisions`. The contract is **nova's own `decide` package** (`decide.Decider`, the typed `Request`, the OpenRouter client, and the `Roles` decorator that maps a role such as `sepia_preread` to a model, a timeout and a fallback), which tools reach through `tool.Context.Decide`, so another model is a config change. Nova refuses `-latest` and `~` aliases by default, which matches pinning the model. The first backend is **Jev** (`jev-1.14` via OpenRouter `/systemone`), named only in config. The **pre-read** is the step that uses it: one batched call per message, in the style of Polaris's Oracle, with a quiet default on every check, a per-check threshold, odds shown on the card, and never blocking a turn (unconfigured, errors or slower than 2.5 s means the turn runs without it). Probabilities are hints, never decisions. Checks live in [`config/decisions/`](config/decisions/) (wording and policy apart) |
 | Decision routing | Inside an entry session **the session sets the default** (an open question card means a reply is answering it; a draft means a message adds to it) and a decision overrides it only above **0.80**. From the home screen the `intent` decision routes: `log_review` and `import_review` start an entry session, and `find_entries`, `edit_entry` and `chitchat` go to the general chat. The state sent with each call is **the latest message, any open question, and the work's title**, as separate sources. `format`, `revisit` and the `mentions_*` flags run only for `log_review`. A split medium read (runner-up at least 0.25 and the leader under 0.30 ahead) triggers the "book or film?" card |
 | Extraction | **Deterministic parse first** (rating, date, obvious format cues). The decision model only for fuzzy fields (format, themes). If no rating is stated, the agent asks |
 | Medium ambiguity | When the decision model's medium read is split (e.g. "Dune": book or film), **ask "book or film?" before any lookup** |
 | Media model | Media-agnostic from the start: a `work` has a `medium` (film, tv, book, game, album, podcast, theatre, other) plus medium-specific fields as data, not columns |
 | Metadata | **One real API per medium first** (TMDB for film and TV, Open Library for books; other media added as we reach them), **merged into one canonical work** with per-source snapshots kept. **Polaris is the fallback** for anything the APIs miss |
-| Web lookups | Through the colocated **Polaris**, which already wraps SearXNG with a Brave fallback. Two tools: `lookup_web` (structured args: title, medium, creator, field wanted — the default) and `ask_polaris_freeform` (a free prompt, the escape hatch; logged only, no confirm tap). Calls carry `source: cairn` and live as normal Polaris threads, which its sidebar never shows. The thread id and citations are stored with the snapshot |
+| Web lookups | Through the colocated **Polaris**, which already wraps SearXNG with a Brave fallback. Two tools: `lookup_web` (structured args: title, medium, creator, field wanted — the default) and `ask_polaris_freeform` (a free prompt, the escape hatch; logged only, no confirm tap). Calls carry `source: sepia` and live as normal Polaris threads, which its sidebar never shows. The thread id and citations are stored with the snapshot |
 | Web trust | Web-derived fields are **proposed, never canonical**: shown on the card as unverified with their source URL, accepted with one tap |
-| Transport | **WebSocket both ways, one socket per open session**; the library, drafts count and search are plain REST that refresh on focus. A small Cairn event vocabulary (nova's events stay server-side). The server keeps a per-session event log with sequence numbers: a client that reconnects (a sleeping phone, a killed PWA) says the last number it saw and gets everything after it replayed. The draft card syncs as a **full snapshot with a version number**; an edit made against a stale version is rejected. Every question the service asks is one `interaction_request`. The same session may be open on two devices; the first confirm wins. Spec: [`docs/PROTOCOL.md`](docs/PROTOCOL.md) |
+| Transport | **WebSocket both ways, one socket per open session**; the library, drafts count and search are plain REST that refresh on focus. A small Sepia event vocabulary (nova's events stay server-side). The server keeps a per-session event log with sequence numbers: a client that reconnects (a sleeping phone, a killed PWA) says the last number it saw and gets everything after it replayed. The draft card syncs as a **full snapshot with a version number**; an edit made against a stale version is rejected. Every question the service asks is one `interaction_request`. The same session may be open on two devices; the first confirm wins. Spec: [`docs/PROTOCOL.md`](docs/PROTOCOL.md) |
 | Question sets | **Per-medium YAML banks** with two parts, both skippable and neither pre-selected. **Describe it**: tabs of multi-select chips (for books Characters, Plot, Setting and world, Writing style, Feel, Content warnings; for film and TV Story, Performances, Visuals, Sound and music, Pacing, Feel, Content warnings), about 150 chips each, a closed vocabulary that mixes praise and criticism. Then **at most three single questions** picked by weight (ending, length, recommend, and so on). The model may point at a chip it thinks I meant, shown dashed and never selected, but it cannot invent a descriptor. Chips are stored as stable keys, so they can be filtered later. One overall rating only; categories have no stars of their own. Banks: [books](config/questions/books.yaml), [films and TV](config/questions/film-tv.yaml), [shared vocabularies](config/questions/shared.yaml) |
 | Pre-read checks (v1) | `intent` (chitchat, log_review, import_review, find_entries, edit_entry, answer_pending), `medium`, `format`, `revisit`, `extract_fidelity` (faithful, drops_opinion, adds_content; runs on the body extract), and nine `mentions_*` yes/no flags (sound, visuals, acting, story, pacing, ending, characters, world, writing). Defined in a **hot-reloaded YAML registry**, baked into the image and bind-mounted over top as Polaris does for `prompts.yaml`. Thresholds are set from real odds in Phase 0 |
 | Revisits | Logging something already in the library asks: **new entry on the same work, or edit the old one**, showing the previous entry and rating. Several entries per work form a timeline |
@@ -140,7 +141,7 @@ What is still open, each with the phase that needs it. None of these blocks the 
    Covers are stored locally and refreshed after 180 days when they are read; the notice and logo ship with the
    provider package and are placed in the UI by S11 and S12
    ([handoff](docs/handoffs/2026-11-01-G3-tmdb-terms.md)).
-3. **Polaris's ask endpoint and container networking** (Phase 0). The exact path, and how the Cairn
+3. **Polaris's ask endpoint and container networking** (Phase 0). The exact path, and how the Sepia
    container reaches Polaris's host-published port.
 
 Defaults assumed without asking, because they follow from decisions above. Say so if any is wrong:
@@ -181,9 +182,9 @@ first media, the Describe it step with content warnings, and the settings and up
  │   SQLite (works, entries, answers, sessions, snapshots)    │
  │   data/covers/*   data/exports/*.json                      │
  └──────┬─────────────────────────────────┬───────────────────┘
-        │ web lookups (source: cairn)     │ nightly rclone
+        │ web lookups (source: sepia)     │ nightly rclone
         ▼                                 ▼
-   Polaris (127.0.0.1:8899)        Cloudflare R2  r2:cairn-backups/
+   Polaris (127.0.0.1:8899)        Cloudflare R2  r2:sepia-backups/
    SearXNG, Brave fallback
 ```
 
@@ -211,11 +212,11 @@ Five properties worth stating because they decide how the code is shaped:
   (`projects/nova/docs/`). A new app shouldn't re-implement tool-calling.
 - Multi-step flows (look up → disambiguate → ask → save) are exactly what a loop with tools is for.
 - Nova's extension protocol has a similar idea (`ui_request`: `form`, `select`, `input`, `confirm`), but
-  Cairn's cards (tabs of chips, an entry card) are its own vocabulary in
+  Sepia's cards (tabs of chips, an entry card) are its own vocabulary in
   [`docs/PROTOCOL.md`](docs/PROTOCOL.md), so nova's UI events are not reused.
 
 **Deferred architectural choice, now leaning one way:** embed nova directly (my own UI, my own state)
-vs ship Cairn as a nova *extension* first. A custom chat with entry cards and a general-chat mode points
+vs ship Sepia as a nova *extension* first. A custom chat with entry cards and a general-chat mode points
 strongly at embedding. Phase 0 confirms it with a spike, not an opinion.
 
 ## 5. The review flow and its tools
@@ -257,7 +258,7 @@ Branches off the main flow:
 | Tool | In | Out |
 |---|---|---|
 | `media_lookup` | `query`, optional `medium`, `year`, `creator` | up to 5 candidates: `provider`, `provider_id`, `title`, `year`, `creator`, `medium`, `thumb` |
-| `lookup_web` | `title`, `medium`, optional `creator`, `field` | labelled fields each with a source URL, plus the Polaris thread id and citations. Calls Polaris with `source: cairn` |
+| `lookup_web` | `title`, `medium`, optional `creator`, `field` | labelled fields each with a source URL, plus the Polaris thread id and citations. Calls Polaris with `source: sepia` |
 | `ask_polaris_freeform` | `prompt` | Polaris's answer and citations. The escape hatch; logged only, no confirm tap |
 | `merge_candidates` | `provider`, `provider_id` | merged canonical draft + `sources[]` snapshots; flags conflicting fields and any web-derived (unverified) ones |
 | `ask_reviewer` | `medium`, `categories[]` (tabs of chips), `questions[]` (each with `id`, `prompt`, `type`, `options?`, `skipped_ok`) | `answers[]` — chip selections per category and typed values, plus what was skipped |
@@ -317,7 +318,7 @@ entries (                    -- my review of a work; one work can have several o
   verdict TEXT,                        -- one line, a verbatim span of my text or empty
   body TEXT,                           -- my words
   body_origin TEXT,                    -- extracted | typed | mixed | imported
-  imported_from TEXT,                  -- e.g. fable; NULL for entries written in Cairn
+  imported_from TEXT,                  -- e.g. fable; NULL for entries written in Sepia
   body_spans_json TEXT,                -- where each kept span sits in the session's messages
   format TEXT,                         -- cinema | streaming | audiobook | hardback | …
   finished_on TEXT,                    -- local date
@@ -419,16 +420,16 @@ migration.
 |---|---|
 | URL | `https://lepotato.taild95077.ts.net:8893` (tailnet only) |
 | Port | `8893` — **verified free** on the potato 2026-10-30 (in use: 22 53 80 443 5335 8080 8081 8418 8766 8888 8890 8891 8892 8899 11434) |
-| Container | Compose project at `~/Cairn`, image pinned by digest in `.env`, published `127.0.0.1:8893` only, non-root, read-only rootfs |
-| Data | `~/Cairn/data/` — `cairn.db`, `covers/`, `media/` (source screenshots, later photos), `exports/`, `backups/` |
+| Container | Compose project at `~/Sepia`, image pinned by digest in `.env`, published `127.0.0.1:8893` only, non-root, read-only rootfs |
+| Data | `~/Sepia/data/` — `sepia.db`, `covers/`, `media/` (source screenshots, later photos), `exports/`, `backups/` |
 | Config | `decisions/wording.yaml` (the checks: prompts and options), `decisions/policy.yaml` (thresholds, routing, backend) and `questions/*.yaml` (the per-medium banks and the shared vocabularies), baked into the image and bind-mounted over top so host edits hot-reload, the way Polaris handles `prompts.yaml` |
 | Health | `GET /healthz` → `{"status":"ok","version":"r…"}` only (two fields, like Warbler's) |
-| Secrets | `OPENROUTER_API_KEY` (main model and the Jev decisions backend, one key) and metadata-provider keys in `~/Cairn/.env`; `rclone` config for R2 already exists on the box |
-| Polaris | Colocated at `127.0.0.1:8899`. Cairn calls its ask API (`gateway.AskRequest`/`AskResponse`: `source`, `citations`, `cost_usd`). How the Cairn container reaches the host-published Polaris port (host networking or `host.docker.internal`) is a Phase 0 item |
-| Updates | Host watcher + `cairn-update.path`, digest pinned, health check, rollback |
-| Backups | Nightly at 03:30: SQLite snapshot → `data/backups/` (rotating) → `rclone sync` to `r2:cairn-backups/`; JSON export on demand |
+| Secrets | `OPENROUTER_API_KEY` (main model and the Jev decisions backend, one key) and metadata-provider keys in `~/Sepia/.env`; `rclone` config for R2 already exists on the box |
+| Polaris | Colocated at `127.0.0.1:8899`. Sepia calls its ask API (`gateway.AskRequest`/`AskResponse`: `source`, `citations`, `cost_usd`). How the Sepia container reaches the host-published Polaris port (host networking or `host.docker.internal`) is a Phase 0 item |
+| Updates | Host watcher + `sepia-update.path`, digest pinned, health check, rollback |
+| Backups | Nightly at 03:30: SQLite snapshot → `data/backups/` (rotating) → `rclone sync` to `r2:sepia-backups/`; JSON export on demand |
 | Meridian | Tile `everyday`/`backbone` with a health probe on `http://localhost:8893/healthz`; vital: **reviews this month** (a count that means something) |
-| Health check | Adds `check_http "Cairn" "http://localhost:8893/healthz"` to `maintenance-setup/service-healthcheck.sh` in the same change that deploys it |
+| Health check | Adds `check_http "Sepia" "http://localhost:8893/healthz"` to `maintenance-setup/service-healthcheck.sh` in the same change that deploys it |
 
 The outside traffic this app causes is: the model calls (OpenRouter, including the decisions backend), metadata lookups to
 the provider APIs (titles and ids only), web lookups through Polaris (which searches via SearXNG, with
@@ -457,8 +458,8 @@ and the standing rules are in [`docs/BUILD.md`](docs/BUILD.md).
   nova conversation with **one** tool (`media_lookup` against TMDB or Open Library).
 - Make one real **decisions** call (the Jev backend, through nova's `decide` package and `Roles`) from Go with a few review-shaped questions (intent,
   medium) and record the odds on a handful of sample messages, including a split one like "Dune".
-- Make one real **Polaris** call with `source: cairn`; confirm the exact endpoint path, the response, the
-  `citations` shape, and that the Cairn container can reach it.
+- Make one real **Polaris** call with `source: sepia`; confirm the exact endpoint path, the response, the
+  `citations` shape, and that the Sepia container can reach it.
 - Answer the deferred architectural choice in [§4](#4-architecture) (embed vs extension) with what the
   spike showed.
 - Get a TMDB key and an Open Library client working (rate limits and attribution requirements written down).
@@ -489,7 +490,7 @@ the decisions and Polaris calls both work from Go, and the embed-or-extension ch
   disambiguation logic is exercised from day one.
 - The entry card ([`docs/ENTRY_CARD.md`](docs/ENTRY_CARD.md)): metadata block, my body, answers, rating (quarter-stars), unverified markers.
 - **Deployment from the first push:** the image published to GHCR by digest, the host watcher
-  (`cairn-update.path`), Settings with the **Updates** and **Services** screens
+  (`sepia-update.path`), Settings with the **Updates** and **Services** screens
   ([`docs/UPDATE.md`](docs/UPDATE.md)), and the Meridian tile and health check.
 - **Nightly SQLite snapshot and R2 mirror from the first deploy**, so the first real review is already backed up.
 
@@ -531,7 +532,7 @@ Fable reviews have been imported and read back correctly.
 - The backups that have run since Phase 1 gain receipts in the app (the Backups and export screen), and a
   **restore is exercised for real**.
 - JSON export (single file + per-entry) and an import that round-trips.
-- `cairn verify`: files present, covers accounted for, database integrity, archive readable.
+- `sepia verify`: files present, covers accounted for, database integrity, archive readable.
 
 **Done when:** I can export everything, wipe a test copy, import it back, and diff clean; and an R2
 restore has actually been performed, not just designed.

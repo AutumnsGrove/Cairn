@@ -90,7 +90,7 @@ func genErrorCodes(in, out string) error {
 	b.WriteString("package contract\n\n")
 	b.WriteString("// ErrorCode is a stable refusal code. The UI maps it to its own copy.\n")
 	b.WriteString("type ErrorCode string\n\n")
-	b.WriteString("// Every error code Cairn can answer with.\nconst (\n")
+	b.WriteString("// Every error code Sepia can answer with.\nconst (\n")
 	for _, c := range reg.Codes {
 		fmt.Fprintf(&b, "\tCode%s ErrorCode = %q\n", exported(c.Code), c.Code)
 	}
@@ -103,7 +103,7 @@ func genErrorCodes(in, out string) error {
 	b.WriteString("}\n\n")
 	b.WriteString("// NoticeCode is a stable notice code, for things that are not failures.\n")
 	b.WriteString("type NoticeCode string\n\n")
-	b.WriteString("// Every notice code Cairn can send.\nconst (\n")
+	b.WriteString("// Every notice code Sepia can send.\nconst (\n")
 	for _, n := range reg.Notices {
 		fmt.Fprintf(&b, "\tNotice%s NoticeCode = %q\n", exported(n.Code), n.Code)
 	}

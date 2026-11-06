@@ -1,6 +1,6 @@
 # Slices
 
-Cairn is built as **vertical slices**, one plan file each, so any agent can pick one up cold, build it test
+Sepia is built as **vertical slices**, one plan file each, so any agent can pick one up cold, build it test
 first, and leave the app working and releasable. Standing rules, invariants, gates and the definition of done
 are in [`../BUILD.md`](../BUILD.md). **Read it first**, then [`../STANDARDS.md`](../STANDARDS.md). Nothing is
 built yet: every status below starts at **planned**.
@@ -49,7 +49,7 @@ S09 needs S02, S07 and S08. S13 needs a working app (S09 and S12).
 | Stream | Slices | Talks to the other through |
 |---|---|---|
 | Backend | S03, S04, S05, S06, S07, S08, S09 | `api/` contract and golden examples |
-| Frontend | S10, S11, S12 | `api/` contract, `cairn-dev` and the world |
+| Frontend | S10, S11, S12 | `api/` contract, `sepia-dev` and the world |
 
 ## Status
 
@@ -95,5 +95,5 @@ decisions layer that reads [`../../config/`](../../config/), the TMDB and Open L
 the session engine, the agent pipeline with its tools, guards, corpus and fake-model runner, and the HTTP and
 WebSocket server that drives the whole logging flow. G4 is decided and S08 is done; S09 is built with its lifecycle
 tests still to write. Everything from S10 on is still plan, spec and mockup. The decisions backend, the two metadata providers, Polaris and R2 are reachable only through the fakes in
-`internal/world`; `cairn-dev` runs the real service against them, offline, with no keys. The live calls against
+`internal/world`; `sepia-dev` runs the real service against them, offline, with no keys. The live calls against
 the real providers are the operator's.

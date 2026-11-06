@@ -1,14 +1,14 @@
-# Updating Cairn
+# Updating Sepia
 
-Cairn updates itself the way Polaris, Ivy and Warbler do. The page asks, a host-side watcher does the
+Sepia updates itself the way Polaris, Ivy and Warbler do. The page asks, a host-side watcher does the
 work, and a failed update rolls back on its own. The state machine below is modelled on Warbler's
 `update/view.ts`, which has the most careful version of it. The screens are in
 [`mockups/05-settings-and-updates.html`](../mockups/05-settings-and-updates.html).
 
 ## How it works
 
-1. **The container never controls Docker.** There is no socket mount. The panel calls Cairn's own REST API,
-   and Cairn writes a signal file that a **host-side watcher** (a systemd path unit, `cairn-update.path`)
+1. **The container never controls Docker.** There is no socket mount. The panel calls Sepia's own REST API,
+   and Sepia writes a signal file that a **host-side watcher** (a systemd path unit, `sepia-update.path`)
    picks up.
 2. **The watcher updates.** It resolves the latest published image digest from GHCR (waiting out an
    in-progress CI build first), fast-forwards the host checkout so `docker-compose.yml` and the
@@ -45,11 +45,11 @@ browser:
 | checking | A check was asked for and the watcher has not answered |
 | up to date | The version, "Last checked ...", and Check for updates |
 | available | The new version and Update now |
-| updating | An indeterminate bar, "This takes a minute. Cairn will reload when it is done.", and a longer-than-expected line after 90 s |
+| updating | An indeterminate bar, "This takes a minute. Sepia will reload when it is done.", and a longer-than-expected line after 90 s |
 | done | "Updated to ...", then the page reloads |
-| failed | The reason in plain text. If the rollback worked: "the previous version is running again" and Try again. If the rollback also failed: "Cairn may not be running properly. Check the potato." with no button |
+| failed | The reason in plain text. If the rollback worked: "the previous version is running again" and Try again. If the rollback also failed: "Sepia may not be running properly. Check the potato." with no button |
 
-## Rules that are specific to Cairn
+## Rules that are specific to Sepia
 
 - **Update is refused while a reply is being written,** and the panel says "Finish the reply first". A turn in
   flight would be killed by the restart. Drafts, sessions and entries are in SQLite and are untouched.
@@ -59,7 +59,7 @@ browser:
   that sees a different one than it was loaded with reloads itself, so an old UI never talks to a new server.
 - **"Rollback also failed" cannot always be shown,** because if no version is running there is no app to
   draw the message. The panel covers the case where the app is up and the watcher says so; otherwise the
-  fix is on the potato (`journalctl -u cairn-update.service`).
+  fix is on the potato (`journalctl -u sepia-update.service`).
 - **Restart is separate from Update.** It does no pull and no rebuild, and is for when something is simply
   stuck.
 

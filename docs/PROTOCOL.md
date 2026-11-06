@@ -5,7 +5,7 @@ must show every state this protocol can produce. Decisions are from the 2026-10-
 
 Principles, in the order they matter:
 
-1. **A small Cairn vocabulary.** The browser never sees nova's events. The service translates them
+1. **A small Sepia vocabulary.** The browser never sees nova's events. The service translates them
    (section 7), so a nova change cannot break the frontend.
 2. **The server owns the state.** The socket is a window onto a session, not the session itself. A turn
    keeps running if the phone sleeps, and a reconnecting client catches up.
@@ -132,7 +132,7 @@ the current `draft_snapshot`.
 
 The service translates inside, so the browser sees only section 3.
 
-| Nova | Cairn |
+| Nova | Sepia |
 |---|---|
 | `text_delta` | `text_delta` |
 | `message_start` / `message_end` | `assistant_start` / `assistant_end` |

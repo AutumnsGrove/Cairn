@@ -2,8 +2,8 @@
 
 ## Purpose
 
-Make the data outlive the app. A JSON export that does not need Cairn to read, an import that round-trips, a
-`cairn verify` that proves the on-disk state is whole, and the Backups and export screen. Rule 7: if this code
+Make the data outlive the app. A JSON export that does not need Sepia to read, an import that round-trips, a
+`sepia verify` that proves the on-disk state is whole, and the Backups and export screen. Rule 7: if this code
 vanished tomorrow, the archive should still be readable.
 
 ## Depends on
@@ -18,9 +18,9 @@ Nightly backups and a restore drill exist from S14. There is no export or import
 
 - Export is JSON: one file per work with its entries, plus a single archive. It includes revisions, answers,
   snapshots and the tags; it excludes drafts. Soft-deleted entries are included and marked.
-- The format is the data model, documented so that a reader needs no Cairn code.
+- The format is the data model, documented so that a reader needs no Sepia code.
 - Import round-trips into an empty database and refuses a non-empty one.
-- `cairn verify` checks files present, covers and media accounted for, database integrity, the protective
+- `sepia verify` checks files present, covers and media accounted for, database integrity, the protective
   triggers, and that the archive is readable.
 
 ## Scope
@@ -32,7 +32,7 @@ Nightly backups and a restore drill exist from S14. There is no export or import
 3. **S19.3 Verify.** The checks above, with a machine-readable result and plain-worded output.
 4. **S19.4 The screen.** The full Backups and export screen: receipts, Back up now, Export, the last verify.
 5. **S19.5 Independence.** A small standalone reader (a script and a README) that opens the archive without
-   Cairn, and a test that runs it.
+   Sepia, and a test that runs it.
 6. **S19.6 The drill.** An automated restore-and-compare used by CI on a synthetic library, and a documented
    manual drill for the potato.
 
@@ -56,5 +56,5 @@ Nightly backups and a restore drill exist from S14. There is no export or import
 
 ## Done when
 
-An export, a wipe and an import diff clean, `cairn verify` passes on the potato, the standalone reader works,
+An export, a wipe and an import diff clean, `sepia verify` passes on the potato, the standalone reader works,
 and an R2 restore has really happened.

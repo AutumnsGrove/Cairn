@@ -13,7 +13,7 @@ S00 and S02. **Runs in parallel with S03 to S09** (the frontend stream). S11 and
 
 ## Where we start
 
-Static mockups in [`../../mockups/`](../../mockups/) with the real CSS in `cairn.css`; the golden examples from
+Static mockups in [`../../mockups/`](../../mockups/) with the real CSS in `sepia.css`; the golden examples from
 S02; the dev stack from S00 and, later, S09.
 
 ## Settled
@@ -30,7 +30,7 @@ S02; the dev stack from S00 and, later, S09.
 
 ## Scope
 
-1. **S10.1 App and tokens.** Scaffolding, the token file extracted from `mockups/cairn.css`, fonts, icons,
+1. **S10.1 App and tokens.** Scaffolding, the token file extracted from `mockups/sepia.css`, fonts, icons,
    the global styles, the `viewport` and PWA manifest (no service worker yet).
 2. **S10.2 Base components.** Button, Pill, Chip (pick, hint, on), Switch, Tabs, Statusbar, Banner, Errbox,
    Interaction card, Cover, Cloud, List row, Rating control (drag across, snap to quarters, plus and minus, the

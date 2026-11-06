@@ -1,7 +1,7 @@
-# Cairn
+# Sepia
 
-A cairn is a stack of stones left on a trail to say "someone passed this way". This is the same thing
-for everything I finish: one private place to review any medium.
+Sepia is the ink a cuttlefish keeps, and the warm tone a print was once given so it would outlast the
+paper. This is that, for everything I finish: one private place to review any medium.
 
 Reviews for **any** medium in one place: films, TV, books, games, albums, podcasts, theatre, whatever
 comes next. Not a catalogue of what exists — a record of what *I* thought, typed in a chat the way I
@@ -43,7 +43,7 @@ built. `PLAN.md` is the source of truth; `README.md` is the pitch.
    │  2. Nova agent loop (embedded) ──► OpenRouter
    │       tools: media_lookup · lookup_web · merge_candidates · ask_reviewer · save_entry
    │                 │                │
-   │           TMDB / Open Library   Polaris (web fallback, source: cairn)
+   │           TMDB / Open Library   Polaris (web fallback, source: sepia)
    │  3. one draft entry card ──► I tap to fix anything, then confirm
    │                                │
    │                                ▼

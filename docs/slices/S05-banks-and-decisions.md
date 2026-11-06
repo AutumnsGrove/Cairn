@@ -36,7 +36,7 @@ out of `docs/` at the start of this slice so that the files the service reads ar
    4, `internal/archtest` and `STACK.md` say so, and `internal/agent` keeps the monopoly on nova's `agent`,
    `mode`, `session`, `config`, `tui` and `bundled` packages. `internal/world` may also name `decide`,
    because it is the fake for that contract. (The alternative, an agent-owned adapter, would have duplicated
-   the request shape in Cairn for no gain.)
+   the request shape in Sepia for no gain.)
 2. **Nova is pinned to its tag** `v0.2.0` in `go.mod`, not a `replace ../nova`. The tag's `decide/` and
    `provider/` are identical to nova's current `HEAD`, the modules are pure Go, and nothing resembles a local
    path in CI or in the image build.

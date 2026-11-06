@@ -3,7 +3,7 @@ package agent
 import (
 	"time"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/domain"
 )
 
 // Parsed is the deterministic read of one message: the rating, the date and the format cues. It is plain rules,

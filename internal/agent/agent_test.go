@@ -13,13 +13,13 @@ import (
 	"github.com/AutumnsGrove/nova/proto"
 	"github.com/AutumnsGrove/nova/provider"
 
-	"github.com/AutumnsGrove/cairn/internal/banks"
-	"github.com/AutumnsGrove/cairn/internal/decisions"
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/providers"
-	"github.com/AutumnsGrove/cairn/internal/session"
-	"github.com/AutumnsGrove/cairn/internal/store"
-	"github.com/AutumnsGrove/cairn/internal/world"
+	"github.com/AutumnsGrove/sepia/internal/banks"
+	"github.com/AutumnsGrove/sepia/internal/decisions"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/providers"
+	"github.com/AutumnsGrove/sepia/internal/session"
+	"github.com/AutumnsGrove/sepia/internal/store"
+	"github.com/AutumnsGrove/sepia/internal/world"
 )
 
 // --- the rig ------------------------------------------------------------------------------------------------
@@ -95,7 +95,7 @@ func newRig(t *testing.T, opts rigOptions) *rig {
 	clock := world.NewFixedClock(time.Date(2026, 11, 2, 12, 0, 0, 0, time.UTC))
 
 	db, err := store.Open(ctx, store.Options{
-		Path: filepath.Join(t.TempDir(), "cairn.db"),
+		Path: filepath.Join(t.TempDir(), "sepia.db"),
 		Now:  clock.Now,
 		NewID: func() string {
 			return fmt.Sprintf("id-%d", time.Now().UnixNano())
@@ -273,7 +273,7 @@ func TestNewValidatesThePinnedModel(t *testing.T) {
 	cases := map[string]string{
 		"alias":     "deepseek/deepseek-v4.1-flash-latest",
 		"tilde":     "~deepseek/deepseek-v4.1-flash-1017",
-		"role":      "cairn_preread",
+		"role":      "sepia_preread",
 		"empty-ish": " ",
 	}
 	for name, model := range cases {

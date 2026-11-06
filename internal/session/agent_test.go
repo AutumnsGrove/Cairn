@@ -6,8 +6,8 @@ import (
 	"strings"
 	"testing"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/store"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/store"
 )
 
 // The session operations the agent needs that S07 did not have: start a card without a saved entry, attach the work

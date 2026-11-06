@@ -10,8 +10,8 @@ import (
 	"sync"
 	"testing"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/store"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/store"
 )
 
 // newEngine opens a store in a temporary directory and an engine over it with countable ids.
@@ -21,7 +21,7 @@ func newEngine(t *testing.T) (*Engine, *store.Store) {
 	var next int
 	var mu sync.Mutex
 	db, err := store.Open(ctx, store.Options{
-		Path: filepath.Join(t.TempDir(), "cairn.db"),
+		Path: filepath.Join(t.TempDir(), "sepia.db"),
 		NewID: func() string {
 			mu.Lock()
 			defer mu.Unlock()

@@ -13,10 +13,10 @@ import (
 	"github.com/santhosh-tekuri/jsonschema/v6"
 	"gopkg.in/yaml.v3"
 
-	"github.com/AutumnsGrove/cairn/internal/contract"
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/session"
-	"github.com/AutumnsGrove/cairn/internal/store"
+	"github.com/AutumnsGrove/sepia/internal/contract"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/session"
+	"github.com/AutumnsGrove/sepia/internal/store"
 )
 
 // The contract test for the wire layer: every event this package can produce is validated against the same schema
@@ -27,7 +27,7 @@ func newSessionRig(t *testing.T) (*Server, *store.Store, *session.Engine, domain
 	t.Helper()
 	ctx := context.Background()
 	clock := func() time.Time { return time.Date(2026, 11, 2, 12, 0, 0, 0, time.UTC) }
-	db, err := store.Open(ctx, store.Options{Path: filepath.Join(t.TempDir(), "cairn.db"), Now: clock})
+	db, err := store.Open(ctx, store.Options{Path: filepath.Join(t.TempDir(), "sepia.db"), Now: clock})
 	if err != nil {
 		t.Fatal(err)
 	}
@@ -195,7 +195,7 @@ func openAPISchemas(t *testing.T) *jsonschema.Compiler {
 	if err != nil {
 		t.Fatal(err)
 	}
-	if err := compiler.AddResource("https://cairn.invalid/openapi.json", docValue); err != nil {
+	if err := compiler.AddResource("https://sepia.invalid/openapi.json", docValue); err != nil {
 		t.Fatal(err)
 	}
 	return compiler
@@ -207,7 +207,7 @@ func validateSchema(t *testing.T, compiler *jsonschema.Compiler, name string, va
 	if err != nil {
 		t.Fatal(err)
 	}
-	schema, err := compiler.Compile("https://cairn.invalid/openapi.json#/components/schemas/" + name)
+	schema, err := compiler.Compile("https://sepia.invalid/openapi.json#/components/schemas/" + name)
 	if err != nil {
 		t.Fatalf("compile %s: %v", name, err)
 	}

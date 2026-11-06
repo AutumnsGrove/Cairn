@@ -10,7 +10,7 @@ test.describe('the walking skeleton', () => {
   test('the page loads, is styled, and does not overflow a phone', async ({ page }) => {
     await page.goto('/');
 
-    await expect(page.getByRole('heading', { level: 1, name: 'Cairn' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Sepia' })).toBeVisible();
 
     // The tokens are applied: a dark warm background, and Fraunces on the title.
     const background = await page.evaluate(() => getComputedStyle(document.body).backgroundColor);
@@ -52,7 +52,7 @@ test.describe('the walking skeleton', () => {
 
   test('matches the recorded screen', async ({ page }) => {
     await page.goto('/');
-    await expect(page.getByRole('heading', { level: 1, name: 'Cairn' })).toBeVisible();
+    await expect(page.getByRole('heading', { level: 1, name: 'Sepia' })).toBeVisible();
     // The first baseline for the first screen. Look at the diff before you ever update this file.
     await expect(page).toHaveScreenshot('home.png', { fullPage: true });
   });

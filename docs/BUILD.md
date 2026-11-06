@@ -1,13 +1,13 @@
 # Build brief
 
 Read this **after** `CLAUDE.md` and **before** writing any code. It is the standing instruction for
-building Cairn, written the way Ivy's chunk briefs are: the invariants that must hold, the decisions
+building Sepia, written the way Ivy's chunk briefs are: the invariants that must hold, the decisions
 already made, the traps earlier work found, and the points where you must stop and hand the work back.
 **Nothing is built yet.** This file exists so that any agent, starting cold, can pick up a slice and
 finish it without asking what the project is.
 
 If this file and another doc disagree, stop (trigger T11) and ask. `PLAN.md` is the source of truth for
-what Cairn is; this file is the source of truth for how it is built.
+what Sepia is; this file is the source of truth for how it is built.
 
 ## 0. Read order
 
@@ -56,7 +56,7 @@ The specs a slice may link: `PLAN.md`, `PRODUCT.md`, `DESIGN.md`, [`ENTRY_CARD.m
 
 All of `PLAN.md` section 2 is settled. The ones builders most often want to reopen:
 
-- **Nova is embedded** (`agent.New(cfg).Run(...)`), not shelled out to, and Cairn stores its own sessions,
+- **Nova is embedded** (`agent.New(cfg).Run(...)`), not shelled out to, and Sepia stores its own sessions,
   because consumers must not import nova's `session`, `mode`, `config`, `tui` or `bundled`.
 - **"Decisions" is the vendor-neutral name** for the fast typed models. Use nova's `decide` package and
   `Roles`. **Jev appears only in config.**
@@ -102,9 +102,9 @@ All of `PLAN.md` section 2 is settled. The ones builders most often want to reop
 ## 4. Repository layout and the dependency rule
 
 ```
-cairn/
-  cmd/cairn/             main and the CLI (serve, verify, export, import)
-  cmd/cairn-dev/         the offline dev stack: the real service against the world (never shipped)
+sepia/
+  cmd/sepia/             main and the CLI (serve, verify, export, import)
+  cmd/sepia-dev/         the offline dev stack: the real service against the world (never shipped)
   api/                   openapi.yaml and events.schema.json: the contract, written first
   internal/
     archtest/            the dependency rule as a test (test-only package)
@@ -120,7 +120,7 @@ cairn/
     server/              HTTP, WebSocket, Origin and Host checks, REST, update API
     update/              the app side of the update flow (version, status, results)
     backup/              snapshot, rclone mirror, export, import, verify
-    world/               in-process fakes with fault injection (tests and cairn-dev only)
+    world/               in-process fakes with fault injection (tests and sepia-dev only)
     config/              strict config loading
   config/                shipped defaults: decisions/{wording,policy}.yaml, questions/*.yaml
   web/                   SvelteKit (Svelte 5), adapter-static, embedded into the binary
@@ -131,7 +131,7 @@ cairn/
 **The dependency rule** (an architecture test fails the build on a violation): `domain` imports nothing
 internal. `store`, `banks`, `decisions`, `providers` import `domain` only. `session` imports `domain`,
 `store`, `banks`. `agent` imports those plus `decisions` and `providers`. `server` imports `session` and
-`agent`. `world` is imported only from `_test.go` files and `cmd/cairn-dev`. Nothing outside `providers`
+`agent`. `world` is imported only from `_test.go` files and `cmd/sepia-dev`. Nothing outside `providers`
 names a provider endpoint. Nova's `decide` contract is named only by `decisions` (its adapter, with the
 `provider` package that carries its usage and cost), `agent` (the embedding) and `world` (the fake); no other
 package imports nova's `agent`, `mode`, `session`, `config`, `tui` or `bundled` packages.

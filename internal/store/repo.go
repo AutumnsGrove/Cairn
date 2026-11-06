@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/store/db"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/store/db"
 )
 
 // The repositories. Each method is a small typed operation over the generated queries; the rules that must not be

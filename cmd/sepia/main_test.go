@@ -35,7 +35,7 @@ func TestHelpIsNotAnError(t *testing.T) {
 		if code := run(context.Background(), args, nil, &out, &errOut); code != 0 {
 			t.Errorf("args %v: exit = %d, want 0", args, code)
 		}
-		if !strings.Contains(out.String(), "cairn serve") {
+		if !strings.Contains(out.String(), "sepia serve") {
 			t.Errorf("args %v: usage text missing serve", args)
 		}
 	}
@@ -55,7 +55,7 @@ func TestUnknownCommand(t *testing.T) {
 // Bad: a config mistake stops the process before it listens, with a message that names the problem.
 func TestServeRefusesBadConfig(t *testing.T) {
 	var out, errOut bytes.Buffer
-	code := run(context.Background(), []string{"serve"}, []string{"CAIRN_ADDR=0.0.0.0:8893"}, &out, &errOut)
+	code := run(context.Background(), []string{"serve"}, []string{"SEPIA_ADDR=0.0.0.0:8893"}, &out, &errOut)
 	if code != 1 {
 		t.Fatalf("exit = %d, want 1", code)
 	}
@@ -78,9 +78,9 @@ func TestServePortInUse(t *testing.T) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 	code := run(ctx, []string{"serve"}, []string{
-		"CAIRN_ADDR=" + addr,
-		"CAIRN_ALLOWED_HOSTS=" + addr,
-		"CAIRN_DATA_DIR=" + t.TempDir(),
+		"SEPIA_ADDR=" + addr,
+		"SEPIA_ALLOWED_HOSTS=" + addr,
+		"SEPIA_DATA_DIR=" + t.TempDir(),
 	}, &out, &errOut)
 
 	if code != 1 {
@@ -100,9 +100,9 @@ func TestServeStopsOnContextCancel(t *testing.T) {
 	done := make(chan int, 1)
 	go func() {
 		done <- run(ctx, []string{"serve"}, []string{
-			"CAIRN_ADDR=" + addr,
-			"CAIRN_ALLOWED_HOSTS=" + addr,
-			"CAIRN_DATA_DIR=" + t.TempDir(),
+			"SEPIA_ADDR=" + addr,
+			"SEPIA_ALLOWED_HOSTS=" + addr,
+			"SEPIA_DATA_DIR=" + t.TempDir(),
 		}, &out, &errOut)
 	}()
 
@@ -129,9 +129,9 @@ func TestBinaryHandlesSIGTERM(t *testing.T) {
 
 	cmd := exec.CommandContext(t.Context(), bin, "serve")
 	cmd.Env = append(os.Environ(),
-		"CAIRN_ADDR="+addr,
-		"CAIRN_ALLOWED_HOSTS="+addr,
-		"CAIRN_DATA_DIR="+t.TempDir(),
+		"SEPIA_ADDR="+addr,
+		"SEPIA_ALLOWED_HOSTS="+addr,
+		"SEPIA_DATA_DIR="+t.TempDir(),
 	)
 	var stderr bytes.Buffer
 	cmd.Stderr = &stderr
@@ -206,7 +206,7 @@ func waitHealthy(t *testing.T, addr string, within time.Duration) {
 func buildBinary(t *testing.T) string {
 	t.Helper()
 	dir := t.TempDir()
-	bin := filepath.Join(dir, "cairn")
+	bin := filepath.Join(dir, "sepia")
 	cmd := exec.CommandContext(t.Context(), "go", "build", "-o", bin, ".")
 	cmd.Env = append(os.Environ(), "CGO_ENABLED=0")
 	out, err := cmd.CombinedOutput()

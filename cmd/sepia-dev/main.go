@@ -1,4 +1,4 @@
-// Command cairn-dev runs the real service against the in-process world, with no network and no keys.
+// Command sepia-dev runs the real service against the in-process world, with no network and no keys.
 //
 // It is the way to look at a screen or reproduce a bug without touching a provider: the server, the database and the
 // agent are all the real ones, and only the outside services are fake. This command is never shipped
@@ -23,24 +23,24 @@ import (
 	"syscall"
 	"time"
 
-	"github.com/AutumnsGrove/cairn/internal/agent"
-	"github.com/AutumnsGrove/cairn/internal/banks"
-	"github.com/AutumnsGrove/cairn/internal/config"
-	"github.com/AutumnsGrove/cairn/internal/decisions"
-	"github.com/AutumnsGrove/cairn/internal/providers"
-	"github.com/AutumnsGrove/cairn/internal/server"
-	"github.com/AutumnsGrove/cairn/internal/session"
-	"github.com/AutumnsGrove/cairn/internal/store"
-	"github.com/AutumnsGrove/cairn/internal/version"
-	"github.com/AutumnsGrove/cairn/internal/webui"
-	"github.com/AutumnsGrove/cairn/internal/world"
+	"github.com/AutumnsGrove/sepia/internal/agent"
+	"github.com/AutumnsGrove/sepia/internal/banks"
+	"github.com/AutumnsGrove/sepia/internal/config"
+	"github.com/AutumnsGrove/sepia/internal/decisions"
+	"github.com/AutumnsGrove/sepia/internal/providers"
+	"github.com/AutumnsGrove/sepia/internal/server"
+	"github.com/AutumnsGrove/sepia/internal/session"
+	"github.com/AutumnsGrove/sepia/internal/store"
+	"github.com/AutumnsGrove/sepia/internal/version"
+	"github.com/AutumnsGrove/sepia/internal/webui"
+	"github.com/AutumnsGrove/sepia/internal/world"
 )
 
 func main() {
 	ctx, stop := signal.NotifyContext(context.Background(), os.Interrupt, syscall.SIGTERM)
 	defer stop()
 	if err := run(ctx, os.Environ(), os.Stderr); err != nil && !errors.Is(err, context.Canceled) {
-		fmt.Fprintf(os.Stderr, "cairn-dev: %v\n", err)
+		fmt.Fprintf(os.Stderr, "sepia-dev: %v\n", err)
 		os.Exit(1)
 	}
 }
@@ -75,7 +75,7 @@ func run(ctx context.Context, environ []string, stderr io.Writer) error {
 
 	log.Info("world ready", "chat", chat.URL(), "tmdb", tmdb.URL(), "openlibrary", ol.URL())
 
-	db, err := store.Open(ctx, store.Options{Path: filepath.Join(cfg.DataDir, "cairn-dev.db")})
+	db, err := store.Open(ctx, store.Options{Path: filepath.Join(cfg.DataDir, "sepia-dev.db")})
 	if err != nil {
 		return err
 	}
@@ -90,7 +90,7 @@ func run(ctx context.Context, environ []string, stderr io.Writer) error {
 	finder := providers.NewFinder(providers.Config{
 		TMDBKey: "dev-key", TMDBBaseURL: tmdb.URL(), TMDBCoverBase: tmdb.URL() + "/t/p/w342",
 		OpenLibraryBaseURL: ol.URL(), OpenLibraryCoverBase: ol.URL() + "/covers",
-		DataDir: cfg.DataDir, Clock: clock, UserAgent: "cairn-dev (offline)",
+		DataDir: cfg.DataDir, Clock: clock, UserAgent: "sepia-dev (offline)",
 	})
 
 	// The shipped config is read from the checkout; a broken file is a logged warning, not a dead dev stack.

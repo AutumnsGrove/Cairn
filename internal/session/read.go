@@ -6,8 +6,8 @@ import (
 	"errors"
 	"sort"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/store"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/store"
 )
 
 // The engine is also the app's read model. docs/BUILD.md 4 lets the server import session and not the store, so

@@ -54,7 +54,7 @@ var topics = []string{"sound", "visuals", "acting", "story", "pacing", "ending",
 // choosing a question (PLAN.md 2; S05 decision 7).
 var formats = []string{"cinema", "streaming", "broadcast", "audiobook", "hardback", "paperback", "ebook", "physical", "live"}
 
-// mediums is the closed set of media Cairn knows. S17 adds a vocabulary per new medium, not a new spelling.
+// mediums is the closed set of media Sepia knows. S17 adds a vocabulary per new medium, not a new spelling.
 var mediums = []string{"book", "film", "tv", "game", "album", "podcast", "theatre", "other"}
 
 // genreHints are the coarse kinds a provider's genres are reduced to. A bank question may depend on one.

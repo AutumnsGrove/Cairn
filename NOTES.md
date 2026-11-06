@@ -51,18 +51,27 @@ Superseded by the 2026-10-31 session below. The remaining open items live in
 The planning session turned the sketch into a chat-first design. The decisions are in
 [§2 of PLAN.md](PLAN.md#2-decisions-already-made); this section keeps what was learned along the way.
 
-### Renamed
+### Renamed, twice (2026-11-06)
 
-OmniReviewer is now **Cairn**. Checked: nothing called cairn on the AutumnsGrove account or in the local
-projects folder. Plenty of unrelated GitHub projects use the word (the closest to confusing a web search
-are two AI-agent tools, `oritera/Cairn` and `cairn-dev/cairn`), which only matters for searching, not for
-our own namespaces. The GHCR check (`ghcr.io/autumnsgrove/cairn`) failed on a shell quoting error and was
-**not** confirmed; re-run it before the first image is published.
+OmniReviewer was the holding name, then **Cairn** (2026-10-31), and now **Sepia**. Cairn failed the test
+that matters: nobody knows the word, it sits close to "Karen" when said aloud, stone is cold next to the
+warm evening this is used in, and it put a trail word in a family that already has Polaris, Meridian,
+Warbler, Harbor, Fern, Ivy and every tree in Lattice. Sepia is the ink, and the tone a print was given so
+it would outlast the paper, which is the promise the app makes about her words: they are hers, and they
+are still readable in ten years. It is the ink and the print, never a photo filter; see the Brand
+Personality in [PRODUCT.md](PRODUCT.md).
+
+Checked: nothing called sepia on the AutumnsGrove account or in the local projects folder, and no service
+or token named sepia in Lattice (patina was taken there, which is why it is not the name). Unrelated
+software uses the word (the closest to confusing a web search are a shared-camera app at filmsepia.com,
+Sepia Software LLC, and a German PIM product), which only matters for searching, not for our own
+namespaces. The GHCR check (`ghcr.io/autumnsgrove/sepia`) failed on a shell quoting error and was **not**
+confirmed; re-run it before the first image is published.
 
 ### Fable has no export (2026-10-31)
 
 Confirmed by Autumn: there is no way to export reviews from Fable. The migration is therefore image import
-inside Cairn (Phase 3), not a script and not a coding-agent insert, because a direct insert would bypass the
+inside Sepia (Phase 3), not a script and not a coding-agent insert, because a direct insert would bypass the
 draft, confirm tap and span rules. The pinned model's OpenRouter listing shows `text` and `image` input, but
 that is metadata, not a test; Phase 0 tries it on real Fable screenshots before anything depends on it.
 
@@ -71,17 +80,17 @@ that is metadata, not a test; Phase 0 tries it on real Fable screenshots before 
 `nova/decide` defines `Decider`, a typed `Request` (shared `State`, a map of named `Question`s), an OpenRouter
 wire client in `decide/openrouter`, and `Roles`, which maps an application role to `Role{Model, Fallback,
 Timeout}` and refuses `-latest` and `~` aliases by default. It sits inside the layers consumers may import,
-and tools call it through `tool.Context.Decide`. Cairn uses it rather than writing its own interface.
+and tools call it through `tool.Context.Decide`. Sepia uses it rather than writing its own interface.
 
 ### Polaris WebSocket conventions worth keeping
 
 Live-only events (`cost_update`, which overwrites rather than adds), optional events whose absence is
 normal, the persisted message id sent back at once so a turn can be retried or edited, and answering a
-pending question as simply the next ordinary message. Cairn's own vocabulary is in `docs/PROTOCOL.md`.
+pending question as simply the next ordinary message. Sepia's own vocabulary is in `docs/PROTOCOL.md`.
 
 ### Naming: "decisions"
 
-The class of fast typed models is called **decisions** in all Cairn code, config and docs (Polaris already
+The class of fast typed models is called **decisions** in all Sepia code, config and docs (Polaris already
 has a `decisions/` package, and Ivy planned a `decide()` interface). Jev is the first backend and is named
 only in the `backend:` block of the decisions config, so another model can replace it.
 
@@ -104,7 +113,7 @@ only in the `backend:` block of the decisions config, so another model can repla
 - `gateway.AskRequest` has `source`, `anonymous` (ghost thread), `focus_mode`, `quick_mode`; `AskResponse`
   returns `answer`, structured `citations`, `cost_usd`, `thread_id`. Production listens on
   `127.0.0.1:8899`.
-- The Polaris sidebar only shows threads from its own source, so Cairn's lookups (tagged `source: cairn`)
+- The Polaris sidebar only shows threads from its own source, so Sepia's lookups (tagged `source: sepia`)
   stay out of sight and still leave a full trace.
 - **Not yet confirmed:** the exact ask endpoint path, and how a container on the same host reaches Polaris's
   host-published port. Both are Phase 0 items.
@@ -120,7 +129,7 @@ only in the `backend:` block of the decisions config, so another model can repla
 
 - **Fable's "describe this book" step** (screenshots from Autumn): category tabs (Characters, Plot, Setting,
   Writing Style, Content Warnings), each with a star rating and about 20 multi-select chips mixing praise and
-  criticism. Cairn adopts the tabs and chips (a closed vocabulary, shown dashed as hints, never pre-selected)
+  criticism. Sepia adopts the tabs and chips (a closed vocabulary, shown dashed as hints, never pre-selected)
   but **not** the per-category stars: one overall quarter-star rating only. Vocabularies are written fresh,
   not copied (`config/questions/`).
 - **Testing and CI standard** adapted from Ivy: `docs/TESTING.md` and `docs/CI.md`. The repo is public, so the
@@ -142,7 +151,7 @@ only in the `backend:` block of the decisions config, so another model can repla
 
 ### 2026-10-31 — the container bind question, opened by S00
 
-The service refused to start in the container with `CAIRN_ADDR=0.0.0.0:8893`, which is the right refusal: the
+The service refused to start in the container with `SEPIA_ADDR=0.0.0.0:8893`, which is the right refusal: the
 loopback rule lives in `config.Load`, not in a compose file. That leaves the potato's deployment with two
 shapes (host networking, or a published loopback port with an explicit exception), and the decision is Autumn's
 at S13. Recommendation and the trade-off are in `docs/slices/S13-deploy-and-update.md`.
@@ -177,18 +186,18 @@ disappears, because both processes share the host's loopback.
 
 ## 2026-11-01 — providers, and what TMDB's terms actually say
 
-- **A TMDB id is not unique on its own.** Movie 603 and TV 603 are different works, so the provider id Cairn
+- **A TMDB id is not unique on its own.** Movie 603 and TV 603 are different works, so the provider id Sepia
   stores carries the kind: `movie:603` and `tv:603`. The merge joins on the whole string.
 - **TMDB v3 takes the key in the query string** (`api_key`), which Polaris already uses; the v4 bearer token is
-  a different product surface. Cairn reads `CAIRN_TMDB_API_KEY` and treats an empty value as "off", not as a
+  a different product surface. Sepia reads `SEPIA_TMDB_API_KEY` and treats an empty value as "off", not as a
   startup error.
 - **The image CDN is configurable and cacheable.** `/configuration` reports `secure_base_url` and the poster
-  sizes; Cairn reads it once and keeps `w342` (or the largest size the provider lists), falling back to
+  sizes; Sepia reads it once and keeps `w342` (or the largest size the provider lists), falling back to
   `https://image.tmdb.org/t/p/w342` when the call fails. A missing poster never fails a lookup.
 - **Caching is capped at six months by the terms (G3).** Covers are stored with the fetch time as the file's own
   modification time and re-fetched after 180 days, checked when the cover is read rather than by a job.
 - **Attribution is exact and not negotiable.** "This application uses TMDB and the TMDB APIs but is not
-  endorsed, certified, or otherwise approved by TMDB." The logo goes with it, below Cairn's own marks.
+  endorsed, certified, or otherwise approved by TMDB." The logo goes with it, below Sepia's own marks.
 - **Open Library needs names by indirection.** A work lists authors by key, so a fetch reads the work, then at
   most two author documents, then the editions list. Author and edition failures are skipped: a thinner work is
   better than no work, and only a cancelled caller aborts the fetch.

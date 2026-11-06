@@ -1,14 +1,14 @@
 SHELL := /bin/bash
 
-# Cairn: the real binary, the offline dev stack and every check CI runs.
+# Sepia: the real binary, the offline dev stack and every check CI runs.
 #
 # Pure Go, no cgo in any build. `go test -race` is the only place cgo is allowed to appear, because the race
 # runtime needs it; the `nocgo` target proves nothing of ours does.
 
 GO         ?= go
 PNPM       ?= pnpm
-BIN        ?= bin/cairn
-DEV_BIN    ?= bin/cairn-dev
+BIN        ?= bin/sepia
+DEV_BIN    ?= bin/sepia-dev
 WEB_DIR    := web
 EMBED_DIR  := internal/webui/dist
 FUZZTIME   ?= 10s
@@ -62,7 +62,7 @@ fuzz-smoke: ## A short run of every fuzz target; guards the parsers that take un
 
 nocgo: ## Prove the whole module builds with cgo off, and compiles for the potato
 	CGO_ENABLED=0 $(GO) build ./...
-	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GO) build -o /dev/null ./cmd/cairn
+	CGO_ENABLED=0 GOOS=linux GOARCH=arm64 $(GO) build -o /dev/null ./cmd/sepia
 
 ## --- frontend ------------------------------------------------------------------------------------------
 
@@ -108,13 +108,13 @@ gitleaks: ## Scan the working tree for secrets
 	gitleaks detect --no-banner --redact --source .
 
 build: ## Build the binary
-	$(GO) build -o $(BIN) ./cmd/cairn
+	$(GO) build -o $(BIN) ./cmd/sepia
 
 dev: ## The real service against the in-process world, offline
-	$(GO) run ./cmd/cairn-dev
+	$(GO) run ./cmd/sepia-dev
 
-eval: ## The real-title live corpus against the real model (operator's check; needs CAIRN_OPENROUTER_API_KEY)
-	$(GO) run ./cmd/cairn-eval internal/agent/testdata/corpus-live.json
+eval: ## The real-title live corpus against the real model (operator's check; needs SEPIA_OPENROUTER_API_KEY)
+	$(GO) run ./cmd/sepia-eval internal/agent/testdata/corpus-live.json
 
 tidy:
 	$(GO) mod tidy

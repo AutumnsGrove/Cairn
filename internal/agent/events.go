@@ -7,7 +7,7 @@ import (
 
 	"github.com/AutumnsGrove/nova/proto"
 
-	"github.com/AutumnsGrove/cairn/internal/store"
+	"github.com/AutumnsGrove/sepia/internal/store"
 )
 
 // toolDetails is the structured part of a tool result. It is never sent to the model; the translator lifts it into
@@ -25,7 +25,7 @@ type toolSource struct {
 	Title string `json:"title,omitempty"`
 }
 
-// translator turns nova's events into Cairn's. It is the only place the two vocabularies meet, so a nova change
+// translator turns nova's events into Sepia's. It is the only place the two vocabularies meet, so a nova change
 // touches this file and nothing on the frontend (docs/PROTOCOL.md 7).
 type translator struct {
 	ctx   context.Context

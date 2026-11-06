@@ -23,7 +23,7 @@ import (
 	// The pure-Go SQLite driver: no cgo, so the potato needs no C toolchain (docs/STANDARDS.md 2).
 	_ "modernc.org/sqlite"
 
-	"github.com/AutumnsGrove/cairn/internal/store/db"
+	"github.com/AutumnsGrove/sepia/internal/store/db"
 )
 
 // Options configure a Store. Clock and IDs are injected so a test can pin them (docs/STANDARDS.md 2).

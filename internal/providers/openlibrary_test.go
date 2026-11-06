@@ -10,7 +10,7 @@ import (
 	"testing"
 	"time"
 
-	"github.com/AutumnsGrove/cairn/internal/world"
+	"github.com/AutumnsGrove/sepia/internal/world"
 )
 
 // The book fixtures are invented too: no real title, author or publisher appears in the repository.
@@ -262,14 +262,14 @@ func TestOpenLibraryRequestCarriesOnlyMetadata(t *testing.T) {
 	}
 }
 
-// The user agent names Cairn and a contact, which is what Open Library asks for.
+// The user agent names Sepia and a contact, which is what Open Library asks for.
 func TestOpenLibraryUserAgent(t *testing.T) {
 	rig := newOLRig(t, nil)
 	if _, err := rig.client.Lookup(context.Background(), Query{Medium: "book", Title: "x"}); err != nil {
 		t.Fatalf("Lookup: %v", err)
 	}
 	agent := rig.srv.Requests()[0].Header.Get("User-Agent")
-	if !strings.Contains(agent, "cairn") || !strings.Contains(agent, "github.com/AutumnsGrove/Cairn") {
+	if !strings.Contains(agent, "sepia") || !strings.Contains(agent, "github.com/AutumnsGrove/Sepia") {
 		t.Errorf("User-Agent = %q", agent)
 	}
 }

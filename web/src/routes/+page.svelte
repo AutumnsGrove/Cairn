@@ -4,13 +4,13 @@
 </script>
 
 <svelte:head>
-  <title>Cairn</title>
+  <title>Sepia</title>
   <meta name="description" content="A private review journal for anything you finish." />
 </svelte:head>
 
 <main>
   <div class="mark" aria-hidden="true"></div>
-  <h1>Cairn</h1>
+  <h1>Sepia</h1>
   <p class="lede">
     A private journal for everything you finish. Films, TV, books, games, albums and more.
   </p>
@@ -32,7 +32,7 @@
     margin: 0 auto;
   }
 
-  /* A small stack of stones, the way a cairn is built: one flat shape, no illustration. */
+  /* A small stack of stones, the way a sepia is built: one flat shape, no illustration. */
   .mark {
     width: 2.5rem;
     height: 0.25rem;

@@ -22,7 +22,7 @@ const placeholderHTML = `<!doctype html>
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cairn</title>
+<title>Sepia</title>
 <style>
   :root { color-scheme: dark; }
   body { margin: 0; min-height: 100vh; display: grid; place-items: center; background: oklch(0.175 0.008 70); color: oklch(0.91 0.012 82); font: 400 1rem/1.6 system-ui, sans-serif; text-align: center; padding: 2rem; }
@@ -32,7 +32,7 @@ const placeholderHTML = `<!doctype html>
 </style>
 </head>
 <body>
-<h1>Cairn</h1>
+<h1>Sepia</h1>
 <p>The frontend has not been built yet. Run <code>make web</code>, then restart.</p>
 </body>
 </html>

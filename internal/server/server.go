@@ -1,4 +1,4 @@
-// Package server is Cairn's network face: the HTTP server, the session socket, the REST handlers and the Host
+// Package server is Sepia's network face: the HTTP server, the session socket, the REST handlers and the Host
 // and Origin guard in front of all of them (docs/slices/S09-server.md).
 //
 // It imports the session engine and the agent and nothing below them (docs/BUILD.md 4), so every fact a response
@@ -22,11 +22,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AutumnsGrove/cairn/internal/agent"
-	"github.com/AutumnsGrove/cairn/internal/config"
-	"github.com/AutumnsGrove/cairn/internal/providers"
-	"github.com/AutumnsGrove/cairn/internal/session"
-	"github.com/AutumnsGrove/cairn/internal/version"
+	"github.com/AutumnsGrove/sepia/internal/agent"
+	"github.com/AutumnsGrove/sepia/internal/config"
+	"github.com/AutumnsGrove/sepia/internal/providers"
+	"github.com/AutumnsGrove/sepia/internal/session"
+	"github.com/AutumnsGrove/sepia/internal/version"
 )
 
 // Server timeouts. Every one is bounded: a stalled peer must not hold a connection forever
@@ -152,7 +152,7 @@ func (s *Server) routes() http.Handler {
 func (s *Server) modeless(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		if s.engine == nil {
-			writeError(w, http.StatusServiceUnavailable, "unavailable", "Cairn is still starting. Try again in a moment.")
+			writeError(w, http.StatusServiceUnavailable, "unavailable", "Sepia is still starting. Try again in a moment.")
 			return
 		}
 		next.ServeHTTP(w, r)
@@ -198,7 +198,7 @@ func Run(ctx context.Context, cfg config.Config, deps Deps, log *slog.Logger, as
 		ErrorLog:          slog.NewLogLogger(log.Handler(), slog.LevelWarn),
 	}
 
-	log.Info("cairn listening", "addr", cfg.Addr, "version", versionString(), "dev", cfg.Dev)
+	log.Info("sepia listening", "addr", cfg.Addr, "version", versionString(), "dev", cfg.Dev)
 
 	served := make(chan error, 1)
 	go func() { served <- srv.Serve(ln) }()
@@ -215,7 +215,7 @@ func Run(ctx context.Context, cfg config.Config, deps Deps, log *slog.Logger, as
 		// server), and the drain needs its own deadline.
 		shutCtx, cancel := context.WithTimeout(context.WithoutCancel(ctx), shutdownGrace)
 		defer cancel()
-		log.Info("cairn draining", "grace", shutdownGrace.String())
+		log.Info("sepia draining", "grace", shutdownGrace.String())
 		// Sockets first: a client that is waiting on a turn is told the service is going away, and a turn that
 		// is already running is given the grace period to finish (docs/PROTOCOL.md 1).
 		s.teardown(shutdownGrace, "the service is restarting")
@@ -256,7 +256,7 @@ func (s *Server) apiNotFound(w http.ResponseWriter, r *http.Request) {
 // notBuilt answers a route whose slice has not been built yet with a stable code, so the frontend can say one
 // plain sentence (S13, S16, S18, S19).
 func (s *Server) notBuilt(w http.ResponseWriter, r *http.Request) {
-	writeError(w, http.StatusNotImplemented, "not_implemented", "This part of Cairn is not built yet.")
+	writeError(w, http.StatusNotImplemented, "not_implemented", "This part of Sepia is not built yet.")
 }
 
 // getOnly refuses everything but GET and HEAD with the envelope and an Allow header, so a wrong method looks

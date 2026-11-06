@@ -1,7 +1,7 @@
-// Command cairn is the service. S00 gives it one subcommand, because a walking skeleton should do one thing:
+// Command sepia is the service. S00 gives it one subcommand, because a walking skeleton should do one thing:
 //
-//	cairn serve     listen on 127.0.0.1:8893 and serve the health check and the embedded frontend
-//	cairn version   print the version the health check reports
+//	sepia serve     listen on 127.0.0.1:8893 and serve the health check and the embedded frontend
+//	sepia version   print the version the health check reports
 //
 // verify, export and import arrive in later slices (S14 and S19).
 package main
@@ -15,16 +15,16 @@ import (
 	"os/signal"
 	"syscall"
 
-	"github.com/AutumnsGrove/cairn/internal/config"
-	"github.com/AutumnsGrove/cairn/internal/version"
-	"github.com/AutumnsGrove/cairn/internal/webui"
+	"github.com/AutumnsGrove/sepia/internal/config"
+	"github.com/AutumnsGrove/sepia/internal/version"
+	"github.com/AutumnsGrove/sepia/internal/webui"
 )
 
-const usage = `cairn: a private review journal.
+const usage = `sepia: a private review journal.
 
-  cairn serve     run the service on 127.0.0.1:8893 (override with CAIRN_ADDR)
-  cairn version   print the version
-  cairn help      this text
+  sepia serve     run the service on 127.0.0.1:8893 (override with SEPIA_ADDR)
+  sepia version   print the version
+  sepia help      this text
 `
 
 func main() {
@@ -47,12 +47,12 @@ func run(ctx context.Context, args []string, environ []string, stdout, stderr io
 	case "serve":
 		cfg, err := config.Load(environ)
 		if err != nil {
-			fmt.Fprintf(stderr, "cairn: %v\n", err)
+			fmt.Fprintf(stderr, "sepia: %v\n", err)
 			return 1
 		}
 		log := slog.New(slog.NewTextHandler(stderr, &slog.HandlerOptions{Level: slog.LevelInfo}))
 		if err := serve(ctx, cfg, log, webui.FS()); err != nil {
-			fmt.Fprintf(stderr, "cairn: %v\n", err)
+			fmt.Fprintf(stderr, "sepia: %v\n", err)
 			return 1
 		}
 		return 0
@@ -66,7 +66,7 @@ func run(ctx context.Context, args []string, environ []string, stdout, stderr io
 		return 0
 
 	default:
-		fmt.Fprintf(stderr, "cairn: unknown command %q\n\n%s", cmd, usage)
+		fmt.Fprintf(stderr, "sepia: unknown command %q\n\n%s", cmd, usage)
 		return 2
 	}
 }

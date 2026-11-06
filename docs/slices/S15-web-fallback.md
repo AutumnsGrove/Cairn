@@ -2,7 +2,7 @@
 
 ## Purpose
 
-Let Cairn find what the APIs miss, through the colocated Polaris, without ever letting a web guess become a fact
+Let Sepia find what the APIs miss, through the colocated Polaris, without ever letting a web guess become a fact
 on its own. Add `lookup_web`, the free-form escape hatch, the unverified-field flow with its source panel and
 Accept, and the **Ask Polaris** button on a failed lookup.
 
@@ -21,7 +21,7 @@ in S11 but are inert.
 
 - Two tools: **`lookup_web`** (structured arguments: title, medium, creator, the field wanted; the default) and
   **`ask_polaris_freeform`** (a free prompt, logged only, no confirm tap).
-- Calls carry `source: cairn` and live as normal Polaris threads (its sidebar only shows its own source); the
+- Calls carry `source: sepia` and live as normal Polaris threads (its sidebar only shows its own source); the
   thread id and citations are stored with the snapshot.
 - Web-derived fields are **proposed, never canonical**: shown unverified with the source URL and a snippet,
   accepted with one tap, with an Accept all.
@@ -31,7 +31,7 @@ in S11 but are inert.
 
 ## Scope
 
-1. **S15.1 Polaris client.** The confirmed endpoint, `source: cairn`, bounded prompts and responses, timeouts,
+1. **S15.1 Polaris client.** The confirmed endpoint, `source: sepia`, bounded prompts and responses, timeouts,
    citations parsing, cost capture, and a health probe for the Services screen.
 2. **S15.2 `lookup_web`.** A prompt built by code from structured arguments with an **output contract** (labelled
    fields, each with a source URL), parsed defensively; a field without a citation is dropped.

@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"testing"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/store"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/store"
 )
 
 // --- revisit and a revision -----------------------------------------------------------------------------
@@ -150,7 +150,7 @@ func TestQueueIsOneDeep(t *testing.T) {
 func TestASessionSurvivesARestart(t *testing.T) {
 	ctx := context.Background()
 	dir := t.TempDir()
-	path := filepath.Join(dir, "cairn.db")
+	path := filepath.Join(dir, "sepia.db")
 	var next int
 	id := func() string { next++; return "id-" + itoa(next) }
 	open := func() (*store.Store, *Engine) {

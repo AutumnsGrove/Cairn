@@ -8,8 +8,8 @@ import (
 	"fmt"
 	"time"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
-	"github.com/AutumnsGrove/cairn/internal/store/db"
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/store/db"
 )
 
 // The draft's writes are one transaction each, because every one of them changes the card's version, appends the

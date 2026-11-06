@@ -1,7 +1,7 @@
 # Standards
 
-How Cairn's code is written and reviewed. Adapted from Ivy's `STANDARDS.md` (the house rules) with
-Cairn-specific limits and exposure rules. The testing standard is in [`TESTING.md`](TESTING.md), CI in
+How Sepia's code is written and reviewed. Adapted from Ivy's `STANDARDS.md` (the house rules) with
+Sepia-specific limits and exposure rules. The testing standard is in [`TESTING.md`](TESTING.md), CI in
 [`CI.md`](CI.md), and the build process in [`BUILD.md`](BUILD.md). Status: DRAFT (2026-10-31).
 
 ## 1. Workflow: test-driven, always
@@ -136,7 +136,7 @@ in the commit that introduces it, with its outcome above the limit.
 ## 5. Frontend standards
 
 - **SvelteKit with Svelte 5 (runes), `adapter-static`, TypeScript strict, pnpm** with a committed lockfile and
-  `--frozen-lockfile` in CI. Pure CSS with custom properties, the tokens from `mockups/cairn.css` as the
+  `--frozen-lockfile` in CI. Pure CSS with custom properties, the tokens from `mockups/sepia.css` as the
   source; no raw colour or pixel literals outside the token file. No Tailwind, no CSS-in-JS.
 - **One typed client module;** components never call `fetch` or open a socket directly. Types come from the
   generated contract, never hand-copied.
@@ -162,7 +162,7 @@ in the commit that introduces it, with its outcome above the limit.
   tailnet name and loopback) is refused, reads included, which defeats DNS rebinding. A state-changing
   request or a WebSocket upgrade whose `Origin` does not match is refused, which defeats drive-by CSRF and
   cross-site WebSocket hijacking. Both are tested in dev and prod modes.
-- **Secrets** live in `~/Cairn/.env` with mode 0600; the doctor check verifies it. The OpenRouter key is the
+- **Secrets** live in `~/Sepia/.env` with mode 0600; the doctor check verifies it. The OpenRouter key is the
   crown jewel.
 - The container is non-root with a read-only root filesystem and no Docker socket.
 

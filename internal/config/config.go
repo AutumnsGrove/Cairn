@@ -1,6 +1,6 @@
-// Package config loads Cairn's settings from the environment.
+// Package config loads Sepia's settings from the environment.
 //
-// It is strict on purpose: an unknown CAIRN_ key, a duplicate key, or a value the server cannot use is a
+// It is strict on purpose: an unknown SEPIA_ key, a duplicate key, or a value the server cannot use is a
 // startup error, not a warning. A setting that silently did nothing would leave the operator believing the
 // app was configured the way she asked for (docs/STANDARDS.md 3.7: the zero value is the safe one).
 package config
@@ -14,7 +14,7 @@ import (
 	"strings"
 )
 
-// DefaultDataDir is where covers and exports live when CAIRN_DATA_DIR is not set. The container mounts this at
+// DefaultDataDir is where covers and exports live when SEPIA_DATA_DIR is not set. The container mounts this at
 // /data in S13; a dev run gets ./data.
 const DefaultDataDir = "./data"
 
@@ -64,10 +64,10 @@ type Config struct {
 }
 
 // knownKeys is the closed set of environment keys this package reads. Anything else that starts with
-// CAIRN_ is a typo.
+// SEPIA_ is a typo.
 var knownKeys = []string{
-	"CAIRN_ADDR", "CAIRN_ALLOWED_HOSTS", "CAIRN_DEV", "CAIRN_DATA_DIR", "CAIRN_CONFIG_DIR",
-	"CAIRN_TMDB_API_KEY", "CAIRN_OPENROUTER_API_KEY", "CAIRN_MODEL",
+	"SEPIA_ADDR", "SEPIA_ALLOWED_HOSTS", "SEPIA_DEV", "SEPIA_DATA_DIR", "SEPIA_CONFIG_DIR",
+	"SEPIA_TMDB_API_KEY", "SEPIA_OPENROUTER_API_KEY", "SEPIA_MODEL",
 }
 
 // Load reads settings from environ, in os.Environ() form. Passing the environment in rather than calling
@@ -85,7 +85,7 @@ func Load(environ []string) (Config, error) {
 		if !ok || key == "" {
 			return Config{}, fmt.Errorf("config: malformed environment entry %q", entry)
 		}
-		if !strings.HasPrefix(key, "CAIRN_") {
+		if !strings.HasPrefix(key, "SEPIA_") {
 			continue
 		}
 		if seen[key] {
@@ -101,14 +101,14 @@ func Load(environ []string) (Config, error) {
 		}
 	}
 
-	if v, ok := values["CAIRN_ADDR"]; ok {
+	if v, ok := values["SEPIA_ADDR"]; ok {
 		if err := validateAddr(v); err != nil {
 			return Config{}, err
 		}
 		cfg.Addr = v
 	}
 
-	if v, ok := values["CAIRN_ALLOWED_HOSTS"]; ok {
+	if v, ok := values["SEPIA_ALLOWED_HOSTS"]; ok {
 		hosts, err := parseHosts(v)
 		if err != nil {
 			return Config{}, err
@@ -116,48 +116,48 @@ func Load(environ []string) (Config, error) {
 		cfg.AllowedHosts = hosts
 	}
 
-	if v, ok := values["CAIRN_DATA_DIR"]; ok {
+	if v, ok := values["SEPIA_DATA_DIR"]; ok {
 		if err := validateDataDir(v); err != nil {
 			return Config{}, err
 		}
 		cfg.DataDir = v
 	}
 
-	if v, ok := values["CAIRN_CONFIG_DIR"]; ok {
+	if v, ok := values["SEPIA_CONFIG_DIR"]; ok {
 		if strings.TrimSpace(v) == "" {
-			return Config{}, errors.New("config: CAIRN_CONFIG_DIR is empty; omit it to use " + DefaultConfigDir)
+			return Config{}, errors.New("config: SEPIA_CONFIG_DIR is empty; omit it to use " + DefaultConfigDir)
 		}
 		if strings.ContainsRune(v, 0) {
-			return Config{}, errors.New("config: CAIRN_CONFIG_DIR contains a NUL byte")
+			return Config{}, errors.New("config: SEPIA_CONFIG_DIR contains a NUL byte")
 		}
 		cfg.ConfigDir = v
 	}
 
-	if v, ok := values["CAIRN_TMDB_API_KEY"]; ok {
-		if err := validateKey("CAIRN_TMDB_API_KEY", v); err != nil {
+	if v, ok := values["SEPIA_TMDB_API_KEY"]; ok {
+		if err := validateKey("SEPIA_TMDB_API_KEY", v); err != nil {
 			return Config{}, err
 		}
 		cfg.TMDBKey = v
 	}
 
-	if v, ok := values["CAIRN_OPENROUTER_API_KEY"]; ok {
-		if err := validateKey("CAIRN_OPENROUTER_API_KEY", v); err != nil {
+	if v, ok := values["SEPIA_OPENROUTER_API_KEY"]; ok {
+		if err := validateKey("SEPIA_OPENROUTER_API_KEY", v); err != nil {
 			return Config{}, err
 		}
 		cfg.OpenRouterKey = v
 	}
 
-	if v, ok := values["CAIRN_MODEL"]; ok {
+	if v, ok := values["SEPIA_MODEL"]; ok {
 		if err := validateModel(v); err != nil {
 			return Config{}, err
 		}
 		cfg.Model = v
 	}
 
-	if v, ok := values["CAIRN_DEV"]; ok {
+	if v, ok := values["SEPIA_DEV"]; ok {
 		dev, err := strconv.ParseBool(v)
 		if err != nil {
-			return Config{}, fmt.Errorf("config: CAIRN_DEV=%q is not a boolean (use 1 or 0)", v)
+			return Config{}, fmt.Errorf("config: SEPIA_DEV=%q is not a boolean (use 1 or 0)", v)
 		}
 		cfg.Dev = dev
 	}
@@ -172,10 +172,10 @@ func Load(environ []string) (Config, error) {
 // validateDataDir refuses an empty path. A relative path is fine for a dev run; the cover store creates it.
 func validateDataDir(dir string) error {
 	if strings.TrimSpace(dir) == "" {
-		return errors.New("config: CAIRN_DATA_DIR is empty; omit it to use " + DefaultDataDir)
+		return errors.New("config: SEPIA_DATA_DIR is empty; omit it to use " + DefaultDataDir)
 	}
 	if strings.ContainsRune(dir, 0) {
-		return errors.New("config: CAIRN_DATA_DIR contains a NUL byte")
+		return errors.New("config: SEPIA_DATA_DIR contains a NUL byte")
 	}
 	return nil
 }
@@ -196,16 +196,16 @@ func validateKey(name, key string) error {
 // model is pinned, so a moving id is a startup error rather than a quiet change of what the journal runs on.
 func validateModel(model string) error {
 	if strings.TrimSpace(model) == "" {
-		return errors.New("config: CAIRN_MODEL is empty; omit it to use " + DefaultModel)
+		return errors.New("config: SEPIA_MODEL is empty; omit it to use " + DefaultModel)
 	}
 	if model != strings.TrimSpace(model) || strings.ContainsAny(model, " \t\r\n") {
-		return errors.New("config: CAIRN_MODEL contains whitespace")
+		return errors.New("config: SEPIA_MODEL contains whitespace")
 	}
 	if strings.HasSuffix(model, "-latest") || strings.HasPrefix(model, "~") {
-		return fmt.Errorf("config: CAIRN_MODEL=%q is an alias; name a pinned model id", model)
+		return fmt.Errorf("config: SEPIA_MODEL=%q is an alias; name a pinned model id", model)
 	}
 	if !strings.Contains(model, "/") {
-		return fmt.Errorf("config: CAIRN_MODEL=%q is not a provider/model id", model)
+		return fmt.Errorf("config: SEPIA_MODEL=%q is not a provider/model id", model)
 	}
 	return nil
 }
@@ -214,27 +214,27 @@ func validateModel(model string) error {
 // the network the tailnet exists to avoid.
 func validateAddr(addr string) error {
 	if addr == "" {
-		return errors.New("config: CAIRN_ADDR is empty")
+		return errors.New("config: SEPIA_ADDR is empty")
 	}
 	host, port, err := net.SplitHostPort(addr)
 	if err != nil {
-		return fmt.Errorf("config: CAIRN_ADDR=%q is not host:port: %w", addr, err)
+		return fmt.Errorf("config: SEPIA_ADDR=%q is not host:port: %w", addr, err)
 	}
 	if port == "" {
-		return fmt.Errorf("config: CAIRN_ADDR=%q has no port", addr)
+		return fmt.Errorf("config: SEPIA_ADDR=%q has no port", addr)
 	}
 	if host == "" || host == "0.0.0.0" || host == "::" {
-		return fmt.Errorf("config: CAIRN_ADDR=%q binds every interface; Cairn is loopback only", addr)
+		return fmt.Errorf("config: SEPIA_ADDR=%q binds every interface; Sepia is loopback only", addr)
 	}
 	ip := net.ParseIP(host)
 	if ip == nil {
 		if !strings.EqualFold(host, "localhost") {
-			return fmt.Errorf("config: CAIRN_ADDR=%q is not an address; Cairn listens on loopback", addr)
+			return fmt.Errorf("config: SEPIA_ADDR=%q is not an address; Sepia listens on loopback", addr)
 		}
 		return nil
 	}
 	if !ip.IsLoopback() {
-		return fmt.Errorf("config: CAIRN_ADDR=%q is not loopback; Cairn is loopback only", addr)
+		return fmt.Errorf("config: SEPIA_ADDR=%q is not loopback; Sepia is loopback only", addr)
 	}
 	return nil
 }
@@ -244,18 +244,18 @@ func parseHosts(raw string) ([]string, error) {
 	for _, part := range strings.Split(raw, ",") {
 		h := strings.TrimSpace(part)
 		if h == "" {
-			return nil, fmt.Errorf("config: CAIRN_ALLOWED_HOSTS has a blank entry in %q", raw)
+			return nil, fmt.Errorf("config: SEPIA_ALLOWED_HOSTS has a blank entry in %q", raw)
 		}
 		if strings.Contains(h, "/") || strings.Contains(h, "://") {
-			return nil, fmt.Errorf("config: CAIRN_ALLOWED_HOSTS entry %q must be a bare host:port, not a URL", h)
+			return nil, fmt.Errorf("config: SEPIA_ALLOWED_HOSTS entry %q must be a bare host:port, not a URL", h)
 		}
 		if _, _, err := net.SplitHostPort(h); err != nil {
-			return nil, fmt.Errorf("config: CAIRN_ALLOWED_HOSTS entry %q must include a port: %w", h, err)
+			return nil, fmt.Errorf("config: SEPIA_ALLOWED_HOSTS entry %q must include a port: %w", h, err)
 		}
 		hosts = append(hosts, h)
 	}
 	if len(hosts) == 0 {
-		return nil, errors.New("config: CAIRN_ALLOWED_HOSTS is empty; then nothing could reach Cairn")
+		return nil, errors.New("config: SEPIA_ALLOWED_HOSTS is empty; then nothing could reach Sepia")
 	}
 	return hosts, nil
 }
@@ -274,7 +274,7 @@ func (c Config) consistent() error {
 			return nil
 		}
 	}
-	return fmt.Errorf("config: CAIRN_ALLOWED_HOSTS %v does not include the listen address's port %s on loopback", c.AllowedHosts, port)
+	return fmt.Errorf("config: SEPIA_ALLOWED_HOSTS %v does not include the listen address's port %s on loopback", c.AllowedHosts, port)
 }
 
 // OriginHosts returns the origin hosts (scheme://host:port) a state-changing request may come from. They are

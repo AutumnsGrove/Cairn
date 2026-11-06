@@ -7,7 +7,7 @@ import (
 	"sync"
 	"time"
 
-	"github.com/AutumnsGrove/cairn/internal/agent"
+	"github.com/AutumnsGrove/sepia/internal/agent"
 )
 
 // The hub owns everything that outlives one connection: the per-session turn, the one-deep queue, the idempotency

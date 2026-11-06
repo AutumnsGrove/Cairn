@@ -23,7 +23,7 @@ func fixedNow() time.Time { return time.Date(2026, time.October, 31, 12, 0, 0, 0
 
 func openTest(t *testing.T) *Store {
 	t.Helper()
-	path := filepath.Join(t.TempDir(), "cairn.db")
+	path := filepath.Join(t.TempDir(), "sepia.db")
 	// The identifier source counts up, because several rows in one test must not collide on the primary key.
 	var next int
 	s, err := Open(context.Background(), Options{
@@ -281,7 +281,7 @@ func TestInjectionShapedTitleIsStoredVerbatim(t *testing.T) {
 // a migration becomes data loss.
 func TestNewerDatabaseRefusesToOpen(t *testing.T) {
 	dir := t.TempDir()
-	path := filepath.Join(dir, "cairn.db")
+	path := filepath.Join(dir, "sepia.db")
 	s, err := Open(context.Background(), Options{Path: path})
 	if err != nil {
 		t.Fatal(err)
@@ -302,7 +302,7 @@ func TestNewerDatabaseRefusesToOpen(t *testing.T) {
 // Sad: a corrupt file is reported by the integrity check rather than being trusted.
 func TestCorruptFileIsDetected(t *testing.T) {
 	dir := t.TempDir()
-	path := filepath.Join(dir, "cairn.db")
+	path := filepath.Join(dir, "sepia.db")
 	s, err := Open(context.Background(), Options{Path: path})
 	if err != nil {
 		t.Fatal(err)
@@ -409,7 +409,7 @@ func TestEventSequenceIsUnique(t *testing.T) {
 // TestCrashChild is the subprocess the crash test kills. It opens the store, begins a write, and dies with SIGKILL
 // before committing, which is the worst case the database has to survive.
 func TestCrashChild(t *testing.T) {
-	path := os.Getenv("CAIRN_CRASH_DB")
+	path := os.Getenv("SEPIA_CRASH_DB")
 	if path == "" {
 		t.Skip("only runs as a subprocess")
 	}
@@ -433,7 +433,7 @@ func TestCrashChild(t *testing.T) {
 // has none of the half-written row.
 func TestCrashMidTransactionLeavesTheDatabaseSound(t *testing.T) {
 	dir := t.TempDir()
-	path := filepath.Join(dir, "cairn.db")
+	path := filepath.Join(dir, "sepia.db")
 
 	// Create the schema in the parent first, so the child only has to write.
 	s, err := Open(context.Background(), Options{Path: path})
@@ -445,7 +445,7 @@ func TestCrashMidTransactionLeavesTheDatabaseSound(t *testing.T) {
 	}
 
 	cmd := exec.CommandContext(t.Context(), os.Args[0], "-test.run=TestCrashChild", "-test.v=false")
-	cmd.Env = append(os.Environ(), "CAIRN_CRASH_DB="+path)
+	cmd.Env = append(os.Environ(), "SEPIA_CRASH_DB="+path)
 	out, err := cmd.CombinedOutput()
 	if err == nil {
 		t.Fatalf("the child exited cleanly; it was supposed to be killed. output: %s", out)

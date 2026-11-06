@@ -3,7 +3,7 @@
 ## Purpose
 
 Real metadata for books and films and TV: TMDB and Open Library clients that turn untrusted network JSON into
-Cairn's domain types, keep a raw snapshot of what each source said, fetch covers, and behave well when the
+Sepia's domain types, keep a raw snapshot of what each source said, fetch covers, and behave well when the
 network does not. Each lives behind a narrow interface with a fake in the world.
 
 ## Depends on
@@ -69,9 +69,9 @@ request. **Properties:** normalisation never panics; a re-fetch of the same id y
    injected clock, keyed by provider and normalised query. It never touches the database, and a restart clears
    it. A **fetch is not cached**: its result carries the provider's whole document, and 128 of those would not
    fit on the potato; a repeated fetch is a second paced request instead.
-3. **TMDB is the v3 API with `api_key` in the query string**, read from `CAIRN_TMDB_API_KEY`, the same shape
+3. **TMDB is the v3 API with `api_key` in the query string**, read from `SEPIA_TMDB_API_KEY`, the same shape
    Polaris uses. A missing key turns film and TV lookup off rather than failing a start (invariant 13).
-4. **`CAIRN_DATA_DIR` (default `./data`)** holds `covers/`. It is the directory S13 will mount.
+4. **`SEPIA_DATA_DIR` (default `./data`)** holds `covers/`. It is the directory S13 will mount.
 5. **The clients are one package**, `internal/providers`, with TMDB and Open Library as files rather than
    subpackages: they share the query, candidate, result and error types, and splitting them would either cycle
    or need a third package for the contract. The swap seam is the interface, not the directory.

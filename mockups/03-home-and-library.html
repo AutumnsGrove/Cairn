@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Cairn: home, drafts and library</title>
-<link rel="stylesheet" href="cairn.css">
+<title>Sepia: home, drafts and library</title>
+<link rel="stylesheet" href="sepia.css">
 </head>
 <body>
 <main class="board">
@@ -19,7 +19,7 @@
       <p>The composer is the front door. Drafts that are waiting on you sit above recent entries.</p>
       <div class="phone">
         <div class="topbar">
-          <div class="wordmark">Cairn</div>
+          <div class="wordmark">Sepia</div>
           <button class="iconbtn badge" aria-label="Drafts, 2 waiting"><svg><use href="#i-drafts"/></svg><i>2</i></button>
           <button class="iconbtn" aria-label="Library"><svg><use href="#i-library"/></svg></button>
           <button class="iconbtn" aria-label="Settings"><svg><use href="#i-settings"/></svg></button>
@@ -65,7 +65,7 @@
       <p>An empty library teaches by example. Tapping one fills the composer, and nothing is sent until you do.</p>
       <div class="phone">
         <div class="topbar">
-          <div class="wordmark">Cairn</div>
+          <div class="wordmark">Sepia</div>
           <button class="iconbtn" aria-label="Drafts"><svg><use href="#i-drafts"/></svg></button>
           <button class="iconbtn" aria-label="Library"><svg><use href="#i-library"/></svg></button>
           <button class="iconbtn" aria-label="Settings"><svg><use href="#i-settings"/></svg></button>
@@ -73,7 +73,7 @@
         <div class="scroll">
           <div class="empty">
             <h2>Finished something?</h2>
-            <p>Say what you thought, the way you would out loud. Cairn finds the details and asks a few questions.</p>
+            <p>Say what you thought, the way you would out loud. Sepia finds the details and asks a few questions.</p>
             <div class="ex">
               <button>finished dune last night, loved it, easy 4.5, the world felt so lived in</button>
               <button>watched blade runner 2049 at the cinema, 5/5, the sound design carried it</button>
@@ -189,7 +189,7 @@
   </div>
 </main>
 <script src="icons.js"></script>
-<script src="cairn.js"></script>
+<script src="sepia.js"></script>
 <script>
   document.querySelectorAll("[data-pillsrow]").forEach((g) => g.addEventListener("click", (e) => {
     const b = e.target.closest(".chip"); if (!b) return;

@@ -1,4 +1,4 @@
-// Package providers turns what TMDB and Open Library say into Cairn's own work types.
+// Package providers turns what TMDB and Open Library say into Sepia's own work types.
 //
 // Three rules shape everything here (docs/BUILD.md 1, docs/slices/S06-providers.md):
 //   - A request carries titles, creators and ids, never review text. Query has no field that could hold an
@@ -24,7 +24,7 @@ import (
 	"strings"
 	"time"
 
-	"github.com/AutumnsGrove/cairn/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/domain"
 )
 
 // The provider names stored on a source. They are the ids the merge and the audit trail use, so they never change.
@@ -54,8 +54,8 @@ const (
 )
 
 // TMDBAttribution is the notice TMDB's API terms require, verbatim, with the bracketed placeholder spelled as
-// "application" because that is what Cairn is. It is shown in Settings and on any screen that renders TMDB data
-// (G3, docs/handoffs/2026-11-01-G3-tmdb-terms.md); the logo goes beside it, below Cairn's own marks.
+// "application" because that is what Sepia is. It is shown in Settings and on any screen that renders TMDB data
+// (G3, docs/handoffs/2026-11-01-G3-tmdb-terms.md); the logo goes beside it, below Sepia's own marks.
 const TMDBAttribution = "This application uses TMDB and the TMDB APIs but is not endorsed, certified, or otherwise approved by TMDB."
 
 // ErrOff is returned (wrapped in *Error) when a provider has no key. It is a normal runtime state, not a failure
@@ -209,7 +209,7 @@ type Config struct {
 	CacheTTL time.Duration
 	// DataDir is where covers are stored, under covers/.
 	DataDir string
-	// UserAgent identifies Cairn to Open Library, which asks for a contactable agent.
+	// UserAgent identifies Sepia to Open Library, which asks for a contactable agent.
 	UserAgent string
 	// TMDBCallInterval and OpenLibraryCallInterval are the minimum gaps between calls. Zero gets the defaults;
 	// a test sets a negative value to disable pacing.
@@ -291,7 +291,7 @@ func (f *Finder) Lookup(ctx context.Context, q Query) ([]Candidate, error) {
 // Fetch reads one work by provider and id.
 //
 // It is deliberately not cached: a result carries the provider's whole document, and 128 of those is a quarter of
-// a gigabyte on the board Cairn runs on. Lookups are what repeat; a fetch of the same work twice in five minutes
+// a gigabyte on the board Sepia runs on. Lookups are what repeat; a fetch of the same work twice in five minutes
 // is a second request, bounded by the same rate limit.
 func (f *Finder) Fetch(ctx context.Context, provider, id string) (Result, error) {
 	fetcher, ok := f.fetchers[provider]
@@ -406,6 +406,6 @@ const (
 	TMDBDefaultInterval = 100 * time.Millisecond
 	// OpenLibraryDefaultInterval paces Open Library at one call a second, which is what they ask for.
 	OpenLibraryDefaultInterval = time.Second
-	// DefaultUserAgent identifies Cairn to a provider that asks for contactable clients.
-	DefaultUserAgent = "cairn/0.1 (+https://github.com/AutumnsGrove/Cairn)"
+	// DefaultUserAgent identifies Sepia to a provider that asks for contactable clients.
+	DefaultUserAgent = "sepia/0.1 (+https://github.com/AutumnsGrove/Sepia)"
 )
