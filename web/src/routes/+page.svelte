@@ -32,7 +32,8 @@
     margin: 0 auto;
   }
 
-  /* A small stack of stones, the way a sepia is built: one flat shape, no illustration. */
+  /* One flat accent bar, a stroke of ink rather than an illustration: the name is the ink, not a
+     filter, so the mark stays a single shape. */
   .mark {
     width: 2.5rem;
     height: 0.25rem;
