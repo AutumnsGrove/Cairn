@@ -515,3 +515,33 @@ for a write that changed nothing. `TestConfirmDraftThatRevisesWritesTheRevisionA
 
 **Left for later.** `internal/agent` (75.8%) and `internal/session` (69.3%) have no floor and are the next place a
 floor would be earned rather than borrowed. The queue-full and mid-turn-restart paths still have no test.
+
+## 2026-11-07, nova moves to v0.3.4
+
+**What changed.** `github.com/AutumnsGrove/nova` `v0.2.0` -> `v0.3.4`, with no transitive change: the module's
+`go.mod` hash is the same, so nothing else moved. `go build ./...`, `go vet`, `go test -race ./...`, `make gen`,
+`make guard` and `make coverage` all pass on the new tag, and the floors are unchanged.
+
+**Nothing Sepia imports broke.** The changelog's v0.2.0 -> v0.3.0 upgrade notes are about `bundled/ask` (the card takes
+labels now), the `ui_request` id and the `ask` form's skip key, all of which live in nova's app shell; `BUILD.md` 4
+keeps `bundled`, `mode`, `config`, `session` and `tui` out of Sepia and `importcheck` fails if that changes. The one
+internal move, `decide`'s role resolver lifting into `decide/roles`, kept the exported names as aliases, so
+`decide.Clock`, `decide.Role` and `Roles` still compile as they did.
+
+**What was adopted.** `provider.Usage` gained `AllowanceUSD`, `ListCostUSD` and `BillingSource`, and cost provenance
+now has an `"allowance"` value with documented mixing rules. Sepia summed usage by hand in `internal/agent`, which
+would have dropped the new fields and let a later non-empty `CostSource` overwrite a stronger one, so that helper is
+gone and `state.Usage.Add(res.Usage)` uses nova's own sum. Sepia must not re-implement a sum nova documents.
+
+**What was noted and not adopted.** `provider/route` (fallback chains, a kill switch), `provider/chat.Complete`, the
+`embed` primitive, `agent/sub` for child runs, `agent.Config.WrapUp` and `agent.Config.RequestTimeout` are all
+capabilities Sepia does not need yet: it makes exactly one provider call per turn through nova's loop, and its
+timeouts and turn budget are already its own (`internal/agent` sets `MaxTurns` from its own step budget, so the
+v0.2.0 removal of nova's default cap never reached Sepia). Reaching for one of them is a slice decision, not a bump.
+
+**Left for Autumn: one question about money.** A call covered by an OpenRouter plan's allowance now reports
+`CostUSD` as allowance dollars with `CostSource: "allowance"`, and nova's `usage.Ledger` splits covered from real
+spend. Sepia's turn and decision ledgers store `CostUSD` alone, and the "why" sheet shows it as cost, so covered
+spend currently reads as money spent. Recording the split needs a column, a wire field and copy that says which is
+which, which is a small slice rather than part of this bump. Nothing is lost today: the number is what the call
+consumed, and it is the same number nova reports.

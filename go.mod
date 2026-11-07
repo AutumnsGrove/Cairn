@@ -3,7 +3,7 @@ module github.com/AutumnsGrove/sepia
 go 1.27.3
 
 require (
-	github.com/AutumnsGrove/nova v0.2.0
+	github.com/AutumnsGrove/nova v0.3.4
 	github.com/santhosh-tekuri/jsonschema/v6 v6.0.3
 	gopkg.in/yaml.v3 v3.0.1
 	modernc.org/sqlite v1.61.1

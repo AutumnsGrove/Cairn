@@ -341,7 +341,9 @@ func (a *Agent) runModel(ctx context.Context, state *RunState, nudge string) err
 	var callUsage provider.Usage
 	if res != nil {
 		callUsage = res.Usage
-		state.Usage = addUsage(state.Usage, res.Usage)
+		// Nova sums usage with its own rules: the strongest cost provenance wins, and the allowance and list-price
+		// dollars are carried rather than dropped. Sepia must not re-implement that sum (docs/STACK.md).
+		state.Usage.Add(res.Usage)
 		if res.Reason != "" {
 			state.Ended = res.Reason
 		}
@@ -462,19 +464,4 @@ func firstDuration(value, fallback time.Duration) time.Duration {
 		return value
 	}
 	return fallback
-}
-
-// addUsage sums two usages so an outcome that took two model runs reports the whole cost.
-func addUsage(a, b provider.Usage) provider.Usage {
-	a.PromptTokens += b.PromptTokens
-	a.CompletionTokens += b.CompletionTokens
-	a.ReasoningTokens += b.ReasoningTokens
-	a.TotalTokens += b.TotalTokens
-	a.CachedTokens += b.CachedTokens
-	a.CacheWriteTokens += b.CacheWriteTokens
-	a.CostUSD += b.CostUSD
-	if b.CostSource != "" {
-		a.CostSource = b.CostSource
-	}
-	return a
 }

@@ -7,6 +7,8 @@ import (
 	"testing"
 	"time"
 
+	"github.com/AutumnsGrove/nova/provider"
+
 	"github.com/AutumnsGrove/sepia/internal/banks"
 	"github.com/AutumnsGrove/sepia/internal/contract"
 	"github.com/AutumnsGrove/sepia/internal/domain"
@@ -350,5 +352,53 @@ func TestPersistedEventsMatchTheContract(t *testing.T) {
 	}
 	if checked < 10 {
 		t.Errorf("checked %d events, want the whole flow", checked)
+	}
+}
+
+// A turn that takes two model runs reports both, and nova's own sum decides how the two costs combine. Sepia used to
+// add the fields up by hand, which dropped everything nova added in v0.3 (allowance and list-price dollars, billing
+// source) and let a weaker cost provenance replace a stronger one.
+func TestTwoModelRunsReportTheWholeCost(t *testing.T) {
+	script := []world.ChatTurn{
+		{
+			ToolCalls: []world.ChatToolCall{toolCall("c1", "search_library", `{"query":"lantern"}`)},
+			Usage: provider.Usage{
+				PromptTokens: 100, CompletionTokens: 10, TotalTokens: 110,
+				CostUSD: 0.0001, CostSource: "provider",
+			},
+		},
+		{
+			Text: "Nothing in the library yet.",
+			Usage: provider.Usage{
+				PromptTokens: 200, CompletionTokens: 20, TotalTokens: 220,
+				CostUSD: 0.0002, CostSource: "allowance", AllowanceUSD: 0.0002,
+			},
+		},
+	}
+	r := newRig(t, rigOptions{script: script})
+	ctx := context.Background()
+	sess, err := r.session.CreateGeneral(ctx, "what did I think of the lantern keeper?")
+	if err != nil {
+		t.Fatalf("CreateGeneral: %v", err)
+	}
+	out, err := r.agent.HandleMessage(ctx, TurnInput{
+		SessionID: sess.ID, Text: "have I written about the lantern keeper?", ClientMsgID: "m1",
+	})
+	if err != nil {
+		t.Fatalf("HandleMessage: %v", err)
+	}
+	// Dollars add as floats, so the sum is compared to within a hundredth of a cent.
+	if out.CostUSD < 0.000299 || out.CostUSD > 0.000301 {
+		t.Errorf("outcome cost = %v, want both runs summed (0.0003)", out.CostUSD)
+	}
+	if out.PromptTokens != 300 || out.CompletionTokens != 30 {
+		t.Errorf("tokens = %d/%d, want 300/30", out.PromptTokens, out.CompletionTokens)
+	}
+	turns, err := r.store.TurnCalls(ctx, sess.ID)
+	if err != nil || len(turns) != 1 {
+		t.Fatalf("turn ledger = %+v, %v", turns, err)
+	}
+	if turns[0].CostUSD < 0.000299 || turns[0].CostUSD > 0.000301 {
+		t.Errorf("the ledger recorded %v, want the summed 0.0003", turns[0].CostUSD)
 	}
 }

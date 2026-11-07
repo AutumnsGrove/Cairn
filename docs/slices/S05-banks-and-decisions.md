@@ -37,9 +37,10 @@ out of `docs/` at the start of this slice so that the files the service reads ar
    `mode`, `session`, `config`, `tui` and `bundled` packages. `internal/world` may also name `decide`,
    because it is the fake for that contract. (The alternative, an agent-owned adapter, would have duplicated
    the request shape in Sepia for no gain.)
-2. **Nova is pinned to its tag** `v0.2.0` in `go.mod`, not a `replace ../nova`. The tag's `decide/` and
-   `provider/` are identical to nova's current `HEAD`, the modules are pure Go, and nothing resembles a local
-   path in CI or in the image build.
+2. **Nova is pinned to its tag** in `go.mod`, not a `replace ../nova`: `v0.2.0` when this decision was
+   recorded, `v0.3.4` since 2026-11-07 (`docs/BUILD-LOG.md`). The modules are pure Go and nothing resembles a
+   local path in CI or in the image build. Moving the pin is a `go.mod` change plus a build log entry, never a
+   local checkout.
 3. **The decisions config is split in two files**: `config/decisions/wording.yaml` (the checks, their prompts
    and options) and `config/decisions/policy.yaml` (thresholds, routing, suppression, the backend roles).
    Tuning never edits wording.
