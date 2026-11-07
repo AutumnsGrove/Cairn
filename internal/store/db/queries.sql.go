@@ -1572,16 +1572,19 @@ func (q *Queries) RestoreEntry(ctx context.Context, arg RestoreEntryParams) erro
 	return err
 }
 
-const saveEntry = `-- name: SaveEntry :exec
+const saveEntry = `-- name: SaveEntry :execresult
 UPDATE entries
-SET rating_q = ?, favourite = ?, verdict = ?, body = ?, body_origin = ?, body_spans_json = ?, format = ?,
-    finished_on = ?, status = 'saved', updated_at = ?
-WHERE id = ? AND status = 'draft'
+SET work_id = ?, rating_q = ?, rating_scale = ?, favourite = ?, season = ?, verdict = ?, body = ?, body_origin = ?,
+    body_spans_json = ?, format = ?, finished_on = ?, status = 'saved', updated_at = ?
+WHERE id = ? AND status IN ('draft', 'saved')
 `
 
 type SaveEntryParams struct {
+	WorkID        string  `json:"work_id"`
 	RatingQ       int64   `json:"rating_q"`
+	RatingScale   string  `json:"rating_scale"`
 	Favourite     int64   `json:"favourite"`
+	Season        *int64  `json:"season"`
 	Verdict       string  `json:"verdict"`
 	Body          string  `json:"body"`
 	BodyOrigin    string  `json:"body_origin"`
@@ -1592,11 +1595,17 @@ type SaveEntryParams struct {
 	ID            string  `json:"id"`
 }
 
-// The confirm tap. Only a draft becomes saved, and only through this statement.
-func (q *Queries) SaveEntry(ctx context.Context, arg SaveEntryParams) error {
-	_, err := q.db.ExecContext(ctx, saveEntry,
+// The confirm tap. Every column the card can edit is written, so the saved row is the card she confirmed rather than
+// a draft-time snapshot of it. A draft becomes saved here; a saved row is rewritten here only after the revision of
+// what it replaced was written in the same transaction (docs/ENTRY_CARD.md 7). The count tells the caller whether
+// the row existed, so a confirm can never report success for a write that changed nothing.
+func (q *Queries) SaveEntry(ctx context.Context, arg SaveEntryParams) (sql.Result, error) {
+	return q.db.ExecContext(ctx, saveEntry,
+		arg.WorkID,
 		arg.RatingQ,
+		arg.RatingScale,
 		arg.Favourite,
+		arg.Season,
 		arg.Verdict,
 		arg.Body,
 		arg.BodyOrigin,
@@ -1606,7 +1615,6 @@ func (q *Queries) SaveEntry(ctx context.Context, arg SaveEntryParams) error {
 		arg.UpdatedAt,
 		arg.ID,
 	)
-	return err
 }
 
 const sessionCost = `-- name: SessionCost :one

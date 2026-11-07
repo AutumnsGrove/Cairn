@@ -80,8 +80,11 @@ type Querier interface {
 	// Resolving is the one update an interaction allows, and only while it is open. The trigger is the backstop.
 	ResolveInteraction(ctx context.Context, arg ResolveInteractionParams) (sql.Result, error)
 	RestoreEntry(ctx context.Context, arg RestoreEntryParams) error
-	// The confirm tap. Only a draft becomes saved, and only through this statement.
-	SaveEntry(ctx context.Context, arg SaveEntryParams) error
+	// The confirm tap. Every column the card can edit is written, so the saved row is the card she confirmed rather than
+	// a draft-time snapshot of it. A draft becomes saved here; a saved row is rewritten here only after the revision of
+	// what it replaced was written in the same transaction (docs/ENTRY_CARD.md 7). The count tells the caller whether
+	// the row existed, so a confirm can never report success for a write that changed nothing.
+	SaveEntry(ctx context.Context, arg SaveEntryParams) (sql.Result, error)
 	// The running total is the turn ledger plus the decisions ledger, never a cached counter that can drift.
 	SessionCost(ctx context.Context, arg SessionCostParams) (float64, error)
 	SetSessionState(ctx context.Context, arg SetSessionStateParams) error

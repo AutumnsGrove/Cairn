@@ -335,6 +335,23 @@ func TestCoverIsServedWithoutTraversal(t *testing.T) {
 		t.Errorf("content type = %q", ct)
 	}
 
+	// Every format the cover cache can hold is served with its own content type.
+	for name, want := range map[string]string{
+		"lantern.png": "image/png", "lantern.webp": "image/webp", "lantern.gif": "image/gif",
+		"lantern.unknownext": "application/octet-stream",
+	} {
+		if err := os.WriteFile(filepath.Join(dir, "covers", name), []byte("BYTES"), 0o600); err != nil {
+			t.Fatal(err)
+		}
+		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, "/covers/"+name, nil)
+		req.Host = "localhost:8893"
+		rec := httptest.NewRecorder()
+		handler.ServeHTTP(rec, req)
+		if ct := rec.Header().Get("Content-Type"); ct != want {
+			t.Errorf("%s content type = %q, want %q", name, ct, want)
+		}
+	}
+
 	for _, path := range []string{"/covers/../sepia.db", "/covers/%2e%2e%2fsepia.db", "/covers/nope.jpg"} {
 		req, _ := http.NewRequestWithContext(context.Background(), http.MethodGet, path, nil)
 		req.Host = "localhost:8893"
@@ -347,4 +364,71 @@ func TestCoverIsServedWithoutTraversal(t *testing.T) {
 		}
 	}
 	_ = h
+}
+
+// The media upload is S18. A route that promises a file and stores nothing must say so with a stable code, and it
+// must still answer a session that does not exist before it says it.
+func TestUploadMediaIsNotBuiltYet(t *testing.T) {
+	h, engine, _ := newREST(t)
+	ctx := context.Background()
+	sess, err := engine.CreateEntry(ctx)
+	if err != nil {
+		t.Fatal(err)
+	}
+	rec := doJSON(t, h, http.MethodPost, "/api/sessions/"+sess.ID+"/media", map[string]any{"kind": "screenshot"})
+	if rec.Code != http.StatusNotImplemented {
+		t.Errorf("upload = %d, want not built: %s", rec.Code, rec.Body)
+	}
+	if rec := doJSON(t, h, http.MethodPost, "/api/sessions/no-such/media", nil); rec.Code != http.StatusNotFound {
+		t.Errorf("upload to a missing session = %d, want 404", rec.Code)
+	}
+}
+
+// The work page shows what each source said and how far it can be trusted, so a field that needs a tap is visible
+// before she opens the card.
+func TestWorkDetailCarriesEverySourceAndItsTrust(t *testing.T) {
+	h, _, db := newREST(t)
+	ctx := context.Background()
+	sources := []domain.Source{
+		{
+			Provider: "openlibrary", ProviderID: "OL1W", Trust: domain.TrustVerified,
+			Citations: []domain.Citation{{URL: "https://example.test/ol", Snippet: "a 1965 novel"}},
+		},
+		{Provider: "web", ProviderID: "https://example.test/lantern", Trust: domain.TrustUnverified},
+	}
+	for _, source := range sources {
+		if _, err := db.AddSource(ctx, "w1", source); err != nil {
+			t.Fatalf("AddSource: %v", err)
+		}
+	}
+	rec := doJSON(t, h, http.MethodGet, "/api/works/w1", nil)
+	if rec.Code != http.StatusOK {
+		t.Fatalf("work detail = %d: %s", rec.Code, rec.Body)
+	}
+	var detail struct {
+		Title   string `json:"title"`
+		Sources []struct {
+			Provider  string `json:"provider"`
+			Trust     string `json:"trust"`
+			Citations []struct {
+				URL     string `json:"url"`
+				Snippet string `json:"snippet"`
+			} `json:"citations"`
+		} `json:"sources"`
+	}
+	decode(t, rec, &detail)
+	if detail.Title != "The Lantern Keeper" || len(detail.Sources) != 2 {
+		t.Fatalf("detail = %+v", detail)
+	}
+	trust := map[string]string{}
+	for _, source := range detail.Sources {
+		trust[source.Provider] = source.Trust
+		if source.Provider == "openlibrary" && (len(source.Citations) != 1 ||
+			source.Citations[0].URL != "https://example.test/ol") {
+			t.Errorf("citations = %+v", source.Citations)
+		}
+	}
+	if trust["openlibrary"] != string(domain.TrustVerified) || trust["web"] != string(domain.TrustUnverified) {
+		t.Errorf("trust = %v", trust)
+	}
 }

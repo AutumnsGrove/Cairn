@@ -204,3 +204,127 @@ func TestLedgerIsPerSession(t *testing.T) {
 		}
 	}
 }
+
+// The record of what was asked is readable after the fact: one question by id, every question for a session, and a
+// missing id told apart from an answered one.
+func TestInteractionsAreReadableAfterTheFact(t *testing.T) {
+	s, _ := newSession(t)
+	ctx := context.Background()
+	first, _, err := s.OpenInteraction(ctx, Interaction{SessionID: "s1", Kind: "describe"})
+	if err != nil {
+		t.Fatalf("OpenInteraction: %v", err)
+	}
+	second, _, err := s.OpenInteraction(ctx, Interaction{SessionID: "s1", Kind: "fill_gap"})
+	if err != nil {
+		t.Fatalf("OpenInteraction: %v", err)
+	}
+	if _, _, resolveErr := s.ResolveInteraction(ctx, "s1", first.ID, domain.ResolvedByUser,
+		json.RawMessage(`{"answers":["quiet"]}`), "m1"); resolveErr != nil {
+		t.Fatalf("ResolveInteraction: %v", resolveErr)
+	}
+
+	one, err := s.Interaction(ctx, second.ID)
+	if err != nil {
+		t.Fatalf("Interaction: %v", err)
+	}
+	if one.Kind != "fill_gap" || one.SessionID != "s1" || one.ResolvedSeq != nil || !one.Open() {
+		t.Errorf("open question = %+v", one)
+	}
+	if one.OpenedAt.IsZero() {
+		t.Error("the question lost its opened_at")
+	}
+
+	all, err := s.Interactions(ctx, "s1")
+	if err != nil {
+		t.Fatalf("Interactions: %v", err)
+	}
+	if len(all) != 2 || all[0].ID != first.ID || all[1].ID != second.ID {
+		t.Fatalf("interactions = %+v, want both in the order they were asked", all)
+	}
+	if all[0].ResolvedBy != domain.ResolvedByUser || all[0].ResolvedSeq == nil {
+		t.Errorf("the answered question lost its answer: %+v", all[0])
+	}
+	if string(all[0].Resolution) != `{"answers":["quiet"]}` {
+		t.Errorf("resolution = %s", all[0].Resolution)
+	}
+
+	// A question that was never asked is ErrNotFound, not an empty struct.
+	if _, err := s.Interaction(ctx, "nope"); !errors.Is(err, ErrNotFound) {
+		t.Errorf("missing interaction = %v, want ErrNotFound", err)
+	}
+}
+
+// The conversation outlives the event log, because the log is compacted and a resumed screen still wants the words.
+func TestSetMessagesStoresTheConversation(t *testing.T) {
+	s, _ := newSession(t)
+	ctx := context.Background()
+	if err := s.SetMessages(ctx, "s1", json.RawMessage(`[{"role":"user","content":"hello"}]`)); err != nil {
+		t.Fatalf("SetMessages: %v", err)
+	}
+	got, err := s.Session(ctx, "s1")
+	if err != nil {
+		t.Fatalf("Session: %v", err)
+	}
+	if string(got.Messages) != `[{"role":"user","content":"hello"}]` {
+		t.Fatalf("messages = %s", got.Messages)
+	}
+	// An empty value is an empty conversation, never the string "null" a client would choke on.
+	if err := s.SetMessages(ctx, "s1", nil); err != nil {
+		t.Fatalf("SetMessages (empty): %v", err)
+	}
+	if got, err := s.Session(ctx, "s1"); err != nil || string(got.Messages) != "[]" {
+		t.Errorf("messages after an empty write = %s, %v", got.Messages, err)
+	}
+}
+
+// A question belongs to the session that asked it. Answering it from somewhere else is a miss, not a change: the
+// row exists, but it is not this conversation's to resolve.
+func TestResolveInteractionRefusesAnotherSessionsQuestion(t *testing.T) {
+	s, _ := newSession(t)
+	ctx := context.Background()
+	if err := s.CreateSession(ctx, domain.Session{ID: "s2", Kind: domain.SessionEntry, State: domain.SessionActive}); err != nil {
+		t.Fatal(err)
+	}
+	interaction, _, err := s.OpenInteraction(ctx, Interaction{SessionID: "s1", Kind: "describe"})
+	if err != nil {
+		t.Fatalf("OpenInteraction: %v", err)
+	}
+	_, _, wrongSession := s.ResolveInteraction(ctx, "s2", interaction.ID, domain.ResolvedByUser, nil, "")
+	if !errors.Is(wrongSession, ErrNotFound) {
+		t.Fatalf("resolve from another session = %v, want ErrNotFound", wrongSession)
+	}
+	still, err := s.Interaction(ctx, interaction.ID)
+	if err != nil {
+		t.Fatalf("Interaction: %v", err)
+	}
+	if !still.Open() {
+		t.Errorf("the question was resolved by the wrong session: %+v", still)
+	}
+}
+
+// An absent payload is an empty object, never the word "null": a client that validates its events would choke on it,
+// and the kind alone is enough to draw a question or replay an event.
+func TestAbsentPayloadsBecomeEmptyObjects(t *testing.T) {
+	s, _ := newSession(t)
+	ctx := context.Background()
+	interaction, event, err := s.OpenInteraction(ctx, Interaction{SessionID: "s1", Kind: "describe"})
+	if err != nil {
+		t.Fatalf("OpenInteraction: %v", err)
+	}
+	if string(interaction.Payload) != "{}" {
+		t.Errorf("interaction payload = %s", interaction.Payload)
+	}
+	if len(event.Payload) == 0 {
+		t.Error("the interaction event carried no payload")
+	}
+	appended, err := s.AppendEvent(ctx, "s1", EventNotice, nil)
+	if err != nil {
+		t.Fatalf("AppendEvent: %v", err)
+	}
+	if string(appended.Payload) != "{}" {
+		t.Errorf("appended payload = %s", appended.Payload)
+	}
+	if appended.Seq != event.Seq+1 {
+		t.Errorf("seq = %d, want %d", appended.Seq, event.Seq+1)
+	}
+}

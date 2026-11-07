@@ -181,8 +181,9 @@ func TestRevisionNumbersOnlyGoUp(t *testing.T) {
 	if _, err := s.SaveEntry(ctx, sampleEntry("e1", "w1", 18)); err != nil {
 		t.Fatal(err)
 	}
+	// Each save moves the rating within the schema's range, so the row really is rewritten each time.
 	for i := 1; i <= 3; i++ {
-		rev, err := s.SaveEntry(ctx, sampleEntry("e1", "w1", 18+i))
+		rev, err := s.SaveEntry(ctx, sampleEntry("e1", "w1", 15+i))
 		if err != nil {
 			t.Fatalf("save %d: %v", i, err)
 		}
@@ -604,5 +605,82 @@ func TestWorkReadKeepsItsID(t *testing.T) {
 	found, err := s.WorksByTitle(ctx, "book", "X")
 	if err != nil || len(found) != 1 || found[0].ID != "w1" {
 		t.Fatalf("WorksByTitle = %+v, %v", found, err)
+	}
+}
+
+// The home screen has three lists and each is a different question: the drafts still open, the past conversations,
+// and the library. The general list must never leak an entry session into the chats.
+func TestGeneralSessionsAndTheSessionList(t *testing.T) {
+	s := openTest(t)
+	ctx := context.Background()
+	if err := s.CreateSession(ctx, domain.Session{
+		ID: "s-chat", Kind: domain.SessionGeneral, Title: "what did I think of Dune?", State: domain.SessionActive,
+	}); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.CreateSession(ctx, domain.Session{
+		ID: "s-entry", Kind: domain.SessionEntry, State: domain.SessionActive,
+	}); err != nil {
+		t.Fatal(err)
+	}
+
+	general, err := s.GeneralSessions(ctx, 10)
+	if err != nil {
+		t.Fatalf("GeneralSessions: %v", err)
+	}
+	if len(general) != 1 || general[0].ID != "s-chat" {
+		t.Fatalf("general = %+v, want only the chat", general)
+	}
+
+	// The kind filter runs in SQL, so a paged list is still one read.
+	entries, err := s.Sessions(ctx, "", domain.SessionEntry, "", 10)
+	if err != nil {
+		t.Fatalf("Sessions: %v", err)
+	}
+	if len(entries) != 1 || entries[0].ID != "s-entry" {
+		t.Fatalf("entry sessions = %+v", entries)
+	}
+	if all, err := s.Sessions(ctx, "", "", "", 10); err != nil || len(all) != 2 {
+		t.Fatalf("every session = %+v, %v", all, err)
+	}
+	// A cursor names the last row of the previous page, and nothing past the end is returned.
+	before := general[0].UpdatedAt.UTC().Format(time.RFC3339) + "|" + general[0].ID
+	if rest, err := s.Sessions(ctx, "", domain.SessionGeneral, before, 10); err != nil || len(rest) != 0 {
+		t.Errorf("sessions after the cursor = %+v, %v", rest, err)
+	}
+}
+
+// A confirm that names a row which is not there is an error, not a silent success: the statement's count is the
+// difference between "saved" and "saved nothing".
+func TestSaveEntryRefusesARowThatIsNotThere(t *testing.T) {
+	s := openTest(t)
+	ctx := context.Background()
+	if err := s.SaveWork(ctx, sampleWork("w1")); err != nil {
+		t.Fatal(err)
+	}
+	if _, err := s.SaveEntry(ctx, sampleEntry("ghost", "w1", 18)); !errors.Is(err, ErrNotFound) {
+		t.Fatalf("SaveEntry on a missing row = %v, want ErrNotFound", err)
+	}
+}
+
+// A draft with no status is a draft, because that is what CreateDraft promises and what every caller that does not
+// set one means.
+func TestCreateDraftDefaultsToDraft(t *testing.T) {
+	s := openTest(t)
+	ctx := context.Background()
+	if err := s.SaveWork(ctx, sampleWork("w1")); err != nil {
+		t.Fatal(err)
+	}
+	entry := sampleEntry("e1", "w1", 0)
+	entry.Status = ""
+	if err := s.CreateDraft(ctx, entry); err != nil {
+		t.Fatalf("CreateDraft: %v", err)
+	}
+	got, err := s.Entry(ctx, "e1")
+	if err != nil {
+		t.Fatalf("Entry: %v", err)
+	}
+	if got.Status != domain.StatusDraft {
+		t.Fatalf("status = %q, want draft", got.Status)
 	}
 }

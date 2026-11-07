@@ -148,13 +148,11 @@ func (s *Store) ConfirmDraft(ctx context.Context, c Confirm) (domain.Entry, int,
 		if err != nil {
 			return fmt.Errorf("store: encode spans: %w", err)
 		}
-		if err := q.SaveEntry(ctx, db.SaveEntryParams{
-			RatingQ: int64(entry.Rating), Favourite: boolToInt(entry.Favourite), Verdict: entry.Verdict,
-			Body: entry.Body, BodyOrigin: string(entry.BodyOrigin), BodySpansJson: string(spans),
-			Format: entry.Format, FinishedOn: nullableString(entry.FinishedOn), UpdatedAt: now.Format(timeLayout),
-			ID: target,
-		}); err != nil {
-			return fmt.Errorf("store: save entry: %w", err)
+		// One statement writes both a first confirm and a revision, onto the row the confirm targets, so the saved
+		// entry is the card she confirmed field for field. A revision writes onto the saved entry, which is why the
+		// statement above has already recorded the version it replaces.
+		if err := saveEntry(ctx, q, entry, target, spans, now); err != nil {
+			return err
 		}
 		if target != entry.ID {
 			// The working copy has served its purpose. It is soft-deleted, never removed: the row is the record of

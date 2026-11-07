@@ -482,3 +482,36 @@ drift into decorating the name.
 renaming the remote is a web action rather than a commit. Nothing else in this repo does: `go test -race ./...`,
 `make web-check`, `make fmt-check` and `make guard` all pass, and no path, identifier or document uses the old
 name except where the history of the rename is recorded on purpose.
+
+## 2026-11-07, the coverage job measures what it says, and two confirm bugs
+
+**The job was measuring the wrong thing.** It averaged the per-function percentages `go tool cover -func` prints, so
+a three-line helper counted as much as a three-hundred-line engine. `internal/domain` reported 94% while standing at
+95.4% of statements, which no amount of testing could clear. `tools/covercheck` now reads the profile and sums
+statements, the number `go test -cover` prints, and compares in statements rather than in a rounded percentage. It
+has its own tests on the happy, bad and sad routes, and a package with no statements in the profile is an error
+rather than a zero, because that means its tests did not run. The floors moved out of the workflow and into that
+tool, one line each; `make coverage` runs the same check locally, and `docs/CI.md` 1a now states the metric, every
+floor and why it is where it is.
+
+**No floor was lowered.** `server` (71.6% of statements) and `store` (65.7%) were lifted by tests, and `world` was
+lifted from 79.5% by testing its chat fake and the dev fixtures. What the new tests cover: the card's four
+transactions (edit, confirm, confirm-as-revision, discard, accept), the engine's interaction record, the ledgers,
+the socket's accept, include, discard, stop and control frames, the hub's turn bookkeeping, the rate limiter's sweep,
+the responder, the work-detail and card source markers, and the sample world the dev stack runs against. That last
+one asserts a property nobody had written down as a test: every quote in the sample chat script is contained in
+`world.SampleMessage`, so `sepia-dev` cannot drift into showing a card the save guard refuses.
+
+**Two real bugs came out of the tests, both in the confirm.** The save statement was guarded by `status = 'draft'`,
+so a confirmed *revision* quietly wrote nothing: the revision of the old version was recorded, the working copy was
+retired, and the saved entry kept her previous rating and body. The same guard hid it from the existing tests, which
+asserted on the value `Confirm` returned rather than on the row that was stored. And the statement dropped every
+column the card can edit after the draft was created (`work_id`, `rating_scale`, `season`), so a season chosen on the
+card was lost on confirm. The statement now writes those columns, allows a saved row only after its revision is
+written in the same transaction, and returns a count the caller checks, so a confirm can no longer report success
+for a write that changed nothing. `TestConfirmDraftThatRevisesWritesTheRevisionAndRetiresTheCopy`,
+`TestConfirmWritesEveryFieldTheCardHolds` and `TestSaveEntryRefusesARowThatIsNotThere` are the regression tests;
+`TestRevisionNumbersOnlyGoUp` used to save a rating of 21 and passed only because the write did nothing.
+
+**Left for later.** `internal/agent` (75.8%) and `internal/session` (69.3%) have no floor and are the next place a
+floor would be earned rather than borrowed. The queue-full and mid-turn-restart paths still have no test.

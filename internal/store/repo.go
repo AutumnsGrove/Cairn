@@ -165,7 +165,8 @@ func (s *Store) CreateDraft(ctx context.Context, e domain.Entry) error {
 }
 
 // SaveEntry is the confirm tap: it saves the draft and writes the revision of what it replaced, in one transaction,
-// so an edit can never exist without the version it replaced (docs/ENTRY_CARD.md 7).
+// so an edit can never exist without the version it replaced (docs/ENTRY_CARD.md 7). A saved entry is rewritten here
+// too, which is what a confirmed revision is, and it is only reachable through the guard the statement carries.
 func (s *Store) SaveEntry(ctx context.Context, e domain.Entry) (int, error) {
 	now := s.Now().UTC()
 	var revision int
@@ -199,17 +200,35 @@ func (s *Store) SaveEntry(ctx context.Context, e domain.Entry) (int, error) {
 		if err != nil {
 			return fmt.Errorf("store: encode spans: %w", err)
 		}
-		return q.SaveEntry(ctx, db.SaveEntryParams{
-			RatingQ: int64(e.Rating), Favourite: boolToInt(e.Favourite), Verdict: e.Verdict,
-			Body: e.Body, BodyOrigin: string(e.BodyOrigin), BodySpansJson: string(spans),
-			Format: e.Format, FinishedOn: nullableString(e.FinishedOn), UpdatedAt: now.Format(timeLayout),
-			ID: e.ID,
-		})
+		return saveEntry(ctx, q, e, e.ID, spans, now)
 	})
 	if err != nil {
 		return 0, err
 	}
 	return revision, nil
+}
+
+// saveEntry writes one confirmed card onto the row id names. The statement's own guard decides what may be written
+// and the count tells the caller what happened, so a confirm never reports success for a row that is not there.
+// id is separate from e.ID because a confirmed revision writes the working copy's fields onto the saved entry.
+func saveEntry(ctx context.Context, q *db.Queries, e domain.Entry, id string, spans []byte, now time.Time) error {
+	scale := e.RatingScale
+	if scale == "" {
+		scale = domain.RatingScale
+	}
+	res, err := q.SaveEntry(ctx, db.SaveEntryParams{
+		WorkID: e.WorkID, RatingQ: int64(e.Rating), RatingScale: scale,
+		Favourite: boolToInt(e.Favourite), Season: seasonPtr(e.Season), Verdict: e.Verdict,
+		Body: e.Body, BodyOrigin: string(e.BodyOrigin), BodySpansJson: string(spans),
+		Format: e.Format, FinishedOn: nullableString(e.FinishedOn), UpdatedAt: now.Format(timeLayout), ID: id,
+	})
+	if err != nil {
+		return fmt.Errorf("store: save entry: %w", err)
+	}
+	if n, _ := res.RowsAffected(); n != 1 {
+		return ErrNotFound
+	}
+	return nil
 }
 
 // Entry reads one entry.

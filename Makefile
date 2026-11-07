@@ -12,12 +12,14 @@ DEV_BIN    ?= bin/sepia-dev
 WEB_DIR    := web
 EMBED_DIR  := internal/webui/dist
 FUZZTIME   ?= 10s
+# Where `make coverage` writes the profile it checks. /tmp, so a run never leaves a file in the tree.
+COVER_PROFILE ?= /tmp/sepia-cover.out
 
 GO_FILES := $(shell find . -name '*.go' -not -path './$(WEB_DIR)/node_modules/*')
 GOVERSION := $(shell $(GO) env GOVERSION)
 
 .DEFAULT_GOAL := check
-.PHONY: help check fmt fmt-check vet lint test test-short race fuzz-smoke nocgo web web-check e2e gen \
+.PHONY: help check fmt fmt-check vet lint test test-short race coverage fuzz-smoke nocgo web web-check e2e gen \
         guard gitleaks build dev eval clean tidy version verify-embed
 
 help: ## Show this help
@@ -49,6 +51,12 @@ test: ## go test -race ./... (the only cgo use)
 
 test-short: ## Unit tests without the race runtime, for a fast loop
 	$(GO) test -count=1 ./...
+
+coverage: ## Statement coverage per critical package against its floor, the check CI runs
+	$(GO) test -count=1 -coverprofile=$(COVER_PROFILE) ./...
+	@# The floor is deliberately not part of `check`: a coverage number is a report, and a quick loop should not
+	@# spend its time re-running the whole suite to produce one.
+	$(GO) run ./tools/covercheck -profile=$(COVER_PROFILE)
 
 fuzz-smoke: ## A short run of every fuzz target; guards the parsers that take untrusted input
 	@set -e; \

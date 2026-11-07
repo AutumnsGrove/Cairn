@@ -62,3 +62,69 @@ func TestLedgerAllowsATurnWithNoSession(t *testing.T) {
 		t.Fatalf("RecordTurn: %v", err)
 	}
 }
+
+// The "why" sheet reads the decisions ledger back. It is a receipt, so a row read back must say the same thing it
+// said when it was written, and a row that is not JSON must never be written at all.
+func TestDecisionCallsAreReadBackAndRefuseBadJSON(t *testing.T) {
+	s := openTest(t)
+	ctx := context.Background()
+	const at = "2026-11-02T10:00:00Z"
+	if err := raw(t, s, `INSERT INTO sessions (id, kind, created_at, updated_at) VALUES ('sess1', 'entry', ?, ?)`, at, at); err != nil {
+		t.Fatal(err)
+	}
+	if err := s.RecordDecisionCall(ctx, domain.DecisionCall{
+		SessionID: "sess1", MessageIndex: 1, Backend: "openrouter", Model: "jev-1.14",
+		Odds: json.RawMessage(`{"intent":{"log_review":0.93}}`), Fired: []string{"intent"},
+		CostUSD: 0.0002, LatencyMS: 40,
+	}); err != nil {
+		t.Fatalf("RecordDecisionCall: %v", err)
+	}
+
+	calls, err := s.DecisionCalls(ctx, "sess1")
+	if err != nil {
+		t.Fatalf("DecisionCalls: %v", err)
+	}
+	if len(calls) != 1 {
+		t.Fatalf("calls = %+v", calls)
+	}
+	call := calls[0]
+	if call.ID == "" || call.CreatedAt.IsZero() {
+		t.Errorf("the store left its own id and clock empty: %+v", call)
+	}
+	if call.Backend != "openrouter" || call.MessageIndex != 1 || len(call.Fired) != 1 || call.Fired[0] != "intent" {
+		t.Errorf("call = %+v", call)
+	}
+	if string(call.Odds) != `{"intent":{"log_review":0.93}}` {
+		t.Errorf("odds = %s", call.Odds)
+	}
+	if calls, err := s.DecisionCalls(ctx, "sess-none"); err != nil || len(calls) != 0 {
+		t.Errorf("calls for a session that asked nothing = %+v, %v", calls, err)
+	}
+
+	// Odds that are not JSON are a bug in the caller, so they are refused rather than stored as a broken receipt.
+	if err := s.RecordDecisionCall(ctx, domain.DecisionCall{SessionID: "sess1", Odds: json.RawMessage(`{`)}); err == nil {
+		t.Fatal("malformed odds were stored")
+	}
+}
+
+// A receipt with a bad date is still readable. The ledger is append-only, so a row written by an older build must
+// not make the "why" sheet fail to open.
+func TestAMalformedLedgerTimestampReadsAsTheZeroTime(t *testing.T) {
+	s := openTest(t)
+	ctx := context.Background()
+	const at = "2026-11-02T10:00:00Z"
+	if err := raw(t, s, `INSERT INTO sessions (id, kind, created_at, updated_at) VALUES ('sess1', 'entry', ?, ?)`, at, at); err != nil {
+		t.Fatal(err)
+	}
+	if err := raw(t, s, `INSERT INTO turn_calls (id, session_id, turn_index, model, prompt_tokens, completion_tokens,
+		cost_usd, latency_ms, reason, created_at) VALUES ('t1', 'sess1', 1, 'vendor/model', 10, 2, 0.0, 5, 'done', 'yesterday')`); err != nil {
+		t.Fatal(err)
+	}
+	turns, err := s.TurnCalls(ctx, "sess1")
+	if err != nil {
+		t.Fatalf("TurnCalls: %v", err)
+	}
+	if len(turns) != 1 || !turns[0].CreatedAt.IsZero() {
+		t.Fatalf("turns = %+v, want one row with the zero time", turns)
+	}
+}

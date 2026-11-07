@@ -38,12 +38,15 @@ VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 -- name: GetEntry :one
 SELECT * FROM entries WHERE id = ?;
 
--- name: SaveEntry :exec
--- The confirm tap. Only a draft becomes saved, and only through this statement.
+-- name: SaveEntry :execresult
+-- The confirm tap. Every column the card can edit is written, so the saved row is the card she confirmed rather than
+-- a draft-time snapshot of it. A draft becomes saved here; a saved row is rewritten here only after the revision of
+-- what it replaced was written in the same transaction (docs/ENTRY_CARD.md 7). The count tells the caller whether
+-- the row existed, so a confirm can never report success for a write that changed nothing.
 UPDATE entries
-SET rating_q = ?, favourite = ?, verdict = ?, body = ?, body_origin = ?, body_spans_json = ?, format = ?,
-    finished_on = ?, status = 'saved', updated_at = ?
-WHERE id = ? AND status = 'draft';
+SET work_id = ?, rating_q = ?, rating_scale = ?, favourite = ?, season = ?, verdict = ?, body = ?, body_origin = ?,
+    body_spans_json = ?, format = ?, finished_on = ?, status = 'saved', updated_at = ?
+WHERE id = ? AND status IN ('draft', 'saved');
 
 -- name: SoftDeleteEntry :exec
 UPDATE entries SET deleted_at = ?, updated_at = ? WHERE id = ? AND deleted_at IS NULL;

@@ -20,10 +20,42 @@ and Playwright browsers.
 | `deps` | `dependency-review-action`: new dependencies must have a compatible licence and no known vulnerabilities |
 | `codeql` | CodeQL for Go and TypeScript, also weekly |
 | `bench` | Short benchmarks compared with the base commit via `benchstat`, advisory until the numbers are trusted |
-| `coverage` | Coverage floors on the critical packages: spans, rating, merge, guards, protocol, decisions, update, database triggers |
+| `coverage` | Statement coverage per critical package against a floor: the metric and the floors are defined in `tools/covercheck` and stated in section 1a |
 
 Required status checks on main: `go`, `nocgo`, `coverage`, `drift`, `web`, `e2e`, `guard`, `deps`,
 `codeql`. `bench` stays advisory until its numbers are trusted.
+
+### 1a. The coverage job
+
+The `coverage` job fails when a critical package's **statement coverage** is below its floor. The number it prints is
+the one `go test -cover` prints for that package, so a log line always means what the tooling means by it.
+
+- **The metric is statements, not functions.** `go tool cover -func` prints a percentage per function, and averaging
+  those weights a three-line helper like a three-hundred-line engine (issue #5). The job used to do exactly that,
+  which reported `internal/domain` as 94% while it stood at 95.4% of statements, so no amount of testing could clear
+  its floor. `tools/covercheck` reads the profile and sums statements. The comparison is done in whole statements
+  rather than a rounded percentage, and it is unit tested on the happy, bad and sad routes.
+- **Generated code is excluded.** sqlc's `internal/store/db` has no tests by design and is covered through the
+  repositories; counting it would punish the schema for being generated rather than written.
+- **A package with no statements in the profile is an error, not a zero.** That means its tests did not run, and a
+  job that passes on a missing package is worse than one that fails.
+- **The floors live in `tools/covercheck`,** one line each, with the reason beside the package. `make coverage` runs
+  the same check locally against `/tmp/sepia-cover.out`.
+
+| Package | Floor | Why that bar |
+|---|---|---|
+| `internal/domain` | 95% | The span locator, the rating scale, the merge and the save guard: her words and her rating are decided here (`docs/slices/S03-domain-core.md`) |
+| `internal/decisions` | 88% | Parses the hand-edited YAML that routes a message, and the thresholds that ride on it (S05, S08) |
+| `internal/banks` | 85% | The question banks are hand-edited YAML that becomes the questions she is asked (S05) |
+| `internal/providers` | 85% | Every provider response is untrusted input turned into a card |
+| `internal/store` | 84% | The transactions that make a confirm atomic and a draft change one write (S04, S07) |
+| `internal/server` | 80% | The Host and Origin guard, the socket and the REST surface (S09) |
+| `internal/config` | 80% | The allowed hosts and the data directory, which the guard depends on |
+| `internal/world` | 80% | The fake world every later test drives Sepia against (S08) |
+
+**Lowering a floor** is a last resort. The reason and the date go in the table in the same commit, and the work to
+lift it is either done or written down as a slice. No floor was lowered when the metric was corrected on 2026-11-07:
+`server` and `store` were lifted by tests, which is what issue #5 asked for.
 
 ## 2. On merge to main (`docker-publish.yml`)
 
@@ -42,8 +74,8 @@ pulls the image and compiles nothing. This is what the update flow ([`UPDATE.md`
 - **Manual (`workflow_dispatch` only), in protected GitHub Environments with required reviewers:** `evals`
   (the real chat model and decisions backend on the fixture corpus, API key as an environment secret) and
   `live-checks`. Never required, never triggered by a PR.
-- **Local only:** `make check` (format, vet, lint, unit and integration tests, a short fuzz smoke) and a
-  potato benchmark over SSH. **The potato is never a CI runner.**
+- **Local only:** `make check` (format, vet, lint, unit and integration tests, a short fuzz smoke), `make
+  coverage` (the same floors CI asserts), and a potato benchmark over SSH. **The potato is never a CI runner.**
 - **Dependabot:** Go modules, pnpm and GitHub Actions weekly, grouped, each update going through the normal
   required checks.
 
