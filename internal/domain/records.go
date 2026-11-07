@@ -115,6 +115,43 @@ type Interaction struct {
 // Open reports whether the interaction is still waiting.
 func (i Interaction) Open() bool { return i.ResolvedSeq == nil }
 
+// Cost sources are nova's vocabulary for where a dollar figure came from, not Sepia's. A call's CostUSD is what it
+// consumed either way; the source says whose dollars they were, so a number the provider reported is never shown as
+// a spend that only a price list estimated, and an allowance is not shown as money spent.
+const (
+	// CostSourceProvider is a figure the provider itself reported. It is the strongest word, and real spend.
+	CostSourceProvider = "provider"
+	// CostSourceAllowance is a figure the provider reported as consumed from a plan's allowance.
+	CostSourceAllowance = "allowance"
+	// CostSourceCatalog is Sepia's own price-list estimate, because the provider reported no figure at all.
+	CostSourceCatalog = "catalog"
+)
+
+// CostSummary is money a session spent, with the part a plan's allowance covered split out. Covered is part of Total,
+// never in addition to it, so Spent plus Covered is the whole. Estimated is true when any of that money came from a
+// price-list estimate rather than a provider's own report.
+type CostSummary struct {
+	Total     float64 `json:"total_usd"`
+	Covered   float64 `json:"covered_usd"`
+	Estimated bool    `json:"estimated,omitempty"`
+}
+
+// Spent is the money that left an account: the total minus what an allowance covered.
+func (c CostSummary) Spent() float64 { return c.Total - c.Covered }
+
+// Add sums two summaries, which is how a session's total is built from per-call rows.
+func (c CostSummary) Add(other CostSummary) CostSummary {
+	c.Total += other.Total
+	c.Covered += other.Covered
+	c.Estimated = c.Estimated || other.Estimated
+	return c
+}
+
+// CostOf turns one ledger row's money into a summary, so the caller does not repeat the same three lines.
+func CostOf(total, covered float64, source string) CostSummary {
+	return CostSummary{Total: total, Covered: covered, Estimated: source == CostSourceCatalog}
+}
+
 // DecisionCall is one recorded decisions call: the odds, what fired, what it cost. It holds no text, so the
 // ledger can never become a copy of her message (docs/BUILD.md invariant 5).
 type DecisionCall struct {
@@ -126,23 +163,35 @@ type DecisionCall struct {
 	Odds         json.RawMessage `json:"odds"`
 	Fired        []string        `json:"fired"`
 	CostUSD      float64         `json:"cost_usd"`
-	LatencyMS    int             `json:"latency_ms"`
-	CreatedAt    time.Time       `json:"created_at"`
+	// AllowanceUSD is the part of CostUSD a plan's allowance paid for, and CostSource is where the figure came from.
+	AllowanceUSD float64   `json:"allowance_usd,omitempty"`
+	CostSource   string    `json:"cost_source,omitempty"`
+	LatencyMS    int       `json:"latency_ms"`
+	CreatedAt    time.Time `json:"created_at"`
 }
+
+// Cost is the row's money as a summary, which is what the "why" sheet and the running total want.
+func (d DecisionCall) Cost() CostSummary { return CostOf(d.CostUSD, d.AllowanceUSD, d.CostSource) }
 
 // TurnCall is one recorded model turn: the tokens and money it cost and how it ended. It holds no text either.
 type TurnCall struct {
-	ID               string    `json:"id"`
-	SessionID        string    `json:"session_id,omitempty"`
-	TurnIndex        int       `json:"turn_index"`
-	Model            string    `json:"model"`
-	PromptTokens     int       `json:"prompt_tokens"`
-	CompletionTokens int       `json:"completion_tokens"`
-	CostUSD          float64   `json:"cost_usd"`
-	LatencyMS        int       `json:"latency_ms"`
-	Reason           string    `json:"reason,omitempty"`
-	CreatedAt        time.Time `json:"created_at"`
+	ID               string  `json:"id"`
+	SessionID        string  `json:"session_id,omitempty"`
+	TurnIndex        int     `json:"turn_index"`
+	Model            string  `json:"model"`
+	PromptTokens     int     `json:"prompt_tokens"`
+	CompletionTokens int     `json:"completion_tokens"`
+	CostUSD          float64 `json:"cost_usd"`
+	// AllowanceUSD is the part of CostUSD a plan's allowance paid for, and CostSource is where the figure came from.
+	AllowanceUSD float64   `json:"allowance_usd,omitempty"`
+	CostSource   string    `json:"cost_source,omitempty"`
+	LatencyMS    int       `json:"latency_ms"`
+	Reason       string    `json:"reason,omitempty"`
+	CreatedAt    time.Time `json:"created_at"`
 }
+
+// Cost is the row's money as a summary.
+func (t TurnCall) Cost() CostSummary { return CostOf(t.CostUSD, t.AllowanceUSD, t.CostSource) }
 
 // ClientMessage is one row of the idempotency ledger: the first outcome of one client_msg_id.
 type ClientMessage struct {

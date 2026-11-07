@@ -45,8 +45,8 @@ func (s *Store) RecordDecisionCall(ctx context.Context, call domain.DecisionCall
 		return q.CreateDecisionCall(ctx, db.CreateDecisionCallParams{
 			ID: call.ID, SessionID: nullableString(call.SessionID), MessageIndex: int64(call.MessageIndex),
 			Backend: call.Backend, Model: call.Model, OddsJson: string(odds), FiredJson: string(fired),
-			CostUsd: call.CostUSD, LatencyMs: int64(call.LatencyMS),
-			CreatedAt: call.CreatedAt.UTC().Format(timeLayout),
+			CostUsd: call.CostUSD, CostSource: call.CostSource, AllowanceUsd: call.AllowanceUSD,
+			LatencyMs: int64(call.LatencyMS), CreatedAt: call.CreatedAt.UTC().Format(timeLayout),
 		})
 	})
 }
@@ -63,8 +63,8 @@ func (s *Store) RecordTurn(ctx context.Context, turn domain.TurnCall) error {
 		return q.CreateTurnCall(ctx, db.CreateTurnCallParams{
 			ID: turn.ID, SessionID: nullableString(turn.SessionID), TurnIndex: int64(turn.TurnIndex),
 			Model: turn.Model, PromptTokens: int64(turn.PromptTokens), CompletionTokens: int64(turn.CompletionTokens),
-			CostUsd: turn.CostUSD, LatencyMs: int64(turn.LatencyMS), Reason: turn.Reason,
-			CreatedAt: turn.CreatedAt.UTC().Format(timeLayout),
+			CostUsd: turn.CostUSD, CostSource: turn.CostSource, AllowanceUsd: turn.AllowanceUSD,
+			LatencyMs: int64(turn.LatencyMS), Reason: turn.Reason, CreatedAt: turn.CreatedAt.UTC().Format(timeLayout),
 		})
 	})
 }
@@ -82,7 +82,8 @@ func (s *Store) DecisionCalls(ctx context.Context, sessionID string) ([]domain.D
 		call := domain.DecisionCall{
 			ID: row.ID, SessionID: derefString(row.SessionID), MessageIndex: int(row.MessageIndex),
 			Backend: row.Backend, Model: row.Model, Odds: json.RawMessage(row.OddsJson),
-			CostUSD: row.CostUsd, LatencyMS: int(row.LatencyMs), CreatedAt: parseTime(row.CreatedAt),
+			CostUSD: row.CostUsd, AllowanceUSD: row.AllowanceUsd, CostSource: row.CostSource,
+			LatencyMS: int(row.LatencyMs), CreatedAt: parseTime(row.CreatedAt),
 		}
 		_ = json.Unmarshal([]byte(row.FiredJson), &call.Fired)
 		out = append(out, call)
@@ -101,22 +102,23 @@ func (s *Store) TurnCalls(ctx context.Context, sessionID string) ([]domain.TurnC
 		out = append(out, domain.TurnCall{
 			ID: row.ID, SessionID: derefString(row.SessionID), TurnIndex: int(row.TurnIndex),
 			Model: row.Model, PromptTokens: int(row.PromptTokens), CompletionTokens: int(row.CompletionTokens),
-			CostUSD: row.CostUsd, LatencyMS: int(row.LatencyMs), Reason: row.Reason,
-			CreatedAt: parseTime(row.CreatedAt),
+			CostUSD: row.CostUsd, AllowanceUSD: row.AllowanceUsd, CostSource: row.CostSource,
+			LatencyMS: int(row.LatencyMs), Reason: row.Reason, CreatedAt: parseTime(row.CreatedAt),
 		})
 	}
 	return out, nil
 }
 
-// SessionCost is the running total for a session, read from both ledgers rather than a counter that can drift.
-func (s *Store) SessionCost(ctx context.Context, sessionID string) (float64, error) {
-	total, err := s.ReadQueries().SessionCost(ctx, db.SessionCostParams{
+// SessionCost is the running total for a session, read from both ledgers rather than a counter that can drift, with
+// the part a plan allowance covered split out.
+func (s *Store) SessionCost(ctx context.Context, sessionID string) (domain.CostSummary, error) {
+	row, err := s.ReadQueries().SessionCost(ctx, db.SessionCostParams{
 		SessionID: nullableString(sessionID), SessionID_2: &sessionID,
 	})
 	if err != nil {
-		return 0, fmt.Errorf("store: session cost: %w", err)
+		return domain.CostSummary{}, fmt.Errorf("store: session cost: %w", err)
 	}
-	return total, nil
+	return domain.CostSummary{Total: row.Total, Covered: row.Covered, Estimated: row.Estimated > 0}, nil
 }
 
 // parseTime reads a stored RFC 3339 instant. A malformed value reads as the zero time rather than failing a list:

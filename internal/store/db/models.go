@@ -40,6 +40,8 @@ type DecisionCall struct {
 	CostUsd      float64 `json:"cost_usd"`
 	LatencyMs    int64   `json:"latency_ms"`
 	CreatedAt    string  `json:"created_at"`
+	CostSource   string  `json:"cost_source"`
+	AllowanceUsd float64 `json:"allowance_usd"`
 }
 
 type Entry struct {
@@ -144,6 +146,8 @@ type TurnCall struct {
 	LatencyMs        int64   `json:"latency_ms"`
 	Reason           string  `json:"reason"`
 	CreatedAt        string  `json:"created_at"`
+	CostSource       string  `json:"cost_source"`
+	AllowanceUsd     float64 `json:"allowance_usd"`
 }
 
 type Work struct {

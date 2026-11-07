@@ -116,8 +116,14 @@
             "summary": "Open Library, one match"
           }
         ],
-        "preread_cost_usd": 0.0004,
-        "turn_cost_usd": 0.0021
+        "preread_cost": {
+          "total_usd": 0.0004,
+          "covered_usd": 0
+        },
+        "turn_cost": {
+          "total_usd": 0.0021,
+          "covered_usd": 0.0021
+        }
       },
       "can_confirm": true,
       "missing": []

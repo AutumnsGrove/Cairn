@@ -838,7 +838,8 @@ func (s *RunState) checkFidelity(ctx context.Context) error {
 	if err == nil {
 		if ledgerErr := s.Agent.store.RecordDecisionCall(ctx, domain.DecisionCall{
 			SessionID: s.SessionID, MessageIndex: s.MessageIndex, Backend: "openrouter", Model: result.Model,
-			Odds: odds, Fired: []string{result.Verdict.Verdict}, CostUSD: result.Usage.CostUSD, LatencyMS: latency,
+			Odds: odds, Fired: []string{result.Verdict.Verdict}, CostUSD: result.Usage.CostUSD,
+			CostSource: result.Usage.CostSource, AllowanceUSD: result.Usage.AllowanceUSD, LatencyMS: latency,
 		}); ledgerErr != nil {
 			s.Agent.log.Error("fidelity ledger write failed", "session", s.SessionID, "err", ledgerErr.Error())
 		}

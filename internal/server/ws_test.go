@@ -316,8 +316,15 @@ func (c *wsClient) nextWithin(wait time.Duration) (event, bool) {
 // expect reads until an event of the type arrives, and fails if the socket closes first.
 func (c *wsClient) expect(kind string) event {
 	c.t.Helper()
+	return c.expectWithin(kind, 5*time.Second)
+}
+
+// expectWithin is expect with a stated wait. A test that is only draining a frame the engine has already written
+// uses a generous wait, because the race build on a loaded machine is slow enough to miss a tight one.
+func (c *wsClient) expectWithin(kind string, wait time.Duration) event {
+	c.t.Helper()
 	for i := 0; i < 200; i++ {
-		ev, ok := c.next()
+		ev, ok := c.nextWithin(wait)
 		if !ok {
 			c.t.Fatalf("socket closed while waiting for %s (code %d)", kind, ev.closeCode)
 		}

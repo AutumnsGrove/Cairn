@@ -87,6 +87,9 @@ type rigOptions struct {
 	turnDeadline     time.Duration
 	maxInputTokens   int
 	providerOverride provider.Provider
+	// live records the events the protocol does not persist, so a test can assert on what a phone would show
+	// while the turn runs.
+	live func(Event)
 }
 
 func newRig(t *testing.T, opts rigOptions) *rig {
@@ -157,7 +160,7 @@ func newRig(t *testing.T, opts rigOptions) *rig {
 	cfg := Config{
 		Store: db, Session: engine, Finder: finder, Banks: set, Decisions: pre,
 		Model: PinnedModel, BaseURL: chat.URL(), APIKey: "test-key",
-		Now: clock.Now, TurnDeadline: opts.turnDeadline, MaxInputTokens: opts.maxInputTokens,
+		Now: clock.Now, TurnDeadline: opts.turnDeadline, MaxInputTokens: opts.maxInputTokens, Live: opts.live,
 	}
 	if opts.noResponder {
 		cfg.Responder = nil

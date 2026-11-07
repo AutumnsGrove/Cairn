@@ -65,7 +65,7 @@ func TestSocketAcceptanceNamesFieldsAndHappensOnce(t *testing.T) {
 	if got := client.expect("ack").field(t, "status"); got != "accepted" {
 		t.Fatalf("accept ack = %v", got)
 	}
-	client.expect("draft_snapshot")
+	client.expectWithin("draft_snapshot", 30*time.Second)
 	if trust := trustOf(t, rig, "https://example.test/dune"); trust != domain.TrustAccepted {
 		t.Fatalf("the tapped field is %s, want accepted", trust)
 	}
@@ -90,7 +90,7 @@ func TestSocketAcceptanceNamesFieldsAndHappensOnce(t *testing.T) {
 	if got := client.expect("ack").field(t, "status"); got != "accepted" {
 		t.Fatalf("accept-all ack = %v", got)
 	}
-	client.expect("draft_snapshot")
+	client.expectWithin("draft_snapshot", 30*time.Second)
 	if trust := trustOf(t, rig, "https://example.test/dune-2"); trust != domain.TrustAccepted {
 		t.Errorf("the second field is %s after accept-all, want accepted", trust)
 	}

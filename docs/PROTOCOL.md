@@ -50,6 +50,11 @@ Every server message is one JSON object:
 Every client message carries a `client_msg_id` (a UUID the client makes), so a retry after a reconnect
 cannot be applied twice.
 
+**Money is always two numbers.** A call reports what it consumed and where that figure came from: the
+provider's own report, a plan's allowance, or Sepia's price-list estimate. A covered call is not money spent,
+so every cost on the wire carries `total_usd` and `covered_usd` together, and an estimated total says so. A
+screen that shows only the total would bill her for an allowance she has already paid for.
+
 ## 3. Server to client
 
 | Type | Persisted | Data | Meaning |
@@ -69,7 +74,7 @@ cannot be applied twice.
 | `saved` | yes | `entry_id`, `version` | The entry was committed. The session closes after this |
 | `discarded` | yes | none | The draft was discarded. The session closes after this |
 | `ack` | no | `client_msg_id`, `status` (`accepted`, `duplicate`, `rejected`), `reason?` | The reply to a client message. A `duplicate` returns the original outcome |
-| `cost_update` | no | `session_total_usd` | The running total for the session. Always the full total, never a delta; the UI overwrites |
+| `cost_update` | no | `session_total_usd`, `session_covered_usd` | The running total for the session and the part of it a plan's allowance paid for. Always the full totals, never deltas; the UI overwrites. `covered` is part of `total`, never in addition to it |
 | `notice` | yes | `level` (`info`, `warn`), `code`, `text` | Something the user should know, such as "the pre-read was unavailable for this message" |
 | `error` | yes | `code`, `message`, `retryable` | A failure. `retryable` tells the UI whether to offer Try again |
 | `queue_update` | no | `queued` (count) | A message I sent mid-turn is waiting for the current turn to finish |

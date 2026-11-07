@@ -67,7 +67,8 @@ func (a *Agent) preread(ctx context.Context, state *RunState) error {
 	// A ledger write is a receipt, not a gate: if it fails, the review still goes on and the failure is logged.
 	if ledgerErr := a.store.RecordDecisionCall(ctx, domain.DecisionCall{
 		SessionID: state.SessionID, MessageIndex: state.MessageIndex, Backend: "openrouter", Model: result.Model,
-		Odds: odds, Fired: result.Outcome.Fired, CostUSD: result.Usage.CostUSD, LatencyMS: latency,
+		Odds: odds, Fired: result.Outcome.Fired, CostUSD: result.Usage.CostUSD,
+		CostSource: result.Usage.CostSource, AllowanceUSD: result.Usage.AllowanceUSD, LatencyMS: latency,
 	}); ledgerErr != nil {
 		a.log.Error("decision ledger write failed", "session", state.SessionID, "err", ledgerErr.Error())
 	}

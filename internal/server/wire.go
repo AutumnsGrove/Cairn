@@ -116,11 +116,25 @@ type wireWhyTool struct {
 	Sources []wireToolSource `json:"sources,omitempty"`
 }
 
+// wireCost is money on the wire: the total, the part a plan covered, and whether any of it is a price-list
+// estimate rather than a provider's own report.
+type wireCost struct {
+	TotalUSD   float64 `json:"total_usd"`
+	CoveredUSD float64 `json:"covered_usd"`
+	Estimated  bool    `json:"estimated,omitempty"`
+}
+
+// wireCostOf shapes one summary. The two numbers are always sent, because a screen that shows only the total would
+// be showing money she may not have spent.
+func wireCostOf(cost domain.CostSummary) wireCost {
+	return wireCost{TotalUSD: cost.Total, CoveredUSD: cost.Covered, Estimated: cost.Estimated}
+}
+
 type wireWhy struct {
-	Checks         []wireWhyCheck `json:"checks,omitempty"`
-	Tools          []wireWhyTool  `json:"tools,omitempty"`
-	PrereadCostUSD float64        `json:"preread_cost_usd"`
-	TurnCostUSD    float64        `json:"turn_cost_usd"`
+	Checks      []wireWhyCheck `json:"checks,omitempty"`
+	Tools       []wireWhyTool  `json:"tools,omitempty"`
+	PrereadCost wireCost       `json:"preread_cost"`
+	TurnCost    wireCost       `json:"turn_cost"`
 }
 
 type wireAnswer struct {
@@ -317,10 +331,10 @@ func unverifiedOf(sources []domain.Source) []wireUnverified {
 
 // whyOf shapes the "why" sheet. A card with nothing to explain has no sheet at all, rather than an empty one.
 func whyOf(card session.Card) *wireWhy {
-	if len(card.Checks) == 0 && len(card.Tools) == 0 && card.PrereadCost == 0 && card.TurnCost == 0 {
+	if len(card.Checks) == 0 && len(card.Tools) == 0 && card.PrereadCost.Total == 0 && card.TurnCost.Total == 0 {
 		return nil
 	}
-	why := &wireWhy{PrereadCostUSD: card.PrereadCost, TurnCostUSD: card.TurnCost}
+	why := &wireWhy{PrereadCost: wireCostOf(card.PrereadCost), TurnCost: wireCostOf(card.TurnCost)}
 	for _, check := range card.Checks {
 		why.Checks = append(why.Checks, wireWhyCheck{
 			Check: check.Name, Option: check.Option, Probability: check.Probability, Fired: check.Fired,

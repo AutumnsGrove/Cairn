@@ -14,6 +14,9 @@ import (
 	"testing"
 	"testing/fstest"
 	"time"
+
+	"github.com/AutumnsGrove/sepia/internal/domain"
+	"github.com/AutumnsGrove/sepia/internal/session"
 )
 
 // The internals that the route tests reach only sideways: the panic path, the response writers, the content
@@ -388,5 +391,54 @@ func TestClipRunesShortensWithoutSplitting(t *testing.T) {
 	// A character outside ASCII is four bytes, and half of one would be mojibake on her screen.
 	if got := clipRunes(strings.Repeat("é", 20), 5); got != "ééééé" {
 		t.Errorf("clipRunes split a character: %q", got)
+	}
+}
+
+// The "why" sheet shows money as two numbers, never one: what the call consumed, and how much of it a plan covered.
+// A screen drawing only the total would bill her for an allowance she already paid for.
+func TestWhySheetSplitsCoveredFromSpent(t *testing.T) {
+	card := session.Card{
+		PrereadCost: domain.CostOf(0.0002, 0, domain.CostSourceProvider),
+		TurnCost:    domain.CostOf(0.0021, 0.0021, domain.CostSourceAllowance),
+	}
+	why := whyOf(card)
+	if why == nil {
+		t.Fatal("a card with money on it has no why sheet")
+	}
+	raw, err := json.Marshal(why)
+	if err != nil {
+		t.Fatal(err)
+	}
+	var got struct {
+		PrereadCost struct {
+			TotalUSD   float64 `json:"total_usd"`
+			CoveredUSD float64 `json:"covered_usd"`
+			Estimated  bool    `json:"estimated"`
+		} `json:"preread_cost"`
+		TurnCost struct {
+			TotalUSD   float64 `json:"total_usd"`
+			CoveredUSD float64 `json:"covered_usd"`
+			Estimated  bool    `json:"estimated"`
+		} `json:"turn_cost"`
+	}
+	if err := json.Unmarshal(raw, &got); err != nil {
+		t.Fatalf("why sheet: %v\n%s", err, raw)
+	}
+	if got.PrereadCost.TotalUSD != 0.0002 || got.PrereadCost.CoveredUSD != 0 {
+		t.Errorf("preread cost = %+v", got.PrereadCost)
+	}
+	if got.TurnCost.TotalUSD != 0.0021 || got.TurnCost.CoveredUSD != 0.0021 {
+		t.Errorf("turn cost = %+v", got.TurnCost)
+	}
+
+	// A price-list estimate says so, because a guessed number is not a receipt.
+	card.TurnCost = domain.CostOf(0.003, 0, domain.CostSourceCatalog)
+	if why := whyOf(card); why == nil || !why.TurnCost.Estimated {
+		t.Errorf("catalog cost = %+v, want it marked as an estimate", why)
+	}
+
+	// A card with nothing to explain still has no sheet at all.
+	if why := whyOf(session.Card{}); why != nil {
+		t.Errorf("an empty card produced a sheet: %+v", why)
 	}
 }

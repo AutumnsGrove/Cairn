@@ -91,7 +91,9 @@ Collapsed by default, in the style of Polaris's Oracle info sheet. It shows:
 - every pre-read check's winning option and its odds, and which checks fired (cleared their threshold);
 - which tools ran, in order, with their inputs;
 - the sources behind any web-derived field (URL, snippet, Polaris thread id);
-- the cost of the pre-read and of the turn.
+- the cost of the pre-read and of the turn, each as what the call consumed and how much of it a plan's
+  allowance covered. An allowance is not money spent, and the sheet says so rather than showing one number
+  that could mean either.
 
 It is how thresholds get tuned from real use and how "why does this entry say that" gets answered.
 

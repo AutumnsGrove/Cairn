@@ -27,8 +27,8 @@ type Card struct {
 
 	Checks      []Check
 	Tools       []ToolTrace
-	PrereadCost float64
-	TurnCost    float64
+	PrereadCost domain.CostSummary
+	TurnCost    domain.CostSummary
 	Fidelity    string
 }
 
@@ -195,8 +195,9 @@ func (e *Engine) HeadSequence(ctx context.Context, sessionID string) (int, error
 	return e.store.HeadSequence(ctx, sessionID)
 }
 
-// SessionCost is the running total a session has spent, which the cost_update event carries.
-func (e *Engine) SessionCost(ctx context.Context, sessionID string) (float64, error) {
+// SessionCost is the running total a session has spent, with the part a plan allowance covered split out, which the
+// cost_update event carries.
+func (e *Engine) SessionCost(ctx context.Context, sessionID string) (domain.CostSummary, error) {
 	return e.store.SessionCost(ctx, sessionID)
 }
 
@@ -213,7 +214,7 @@ func (e *Engine) receipts(ctx context.Context, sessionID string, card *Card) {
 	calls, err := e.store.DecisionCalls(ctx, sessionID)
 	if err == nil {
 		for _, call := range calls {
-			card.PrereadCost += call.CostUSD
+			card.PrereadCost = card.PrereadCost.Add(call.Cost())
 			var odds map[string]map[string]float64
 			if json.Unmarshal(call.Odds, &odds) != nil {
 				continue
@@ -239,7 +240,7 @@ func (e *Engine) receipts(ctx context.Context, sessionID string, card *Card) {
 	}
 	if turns, turnErr := e.store.TurnCalls(ctx, sessionID); turnErr == nil {
 		for _, turn := range turns {
-			card.TurnCost += turn.CostUSD
+			card.TurnCost = card.TurnCost.Add(turn.Cost())
 		}
 	}
 	events, err := e.store.EventsSince(ctx, sessionID, 0)

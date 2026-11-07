@@ -130,8 +130,8 @@ func (q *Queries) CreateAnswer(ctx context.Context, arg CreateAnswerParams) erro
 
 const createDecisionCall = `-- name: CreateDecisionCall :exec
 INSERT INTO decision_calls (id, session_id, message_index, backend, model, odds_json, fired_json, cost_usd,
-                            latency_ms, created_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+                            cost_source, allowance_usd, latency_ms, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateDecisionCallParams struct {
@@ -143,6 +143,8 @@ type CreateDecisionCallParams struct {
 	OddsJson     string  `json:"odds_json"`
 	FiredJson    string  `json:"fired_json"`
 	CostUsd      float64 `json:"cost_usd"`
+	CostSource   string  `json:"cost_source"`
+	AllowanceUsd float64 `json:"allowance_usd"`
 	LatencyMs    int64   `json:"latency_ms"`
 	CreatedAt    string  `json:"created_at"`
 }
@@ -157,6 +159,8 @@ func (q *Queries) CreateDecisionCall(ctx context.Context, arg CreateDecisionCall
 		arg.OddsJson,
 		arg.FiredJson,
 		arg.CostUsd,
+		arg.CostSource,
+		arg.AllowanceUsd,
 		arg.LatencyMs,
 		arg.CreatedAt,
 	)
@@ -319,9 +323,9 @@ func (q *Queries) CreateSession(ctx context.Context, arg CreateSessionParams) er
 }
 
 const createTurnCall = `-- name: CreateTurnCall :exec
-INSERT INTO turn_calls (id, session_id, turn_index, model, prompt_tokens, completion_tokens, cost_usd, latency_ms,
-                        reason, created_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+INSERT INTO turn_calls (id, session_id, turn_index, model, prompt_tokens, completion_tokens, cost_usd, cost_source,
+                        allowance_usd, latency_ms, reason, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
 `
 
 type CreateTurnCallParams struct {
@@ -332,6 +336,8 @@ type CreateTurnCallParams struct {
 	PromptTokens     int64   `json:"prompt_tokens"`
 	CompletionTokens int64   `json:"completion_tokens"`
 	CostUsd          float64 `json:"cost_usd"`
+	CostSource       string  `json:"cost_source"`
+	AllowanceUsd     float64 `json:"allowance_usd"`
 	LatencyMs        int64   `json:"latency_ms"`
 	Reason           string  `json:"reason"`
 	CreatedAt        string  `json:"created_at"`
@@ -346,6 +352,8 @@ func (q *Queries) CreateTurnCall(ctx context.Context, arg CreateTurnCallParams) 
 		arg.PromptTokens,
 		arg.CompletionTokens,
 		arg.CostUsd,
+		arg.CostSource,
+		arg.AllowanceUsd,
 		arg.LatencyMs,
 		arg.Reason,
 		arg.CreatedAt,
@@ -751,7 +759,7 @@ func (q *Queries) ListAnswers(ctx context.Context, entryID string) ([]Answer, er
 }
 
 const listDecisionCalls = `-- name: ListDecisionCalls :many
-SELECT id, session_id, message_index, backend, model, odds_json, fired_json, cost_usd, latency_ms, created_at FROM decision_calls
+SELECT id, session_id, message_index, backend, model, odds_json, fired_json, cost_usd, latency_ms, created_at, cost_source, allowance_usd FROM decision_calls
 WHERE session_id = ?1
 ORDER BY created_at, id
 LIMIT ?2
@@ -783,6 +791,8 @@ func (q *Queries) ListDecisionCalls(ctx context.Context, arg ListDecisionCallsPa
 			&i.CostUsd,
 			&i.LatencyMs,
 			&i.CreatedAt,
+			&i.CostSource,
+			&i.AllowanceUsd,
 		); err != nil {
 			return nil, err
 		}
@@ -1407,7 +1417,7 @@ func (q *Queries) ListSessions(ctx context.Context, arg ListSessionsParams) ([]S
 }
 
 const listTurnCalls = `-- name: ListTurnCalls :many
-SELECT id, session_id, turn_index, model, prompt_tokens, completion_tokens, cost_usd, latency_ms, reason, created_at FROM turn_calls WHERE session_id = ? ORDER BY turn_index, created_at, id
+SELECT id, session_id, turn_index, model, prompt_tokens, completion_tokens, cost_usd, latency_ms, reason, created_at, cost_source, allowance_usd FROM turn_calls WHERE session_id = ? ORDER BY turn_index, created_at, id
 `
 
 func (q *Queries) ListTurnCalls(ctx context.Context, sessionID *string) ([]TurnCall, error) {
@@ -1430,6 +1440,8 @@ func (q *Queries) ListTurnCalls(ctx context.Context, sessionID *string) ([]TurnC
 			&i.LatencyMs,
 			&i.Reason,
 			&i.CreatedAt,
+			&i.CostSource,
+			&i.AllowanceUsd,
 		); err != nil {
 			return nil, err
 		}
@@ -1618,10 +1630,15 @@ func (q *Queries) SaveEntry(ctx context.Context, arg SaveEntryParams) (sql.Resul
 }
 
 const sessionCost = `-- name: SessionCost :one
-SELECT CAST(
-    COALESCE((SELECT SUM(t.cost_usd) FROM turn_calls AS t WHERE t.session_id = ?), 0) +
-    COALESCE((SELECT SUM(d.cost_usd) FROM decision_calls AS d WHERE d.session_id = ?), 0)
-AS REAL) AS total
+WITH calls AS (
+    SELECT t.cost_usd, t.allowance_usd, t.cost_source FROM turn_calls AS t WHERE t.session_id = ?
+    UNION ALL
+    SELECT d.cost_usd, d.allowance_usd, d.cost_source FROM decision_calls AS d WHERE d.session_id = ?
+)
+SELECT CAST(COALESCE(SUM(calls.cost_usd), 0) AS REAL) AS total,
+       CAST(COALESCE(SUM(calls.allowance_usd), 0) AS REAL) AS covered,
+       CAST(COALESCE(SUM(CASE WHEN calls.cost_source = 'catalog' THEN 1 ELSE 0 END), 0) AS INTEGER) AS estimated
+FROM calls
 `
 
 type SessionCostParams struct {
@@ -1629,12 +1646,20 @@ type SessionCostParams struct {
 	SessionID_2 *string `json:"session_id_2"`
 }
 
-// The running total is the turn ledger plus the decisions ledger, never a cached counter that can drift.
-func (q *Queries) SessionCost(ctx context.Context, arg SessionCostParams) (float64, error) {
+type SessionCostRow struct {
+	Total     float64 `json:"total"`
+	Covered   float64 `json:"covered"`
+	Estimated int64   `json:"estimated"`
+}
+
+// The running total is the turn ledger plus the decisions ledger, never a cached counter that can drift. covered is
+// the part of that total a plan allowance paid for, and estimated counts the calls whose money came from a catalog
+// price rather than the provider's own report, so a screen can say which number it is showing.
+func (q *Queries) SessionCost(ctx context.Context, arg SessionCostParams) (SessionCostRow, error) {
 	row := q.db.QueryRowContext(ctx, sessionCost, arg.SessionID, arg.SessionID_2)
-	var total float64
-	err := row.Scan(&total)
-	return total, err
+	var i SessionCostRow
+	err := row.Scan(&i.Total, &i.Covered, &i.Estimated)
+	return i, err
 }
 
 const setSessionState = `-- name: SetSessionState :exec

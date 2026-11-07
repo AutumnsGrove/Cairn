@@ -4,6 +4,7 @@
   "session_id": "s_8f2",
   "ts": "2026-10-31T14:03:22Z",
   "data": {
-    "session_total_usd": 0.0031
+    "session_total_usd": 0.0031,
+    "session_covered_usd": 0.001
   }
 }

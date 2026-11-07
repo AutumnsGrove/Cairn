@@ -4,9 +4,11 @@ import (
 	"context"
 	"encoding/json"
 	"strings"
+	"sync"
 	"testing"
 	"time"
 
+	"github.com/AutumnsGrove/nova/message"
 	"github.com/AutumnsGrove/nova/provider"
 
 	"github.com/AutumnsGrove/sepia/internal/banks"
@@ -149,7 +151,7 @@ func TestPipelineBookFlow(t *testing.T) {
 	if turns[0].PromptTokens == 0 || out.CostUSD == 0 {
 		t.Errorf("turn = %+v, outcome cost = %v", turns[0], out.CostUSD)
 	}
-	if total, costErr := r.store.SessionCost(ctx, sess.ID); costErr != nil || total < out.CostUSD {
+	if total, costErr := r.store.SessionCost(ctx, sess.ID); costErr != nil || total.Total < out.CostUSD {
 		t.Errorf("session cost = %v, %v", total, costErr)
 	}
 
@@ -375,7 +377,13 @@ func TestTwoModelRunsReportTheWholeCost(t *testing.T) {
 			},
 		},
 	}
-	r := newRig(t, rigOptions{script: script})
+	var mu sync.Mutex
+	var live []Event
+	r := newRig(t, rigOptions{script: script, live: func(ev Event) {
+		mu.Lock()
+		defer mu.Unlock()
+		live = append(live, ev)
+	}})
 	ctx := context.Background()
 	sess, err := r.session.CreateGeneral(ctx, "what did I think of the lantern keeper?")
 	if err != nil {
@@ -400,5 +408,108 @@ func TestTwoModelRunsReportTheWholeCost(t *testing.T) {
 	}
 	if turns[0].CostUSD < 0.000299 || turns[0].CostUSD > 0.000301 {
 		t.Errorf("the ledger recorded %v, want the summed 0.0003", turns[0].CostUSD)
+	}
+	// OpenRouter reports real money and has no allowance concept, so the receipt says provider and nothing covered.
+	// The covered case is a plan backend, and TestAnAllowanceCoveredTurnIsRecordedAsCovered drives that one.
+	if turns[0].CostSource != domain.CostSourceProvider || turns[0].AllowanceUSD != 0 {
+		t.Errorf("provenance = %q, %v, want provider with nothing covered", turns[0].CostSource, turns[0].AllowanceUSD)
+	}
+
+	// The live total a phone shows carries the split too, never one ambiguous number.
+	mu.Lock()
+	defer mu.Unlock()
+	last := lastCostUpdate(t, live)
+	sessionCost, err := r.store.SessionCost(ctx, sess.ID)
+	if err != nil {
+		t.Fatalf("SessionCost: %v", err)
+	}
+	if last["session_total_usd"] != sessionCost.Total || last["session_covered_usd"] != sessionCost.Covered {
+		t.Errorf("cost_update = %v, want the ledgers' total %v covered %v",
+			last, sessionCost.Total, sessionCost.Covered)
+	}
+}
+
+// lastCostUpdate is the newest live cost event, which is the one a phone is showing.
+func lastCostUpdate(t *testing.T, live []Event) map[string]any {
+	t.Helper()
+	for i := len(live) - 1; i >= 0; i-- {
+		if live[i].Kind != "cost_update" {
+			continue
+		}
+		data, ok := live[i].Data.(map[string]any)
+		if !ok {
+			t.Fatalf("cost_update data is %T, want a map", live[i].Data)
+		}
+		return data
+	}
+	t.Fatal("no cost_update event")
+	return nil
+}
+
+// allowanceProvider is a plan backend: it reports what the call consumed from an allowance rather than money.
+type allowanceProvider struct{ covered float64 }
+
+func (allowanceProvider) Name() string { return "allowance" }
+
+func (p allowanceProvider) Stream(ctx context.Context, _ provider.Request,
+	emit func(provider.StreamEvent),
+) (*provider.Response, error) {
+	emit(provider.StreamEvent{Type: provider.StreamTextDelta, Text: "Noted."})
+	return &provider.Response{
+		Message:      message.Assistant("Noted."),
+		FinishReason: "stop",
+		Usage: provider.Usage{
+			PromptTokens: 100, CompletionTokens: 10, TotalTokens: 110,
+			CostUSD: p.covered, AllowanceUSD: p.covered, CostSource: domain.CostSourceAllowance,
+		},
+	}, nil
+}
+
+// A turn a plan's allowance covered is recorded as covered, in the ledger and in the running total. The number is
+// the same one the provider consumed; what changes is whose dollars they were (docs/BUILD-LOG.md 2026-11-07).
+func TestAnAllowanceCoveredTurnIsRecordedAsCovered(t *testing.T) {
+	var mu sync.Mutex
+	var live []Event
+	r := newRig(t, rigOptions{
+		providerOverride: allowanceProvider{covered: 0.002},
+		live: func(ev Event) {
+			mu.Lock()
+			defer mu.Unlock()
+			live = append(live, ev)
+		},
+	})
+	ctx := context.Background()
+	sess, err := r.session.CreateGeneral(ctx, "a plan-covered question")
+	if err != nil {
+		t.Fatalf("CreateGeneral: %v", err)
+	}
+	if _, turnErr := r.agent.HandleMessage(ctx, TurnInput{
+		SessionID: sess.ID, Text: "just checking in", ClientMsgID: "m1",
+	}); turnErr != nil {
+		t.Fatalf("HandleMessage: %v", turnErr)
+	}
+
+	turns, err := r.store.TurnCalls(ctx, sess.ID)
+	if err != nil || len(turns) != 1 {
+		t.Fatalf("turn ledger = %+v, %v", turns, err)
+	}
+	if turns[0].CostSource != domain.CostSourceAllowance {
+		t.Errorf("cost source = %q, want allowance", turns[0].CostSource)
+	}
+	if turns[0].CostUSD != 0.002 || turns[0].AllowanceUSD != 0.002 {
+		t.Errorf("cost = %v covered %v, want the allowance 0.002 both", turns[0].CostUSD, turns[0].AllowanceUSD)
+	}
+	if spent := turns[0].Cost().Spent(); spent != 0 {
+		t.Errorf("spent = %v, want nothing spent", spent)
+	}
+
+	mu.Lock()
+	defer mu.Unlock()
+	last := lastCostUpdate(t, live)
+	if last["session_covered_usd"].(float64) <= 0 {
+		t.Errorf("cost_update = %v, want a covered part", last)
+	}
+	if last["session_covered_usd"].(float64) > last["session_total_usd"].(float64) {
+		t.Errorf("cost_update = %v, want covered inside the total", last)
 	}
 }

@@ -31,6 +31,26 @@ const eventsSchema = `{
       "type": "number",
       "minimum": 0
     },
+    "costSummary": {
+      "description": "Money a session spent, with the part a plan's allowance covered split out. Covered is part of total, never in addition to it, so total minus covered is what left an account.",
+      "type": "object",
+      "required": [
+        "total_usd",
+        "covered_usd"
+      ],
+      "properties": {
+        "total_usd": {
+          "$ref": "#/$defs/usd"
+        },
+        "covered_usd": {
+          "$ref": "#/$defs/usd"
+        },
+        "estimated": {
+          "type": "boolean"
+        }
+      },
+      "additionalProperties": false
+    },
     "version": {
       "type": "integer",
       "minimum": 0
@@ -404,11 +424,11 @@ const eventsSchema = `{
             "$ref": "#/$defs/whyTool"
           }
         },
-        "preread_cost_usd": {
-          "$ref": "#/$defs/usd"
+        "preread_cost": {
+          "$ref": "#/$defs/costSummary"
         },
-        "turn_cost_usd": {
-          "$ref": "#/$defs/usd"
+        "turn_cost": {
+          "$ref": "#/$defs/costSummary"
         }
       },
       "additionalProperties": false
@@ -1342,10 +1362,14 @@ const eventsSchema = `{
                 "data": {
                   "type": "object",
                   "required": [
-                    "session_total_usd"
+                    "session_total_usd",
+                    "session_covered_usd"
                   ],
                   "properties": {
                     "session_total_usd": {
+                      "$ref": "#/$defs/usd"
+                    },
+                    "session_covered_usd": {
                       "$ref": "#/$defs/usd"
                     }
                   },

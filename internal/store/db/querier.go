@@ -85,8 +85,10 @@ type Querier interface {
 	// what it replaced was written in the same transaction (docs/ENTRY_CARD.md 7). The count tells the caller whether
 	// the row existed, so a confirm can never report success for a write that changed nothing.
 	SaveEntry(ctx context.Context, arg SaveEntryParams) (sql.Result, error)
-	// The running total is the turn ledger plus the decisions ledger, never a cached counter that can drift.
-	SessionCost(ctx context.Context, arg SessionCostParams) (float64, error)
+	// The running total is the turn ledger plus the decisions ledger, never a cached counter that can drift. covered is
+	// the part of that total a plan allowance paid for, and estimated counts the calls whose money came from a catalog
+	// price rather than the provider's own report, so a screen can say which number it is showing.
+	SessionCost(ctx context.Context, arg SessionCostParams) (SessionCostRow, error)
 	SetSessionState(ctx context.Context, arg SetSessionStateParams) error
 	SoftDeleteEntry(ctx context.Context, arg SoftDeleteEntryParams) error
 	// A draft's fields. The status guard is the WHERE clause, so a saved entry can never be rewritten this way.

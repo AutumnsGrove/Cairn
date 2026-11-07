@@ -125,23 +125,30 @@ DELETE FROM session_events WHERE session_id = ? AND kind = 'text_delta' AND seq 
 
 -- name: CreateDecisionCall :exec
 INSERT INTO decision_calls (id, session_id, message_index, backend, model, odds_json, fired_json, cost_usd,
-                            latency_ms, created_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+                            cost_source, allowance_usd, latency_ms, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 -- name: CreateTurnCall :exec
-INSERT INTO turn_calls (id, session_id, turn_index, model, prompt_tokens, completion_tokens, cost_usd, latency_ms,
-                        reason, created_at)
-VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
+INSERT INTO turn_calls (id, session_id, turn_index, model, prompt_tokens, completion_tokens, cost_usd, cost_source,
+                        allowance_usd, latency_ms, reason, created_at)
+VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?);
 
 -- name: ListTurnCalls :many
 SELECT * FROM turn_calls WHERE session_id = ? ORDER BY turn_index, created_at, id;
 
 -- name: SessionCost :one
--- The running total is the turn ledger plus the decisions ledger, never a cached counter that can drift.
-SELECT CAST(
-    COALESCE((SELECT SUM(t.cost_usd) FROM turn_calls AS t WHERE t.session_id = ?), 0) +
-    COALESCE((SELECT SUM(d.cost_usd) FROM decision_calls AS d WHERE d.session_id = ?), 0)
-AS REAL) AS total;
+-- The running total is the turn ledger plus the decisions ledger, never a cached counter that can drift. covered is
+-- the part of that total a plan allowance paid for, and estimated counts the calls whose money came from a catalog
+-- price rather than the provider's own report, so a screen can say which number it is showing.
+WITH calls AS (
+    SELECT t.cost_usd, t.allowance_usd, t.cost_source FROM turn_calls AS t WHERE t.session_id = ?
+    UNION ALL
+    SELECT d.cost_usd, d.allowance_usd, d.cost_source FROM decision_calls AS d WHERE d.session_id = ?
+)
+SELECT CAST(COALESCE(SUM(calls.cost_usd), 0) AS REAL) AS total,
+       CAST(COALESCE(SUM(calls.allowance_usd), 0) AS REAL) AS covered,
+       CAST(COALESCE(SUM(CASE WHEN calls.cost_source = 'catalog' THEN 1 ELSE 0 END), 0) AS INTEGER) AS estimated
+FROM calls;
 
 -- name: UpsertTag :exec
 INSERT INTO tags (id, name) VALUES (?, ?) ON CONFLICT (name) DO NOTHING;

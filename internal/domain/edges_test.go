@@ -228,3 +228,51 @@ func TestUnicodeDigits(t *testing.T) {
 		}
 	}
 }
+
+// A cost summary is two numbers with a rule: covered is part of the total, never in addition to it, and a total that
+// includes a price-list guess says so. Adding two calls is how a session's receipt is built.
+func TestCostSummarySplitsCoveredAndSpent(t *testing.T) {
+	providerReported := CostOf(0.0002, 0, CostSourceProvider)
+	if providerReported.Spent() != 0.0002 || providerReported.Estimated {
+		t.Errorf("provider cost = %+v", providerReported)
+	}
+	covered := CostOf(0.003, 0.003, CostSourceAllowance)
+	if covered.Spent() != 0 || covered.Covered != 0.003 {
+		t.Errorf("covered cost = %+v, want nothing spent", covered)
+	}
+	guessed := CostOf(0.004, 0, CostSourceCatalog)
+	if !guessed.Estimated {
+		t.Error("a catalog price was not marked as an estimate")
+	}
+
+	sum := providerReported.Add(covered).Add(guessed)
+	if sum.Total != 0.0072 || sum.Covered != 0.003 {
+		t.Errorf("sum = %+v", sum)
+	}
+	if !sum.Estimated {
+		t.Error("a total that includes an estimate did not say so")
+	}
+	if spent := sum.Spent(); spent < 0.00419 || spent > 0.00421 {
+		t.Errorf("spent = %v, want the uncovered 0.0042", spent)
+	}
+	// Nothing plus nothing is zero, which is what a session with no calls reports.
+	if empty := (CostSummary{}).Add(CostSummary{}); empty.Total != 0 || empty.Covered != 0 || empty.Estimated {
+		t.Errorf("empty sum = %+v", empty)
+	}
+}
+
+// A ledger row turns into a summary the same way whatever kind of call it was, so a screen never reads one ledger
+// differently from the other.
+func TestLedgerRowsCarryTheirCostProvenance(t *testing.T) {
+	call := DecisionCall{CostUSD: 0.002, AllowanceUSD: 0.0015, CostSource: CostSourceAllowance}
+	if got := call.Cost(); got.Total != 0.002 || got.Covered != 0.0015 || got.Estimated {
+		t.Errorf("decision cost = %+v", got)
+	}
+	turn := TurnCall{CostUSD: 0.004, CostSource: CostSourceCatalog}
+	if got := turn.Cost(); got.Total != 0.004 || got.Covered != 0 || !got.Estimated {
+		t.Errorf("turn cost = %+v", got)
+	}
+	if got := (TurnCall{}).Cost(); got.Total != 0 || got.Covered != 0 || got.Estimated {
+		t.Errorf("empty turn cost = %+v", got)
+	}
+}

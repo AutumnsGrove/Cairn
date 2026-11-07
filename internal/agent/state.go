@@ -59,7 +59,7 @@ type RunState struct {
 	MessageIndex int
 	turnIndex    int
 	Usage        provider.Usage
-	PriorCost    float64
+	PriorCost    domain.CostSummary
 	Ended        string
 	// transcript is what nova produced this turn, kept so the session's own messages_json survives a restart.
 	transcript []message.Message

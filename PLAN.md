@@ -372,6 +372,9 @@ Rules:
 - **Timestamps are the phone's local date** for `finished_on` (a review is about the evening I finished
   it, not UTC).
 - **A draft is an entry with `status = draft`.** It never shows in the library views or the export.
+- **A cost row records whose dollars it was.** Every ledger row keeps `cost_usd` with `cost_source` and
+  `allowance_usd`, so a call a plan's allowance covered is never shown as money spent and a price-list estimate is
+  never passed off as a receipt. `covered` is part of the total, never in addition to it.
 - **Nothing is hard-deleted.** `BEFORE DELETE` triggers abort on `entries`, `entry_revisions`,
   `work_sources` and `answers`; deleting an entry sets `deleted_at`. There is no purge command, and R2
   backups keep every copy. `entry_revisions` also rejects updates, so it is append-only.

@@ -545,3 +545,30 @@ spend. Sepia's turn and decision ledgers store `CostUSD` alone, and the "why" sh
 spend currently reads as money spent. Recording the split needs a column, a wire field and copy that says which is
 which, which is a small slice rather than part of this bump. Nothing is lost today: the number is what the call
 consumed, and it is the same number nova reports.
+
+## 2026-11-07, cost keeps whose dollars it was
+
+**What changed.** A model call reports what it consumed and where that figure came from: the provider's own report,
+a plan's allowance, or Sepia's price-list estimate (nova v0.3.4, `provider.Usage`). Until now both ledgers stored
+`cost_usd` alone, so a call an allowance covered read as money spent and a catalog guess read as a receipt.
+Migration `0006_cost_provenance` adds `cost_source` and `allowance_usd` to `decision_calls` and `turn_calls`, and
+`cost_source` deliberately has no CHECK: it is an external system's vocabulary, and a receipt that cannot be written
+loses a fact.
+
+**The shape.** `domain.CostSummary` is `total_usd` and `covered_usd` with the rule that covered is part of the
+total, never in addition to it, plus `Estimated` for a total that includes a price-list guess. The session total, the
+"why" sheet's two costs and the live `cost_update` all carry both numbers: `preread_cost` and `turn_cost` replaced
+`preread_cost_usd` and `turn_cost_usd` in the contract, and `cost_update` gained `session_covered_usd`. Nothing on
+the frontend read the old fields, so the change costs no UI work; a screen that shows cost must now say which number
+it is showing (`docs/PROTOCOL.md` 3, `docs/ENTRY_CARD.md` 6).
+
+**What was deliberately not stored.** `list_cost_usd` (the retail-equivalent of an allowance-covered call) is
+dropped at the ledger boundary. It is display sugar for a screen that does not exist, and a column with no reader is
+worse than a note here. If the why-sheet ever wants it, it needs the ledger to keep it from the next call onward,
+because a past call cannot be re-asked.
+
+**Tests.** The store's split on the happy route, on a row written before the columns existed (old rows read as real
+money with nothing covered, which is what they were), and on a session whose only call is a catalog estimate; the
+domain's summary arithmetic; the wire's two numbers and the estimated flag; and an agent turn through a
+plan-shaped fake provider, which is the only way to drive an allowance: OpenRouter reports real money and has no
+allowance concept, so the world's chat fake cannot honestly pretend to be one.

@@ -7,6 +7,7 @@ import (
 
 	"github.com/AutumnsGrove/nova/proto"
 
+	"github.com/AutumnsGrove/sepia/internal/domain"
 	"github.com/AutumnsGrove/sepia/internal/store"
 )
 
@@ -78,9 +79,11 @@ func (t *translator) Emit(ev proto.Event) {
 	case proto.EventUsage:
 		total := t.state.PriorCost
 		if ev.Total != nil {
-			total += ev.Total.CostUSD
+			total = total.Add(domain.CostOf(ev.Total.CostUSD, ev.Total.AllowanceUSD, ev.Total.CostSource))
 		}
-		t.liveEvent("cost_update", map[string]any{"session_total_usd": total})
+		t.liveEvent("cost_update", map[string]any{
+			"session_total_usd": total.Total, "session_covered_usd": total.Covered,
+		})
 	case proto.EventError:
 		code, text := "model_error", "The model failed."
 		if ev.Error != nil {

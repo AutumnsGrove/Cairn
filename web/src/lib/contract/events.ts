@@ -268,6 +268,7 @@ export type ServerEvent =
       type?: 'cost_update';
       data?: {
         session_total_usd: Usd;
+        session_covered_usd: Usd;
       };
     })
   | (ServerEnvelope & {
@@ -529,8 +530,8 @@ export interface Why {
     | [WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool]
     | [WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool]
     | [WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool, WhyTool];
-  preread_cost_usd?: Usd;
-  turn_cost_usd?: Usd;
+  preread_cost?: CostSummary;
+  turn_cost?: CostSummary;
 }
 export interface WhyCheck {
   check: string;
@@ -649,6 +650,14 @@ export interface WhyTool {
 export interface Items {
   url: string;
   title?: string;
+}
+/**
+ * Money a session spent, with the part a plan's allowance covered split out. Covered is part of total, never in addition to it, so total minus covered is what left an account.
+ */
+export interface CostSummary {
+  total_usd: Usd;
+  covered_usd: Usd;
+  estimated?: boolean;
 }
 /**
  * One mechanism for every question the service asks. The payload shape follows the kind.

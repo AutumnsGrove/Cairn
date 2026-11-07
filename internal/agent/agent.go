@@ -304,7 +304,7 @@ func (a *Agent) runModel(ctx context.Context, state *RunState, nudge string) err
 	prior, err := a.store.SessionCost(ctx, state.SessionID)
 	if err != nil {
 		a.log.Error("session cost read failed", "session", state.SessionID, "err", err.Error())
-		prior = 0
+		prior = domain.CostSummary{}
 	}
 	state.PriorCost = prior
 	turns, err := a.store.TurnCalls(ctx, state.SessionID)
@@ -366,7 +366,8 @@ func (a *Agent) runModel(ctx context.Context, state *RunState, nudge string) err
 	if recordErr := a.store.RecordTurn(recordCtx, domain.TurnCall{
 		SessionID: state.SessionID, TurnIndex: state.turnIndex, Model: a.model,
 		PromptTokens: callUsage.PromptTokens, CompletionTokens: callUsage.CompletionTokens,
-		CostUSD: callUsage.CostUSD, LatencyMS: int(elapsed.Milliseconds()), Reason: state.Ended,
+		CostUSD: callUsage.CostUSD, CostSource: callUsage.CostSource, AllowanceUSD: callUsage.AllowanceUSD,
+		LatencyMS: int(elapsed.Milliseconds()), Reason: state.Ended,
 	}); recordErr != nil {
 		a.log.Error("turn ledger write failed", "session", state.SessionID, "err", recordErr.Error())
 	}
@@ -424,7 +425,9 @@ func (a *Agent) finish(ctx context.Context, state *RunState, ended string) (Outc
 	if total, err := a.store.SessionCost(ctx, state.SessionID); err != nil {
 		a.log.Error("session cost read failed", "session", state.SessionID, "err", err.Error())
 	} else if a.live != nil {
-		a.live(Event{SessionID: state.SessionID, Kind: "cost_update", Data: map[string]any{"session_total_usd": total}})
+		a.live(Event{SessionID: state.SessionID, Kind: "cost_update", Data: map[string]any{
+			"session_total_usd": total.Total, "session_covered_usd": total.Covered,
+		}})
 	}
 	return out, nil
 }
