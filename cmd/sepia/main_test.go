@@ -75,7 +75,9 @@ func TestServePortInUse(t *testing.T) {
 	addr := ln.Addr().String()
 
 	var out, errOut bytes.Buffer
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	// The budget is for the failure this test is about, not for startup speed: a race build opening the database and
+	// applying the migrations can take a few seconds on a machine running every package at once.
+	ctx, cancel := context.WithTimeout(context.Background(), 30*time.Second)
 	defer cancel()
 	code := run(ctx, []string{"serve"}, []string{
 		"SEPIA_ADDR=" + addr,
